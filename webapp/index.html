@@ -1,1043 +1,121 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
-
-<title>COSMIRA</title>
-
-<style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
-
-body{
-
-font-family:Arial,sans-serif;
-
-background:
-radial-gradient(circle at top,
-#24113f,
-#090911 45%,
-#020204 100%);
-
-color:white;
-
-overflow-x:hidden;
-
-min-height:100vh;
-}
-
-/* ======================= */
-/* SPACE */
-/* ======================= */
-
-.space{
-
-position:fixed;
-
-inset:0;
-
-overflow:hidden;
-
-z-index:-100;
-}
-
-.nebula{
-
-position:absolute;
-
-border-radius:50%;
-
-filter:blur(140px);
-
-animation:float 16s ease-in-out infinite;
-}
-
-.nebula1{
-
-width:600px;
-height:600px;
-
-background:rgba(139,92,246,0.28);
-
-top:-200px;
-left:-150px;
-}
-
-.nebula2{
-
-width:500px;
-height:500px;
-
-background:rgba(59,130,246,0.2);
-
-bottom:-120px;
-right:-100px;
-
-animation-delay:3s;
-}
-
-.nebula3{
-
-width:350px;
-height:350px;
-
-background:rgba(168,85,247,0.16);
-
-top:45%;
-left:40%;
-
-animation-delay:5s;
-}
-
-@keyframes float{
-
-0%{
-transform:
-translateY(0px)
-translateX(0px)
-scale(1);
-}
-
-50%{
-transform:
-translateY(-30px)
-translateX(20px)
-scale(1.08);
-}
-
-100%{
-transform:
-translateY(0px)
-translateX(0px)
-scale(1);
-}
-}
-
-/* ======================= */
-/* PARTICLES */
-/* ======================= */
-
-.particle{
-
-position:absolute;
-
-background:white;
-
-border-radius:50%;
-
-animation:twinkle 5s infinite;
-}
-
-.small{
-width:2px;
-height:2px;
-}
-
-.medium{
-width:4px;
-height:4px;
-}
-
-.big{
-width:6px;
-height:6px;
-}
-
-@keyframes twinkle{
-
-0%{opacity:0.2;}
-50%{opacity:1;}
-100%{opacity:0.2;}
-}
-
-/* ======================= */
-/* CONTAINER */
-/* ======================= */
-
-.container{
-
-padding:24px;
-
-padding-bottom:140px;
-
-animation:fadeIn 1.2s ease;
-}
-
-@keyframes fadeIn{
-
-from{
-opacity:0;
-transform:translateY(20px);
-}
-
-to{
-opacity:1;
-transform:translateY(0px);
-}
-}
-
-/* ======================= */
-/* LOGO */
-/* ======================= */
-
-.logo{
-
-margin-top:40px;
-
-text-align:center;
-
-font-size:42px;
-
-font-weight:bold;
-
-letter-spacing:8px;
-
-background:
-linear-gradient(
-90deg,
-#ffffff,
-#b794ff,
-#ffffff
-);
-
--webkit-background-clip:text;
-
--webkit-text-fill-color:transparent;
-}
-
-.subtitle{
-
-margin-top:14px;
-
-text-align:center;
-
-color:#c5c8ea;
-
-line-height:1.8;
-}
-
-/* ======================= */
-/* HERO */
-/* ======================= */
-
-.hero{
-
-margin-top:40px;
-
-padding:34px;
-
-border-radius:36px;
-
-background:rgba(255,255,255,0.07);
-
-backdrop-filter:blur(24px);
-
-border:
-1px solid rgba(255,255,255,0.08);
-
-box-shadow:
-0 0 60px rgba(139,92,246,0.12);
-}
-
-.badge{
-
-display:inline-flex;
-
-padding:10px 18px;
-
-border-radius:999px;
-
-background:rgba(139,92,246,0.16);
-
-color:#d8c2ff;
-
-font-size:13px;
-}
-
-.hero-title{
-
-margin-top:28px;
-
-font-size:38px;
-
-font-weight:bold;
-
-line-height:1.25;
-}
-
-.hero-text{
-
-margin-top:20px;
-
-line-height:1.9;
-
-color:#d8d9ef;
-
-font-size:15px;
-}
-
-/* ======================= */
-/* BUTTON */
-/* ======================= */
-
-.main-button{
-
-width:100%;
-
-margin-top:32px;
-
-border:none;
-
-padding:22px;
-
-border-radius:24px;
-
-cursor:pointer;
-
-font-size:16px;
-
-font-weight:bold;
-
-color:white;
-
-background:
-linear-gradient(
-135deg,
-#8b5cf6,
-#6366f1
-);
-
-box-shadow:
-0 0 40px rgba(139,92,246,0.35);
-
-transition:0.3s;
-}
-
-.main-button:hover{
-
-transform:
-scale(1.02)
-translateY(-2px);
-}
-
-.main-button:active{
-
-transform:scale(0.98);
-}
-
-/* ======================= */
-/* ZODIAC */
-/* ======================= */
-
-.zodiac{
-
-margin-top:40px;
-
-text-align:center;
-}
-
-.zodiac-title{
-
-font-size:30px;
-
-font-weight:bold;
-}
-
-.zodiac-sub{
-
-margin-top:12px;
-
-color:#bcc0e7;
-
-line-height:1.8;
-}
-
-.wheel{
-
-position:relative;
-
-width:320px;
-height:320px;
-
-margin:40px auto;
-
-border-radius:50%;
-
-background:
-radial-gradient(circle,
-rgba(255,255,255,0.06),
-rgba(255,255,255,0.02));
-
-border:
-1px solid rgba(255,255,255,0.08);
-
-backdrop-filter:blur(20px);
-
-animation:rotateWheel 40s linear infinite;
-
-box-shadow:
-0 0 60px rgba(139,92,246,0.18);
-}
-
-@keyframes rotateWheel{
-
-from{
-transform:rotate(0deg);
-}
-
-to{
-transform:rotate(360deg);
-}
-}
-
-.center{
-
-position:absolute;
-
-top:50%;
-left:50%;
-
-transform:translate(-50%,-50%);
-
-width:110px;
-height:110px;
-
-border-radius:50%;
-
-display:flex;
-
-align-items:center;
-justify-content:center;
-
-font-size:42px;
-
-background:
-linear-gradient(
-135deg,
-#8b5cf6,
-#3b82f6
-);
-
-box-shadow:
-0 0 50px rgba(139,92,246,0.6);
-}
-
-.sign{
-
-position:absolute;
-
-width:54px;
-height:54px;
-
-border-radius:50%;
-
-display:flex;
-
-align-items:center;
-justify-content:center;
-
-background:rgba(255,255,255,0.08);
-
-backdrop-filter:blur(12px);
-
-font-size:24px;
-
-border:
-1px solid rgba(255,255,255,0.08);
-
-transition:0.3s;
-}
-
-.sign:hover{
-
-transform:scale(1.12);
-
-background:rgba(255,255,255,0.12);
-}
-
-.s1{top:10px;left:133px;}
-.s2{top:40px;right:40px;}
-.s3{top:133px;right:10px;}
-.s4{bottom:40px;right:40px;}
-.s5{bottom:10px;left:133px;}
-.s6{bottom:40px;left:40px;}
-.s7{top:133px;left:10px;}
-.s8{top:40px;left:40px;}
-
-/* ======================= */
-/* CARDS */
-/* ======================= */
-
-.cards{
-
-display:grid;
-
-grid-template-columns:1fr 1fr;
-
-gap:18px;
-
-margin-top:40px;
-}
-
-.card{
-
-padding:24px;
-
-border-radius:30px;
-
-background:rgba(255,255,255,0.06);
-
-border:
-1px solid rgba(255,255,255,0.08);
-
-backdrop-filter:blur(18px);
-
-transition:0.35s;
-}
-
-.card:hover{
-
-transform:
-translateY(-6px)
-scale(1.02);
-
-background:rgba(255,255,255,0.09);
-
-box-shadow:
-0 0 40px rgba(139,92,246,0.12);
-}
-
-.card-icon{
-
-font-size:34px;
-}
-
-.card-title{
-
-margin-top:16px;
-
-font-size:18px;
-
-font-weight:bold;
-}
-
-.card-text{
-
-margin-top:12px;
-
-line-height:1.8;
-
-font-size:14px;
-
-color:#c2c5e8;
-}
-
-/* ======================= */
-/* PREMIUM */
-/* ======================= */
-
-.premium{
-
-margin-top:40px;
-
-padding:34px;
-
-border-radius:36px;
-
-background:
-linear-gradient(
-135deg,
-rgba(139,92,246,0.18),
-rgba(59,130,246,0.12)
-);
-
-border:
-1px solid rgba(255,255,255,0.08);
-
-backdrop-filter:blur(24px);
-
-box-shadow:
-0 0 60px rgba(139,92,246,0.12);
-}
-
-.premium-title{
-
-font-size:32px;
-
-font-weight:bold;
-}
-
-.premium-text{
-
-margin-top:18px;
-
-line-height:1.9;
-
-color:#d7d9ef;
-}
-
-.unlock{
-
-width:100%;
-
-margin-top:28px;
-
-border:none;
-
-padding:22px;
-
-border-radius:24px;
-
-cursor:pointer;
-
-font-size:16px;
-
-font-weight:bold;
-
-color:white;
-
-background:
-linear-gradient(
-135deg,
-#8b5cf6,
-#3b82f6
-);
-
-box-shadow:
-0 0 40px rgba(139,92,246,0.35);
-
-transition:0.3s;
-}
-
-.unlock:hover{
-
-transform:
-scale(1.02)
-translateY(-2px);
-}
-
-/* ======================= */
-/* BOTTOM NAV */
-/* ======================= */
-
-.bottom-nav{
-
-position:fixed;
-
-left:20px;
-right:20px;
-bottom:20px;
-
-padding:18px;
-
-display:flex;
-
-justify-content:space-around;
-
-border-radius:30px;
-
-background:rgba(255,255,255,0.08);
-
-backdrop-filter:blur(20px);
-
-border:
-1px solid rgba(255,255,255,0.08);
-}
-
-.nav-item{
-
-text-align:center;
-
-font-size:12px;
-
-color:#cfd1ef;
-
-cursor:pointer;
-
-transition:0.3s;
-}
-
-.nav-item:hover{
-
-transform:translateY(-3px);
-}
-
-.nav-icon{
-
-font-size:24px;
-
-margin-bottom:6px;
-}
-
-/* ======================= */
-/* POPUP */
-/* ======================= */
-
-.popup{
-
-position:fixed;
-
-inset:0;
-
-display:none;
-
-align-items:center;
-justify-content:center;
-
-background:rgba(0,0,0,0.6);
-
-backdrop-filter:blur(10px);
-
-z-index:999;
-}
-
-.popup-content{
-
-width:90%;
-max-width:380px;
-
-padding:32px;
-
-border-radius:32px;
-
-background:
-linear-gradient(
-135deg,
-rgba(25,25,40,0.95),
-rgba(15,15,25,0.95)
-);
-
-border:
-1px solid rgba(255,255,255,0.08);
-
-animation:popupShow 0.4s ease;
-}
-
-@keyframes popupShow{
-
-from{
-opacity:0;
-transform:scale(0.8);
-}
-
-to{
-opacity:1;
-transform:scale(1);
-}
-}
-
-.popup-title{
-
-font-size:28px;
-
-font-weight:bold;
-}
-
-.popup-text{
-
-margin-top:18px;
-
-line-height:1.9;
-
-color:#d5d7ef;
-}
-
-.close-popup{
-
-width:100%;
-
-margin-top:28px;
-
-border:none;
-
-padding:18px;
-
-border-radius:20px;
-
-cursor:pointer;
-
-font-weight:bold;
-
-color:white;
-
-background:
-linear-gradient(
-135deg,
-#8b5cf6,
-#6366f1
-);
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COSMIRA</title>
+
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<!-- SPACE -->
+    <!-- BACKGROUND -->
 
-<div class="space">
+    <div class="background"></div>
+    <div class="stars"></div>
+    <div class="glow glow1"></div>
+    <div class="glow glow2"></div>
 
-<div class="nebula nebula1"></div>
-<div class="nebula nebula2"></div>
-<div class="nebula nebula3"></div>
+    <!-- APP -->
 
-<div class="particle small" style="top:10%;left:20%;"></div>
-<div class="particle medium" style="top:15%;left:80%;"></div>
-<div class="particle big" style="top:30%;left:60%;"></div>
-<div class="particle small" style="top:70%;left:15%;"></div>
-<div class="particle medium" style="top:85%;left:70%;"></div>
+    <div class="app">
 
-</div>
+        <!-- HEADER -->
 
-<div class="container">
+        <div class="header">
+            <div>
+                <h1>COSMIRA</h1>
+                <p>AI нового поколения</p>
+            </div>
 
-<div class="logo">
-COSMIRA
-</div>
+            <div class="status">
+                ONLINE
+            </div>
+        </div>
 
-<div class="subtitle">
-AI astrology experience<br>
-нового поколения
-</div>
+        <!-- HERO -->
 
-<!-- HERO -->
+        <div class="hero">
 
-<div class="hero">
+            <div class="hero-icon">
+                ✨
+            </div>
 
-<div class="badge">
-✨ COSMIC ENERGY ACTIVE
-</div>
+            <h2>
+                Добро пожаловать в будущее
+            </h2>
 
-<div class="hero-title">
-Космос знает<br>
-твою энергию
-</div>
+            <p>
+                Умный AI ассистент, космический интерфейс
+                и технологии нового поколения.
+            </p>
 
-<div class="hero-text">
+        </div>
 
-COSMIRA анализирует
-астрологические потоки,
-эмоции и внутреннюю энергию
-при помощи AI нового поколения.
+        <!-- CARDS -->
 
-</div>
+        <div class="cards">
 
-<button
-class="main-button"
-onclick="openPopup()">
+            <div class="card">
+                <div class="card-icon">🧠</div>
 
-🔮 Начать AI анализ
+                <h3>AI CHAT</h3>
 
-</button>
+                <p>
+                    Скоро здесь появится настоящий AI чат.
+                </p>
+            </div>
 
-</div>
+            <div class="card">
+                <div class="card-icon">🎨</div>
 
-<!-- ZODIAC -->
+                <h3>AI IMAGES</h3>
 
-<div class="zodiac">
+                <p>
+                    Генерация изображений будущего.
+                </p>
+            </div>
 
-<div class="zodiac-title">
-Зодиакальное колесо
-</div>
+            <div class="card">
+                <div class="card-icon">🚀</div>
 
-<div class="zodiac-sub">
-Живая энергия знаков<br>
-в одной системе
-</div>
+                <h3>FAST SYSTEM</h3>
 
-<div class="wheel">
+                <p>
+                    Молниеносная работа платформы.
+                </p>
+            </div>
 
-<div class="center">
-✨
-</div>
+            <div class="card">
+                <div class="card-icon">💎</div>
 
-<div class="sign s1">♈</div>
-<div class="sign s2">♉</div>
-<div class="sign s3">♊</div>
-<div class="sign s4">♋</div>
-<div class="sign s5">♌</div>
-<div class="sign s6">♍</div>
-<div class="sign s7">♎</div>
-<div class="sign s8">♏</div>
+                <h3>PREMIUM</h3>
 
-</div>
+                <p>
+                    Premium система появится позже.
+                </p>
+            </div>
 
-</div>
+        </div>
 
-<!-- CARDS -->
+        <!-- PROFILE -->
 
-<div class="cards">
+        <div class="profile">
 
-<div class="card">
+            <div class="profile-avatar">
+                S
+            </div>
 
-<div class="card-icon">
-🔮
-</div>
+            <div>
+                <h3>Sergey</h3>
+                <p>COSMIRA Explorer</p>
+            </div>
 
-<div class="card-title">
-AI Астролог
-</div>
+        </div>
 
-<div class="card-text">
+    </div>
 
-Глубокий анализ
-твоей энергетики
-и эмоциональных потоков.
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="card-icon">
-💞
-</div>
-
-<div class="card-title">
-Совместимость
-</div>
-
-<div class="card-text">
-
-Анализ отношений
-и энергетической связи.
-
-</div>
-
-</div>
-
-</div>
-
-<!-- PREMIUM -->
-
-<div class="premium">
-
-<div class="premium-title">
-💎 COSMIRA PREMIUM
-</div>
-
-<div class="premium-text">
-
-Полный доступ
-к AI прогнозам,
-совместимости
-и глубокой аналитике.
-
-</div>
-
-<button
-class="unlock"
-onclick="openPopup()">
-
-✨ Открыть Premium
-
-</button>
-
-</div>
-
-</div>
-
-<!-- NAV -->
-
-<div class="bottom-nav">
-
-<div class="nav-item">
-<div class="nav-icon">🌙</div>
-Главная
-</div>
-
-<div class="nav-item">
-<div class="nav-icon">🔮</div>
-AI
-</div>
-
-<div class="nav-item">
-<div class="nav-icon">💎</div>
-Premium
-</div>
-
-<div class="nav-item">
-<div class="nav-icon">⚙️</div>
-Профиль
-</div>
-
-</div>
-
-<!-- POPUP -->
-
-<div
-class="popup"
-id="popup">
-
-<div class="popup-content">
-
-<div class="popup-title">
-🔮 COSMIRA AI
-</div>
-
-<div class="popup-text"
-id="popupText">
-
-Инициализация AI анализа...
-
-</div>
-
-<button
-class="close-popup"
-onclick="closePopup()">
-
-Закрыть
-
-</button>
-
-</div>
-
-</div>
-
-<script>
-
-function openPopup(){
-
-const popup =
-document.getElementById("popup");
-
-const text =
-document.getElementById("popupText");
-
-popup.style.display = "flex";
-
-text.innerHTML =
-"Инициализация AI анализа...";
-
-setTimeout(() => {
-
-text.innerHTML =
-"✨ Анализ энергетики завершен.<br><br>Сегодня тебя ждут сильные эмоциональные изменения и важный внутренний рост.";
-
-}, 2200);
-
-}
-
-function closePopup(){
-
-document.getElementById("popup")
-.style.display = "none";
-
-}
-
-</script>
+    <script src="app.js"></script>
 
 </body>
-
 </html>
