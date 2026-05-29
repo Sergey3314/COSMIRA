@@ -169,4 +169,41 @@ async def main():
 
 if __name__ == "__main__":
 
+    from aiohttp import web
+
+# ============================================
+# FAKE WEB SERVER FOR RENDER
+# ============================================
+
+async def health(request):
+    return web.Response(text="COSMIRA BOT WORKING")
+
+async def start_web_server():
+    app = web.Application()
+    app.router.add_get('/', health)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+
+    port = int(os.environ.get("PORT", 10000))
+
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+
+# ============================================
+# MAIN
+# ============================================
+
+async def main():
+
+    await start_web_server()
+
+    await dp.start_polling(bot)
+
+# ============================================
+# START APP
+# ============================================
+
+if __name__ == "__main__":
+
     asyncio.run(main())
