@@ -153,22 +153,37 @@ async def start_web_server():
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
 
+    print(f"Web server started on port {port}")
+
 # ============================================
-# MAIN
+# BOT RUNNER
 # ============================================
 
-async def main():
+async def start_bot():
     bot = Bot(
         token=TOKEN,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
 
-    await start_web_server()
     await dp.start_polling(bot)
+
+# ============================================
+# MAIN
+# ============================================
+
+async def main():
+    # запускаем 2 процесса параллельно
+    web_task = asyncio.create_task(start_web_server())
+    bot_task = asyncio.create_task(start_bot())
+
+    await asyncio.gather(web_task, bot_task)
 
 # ============================================
 # START
 # ============================================
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        print("Bot stopped")
