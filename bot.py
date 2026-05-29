@@ -1,34 +1,37 @@
+import os
 import asyncio
 import logging
+
+from dotenv import load_dotenv
 
 from aiogram import Bot, Dispatcher, F
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
 
-from aiogram.filters import CommandStart
-
 from aiogram.types import (
     Message,
-    CallbackQuery,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+    WebAppInfo
 )
 
-# =========================================
-# TOKEN
-# =========================================
+# ============================================
+# ЗАГРУЗКА TOKEN ИЗ RENDER
+# ============================================
 
-TOKEN = "8700927104:AAHQ32n-TtV1UmyMVlQqk0vdqjd-luOn1MQ"
+load_dotenv()
 
-# =========================================
-# LOGGING
-# =========================================
+TOKEN = os.getenv("TOKEN")
+
+# ============================================
+# ЛОГИ
+# ============================================
 
 logging.basicConfig(level=logging.INFO)
 
-# =========================================
+# ============================================
 # BOT
-# =========================================
+# ============================================
 
 bot = Bot(
     token=TOKEN,
@@ -41,214 +44,129 @@ dp = Dispatcher()
 
 print("COSMIRA STARTED")
 
-# =========================================
-# MAIN MENU
-# =========================================
+# ============================================
+# КНОПКИ
+# ============================================
 
-def main_menu():
-
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-
-            [
-                InlineKeyboardButton(
-                    text="👤 Профиль",
-                    callback_data="profile"
-                ),
-
-                InlineKeyboardButton(
-                    text="💎 Premium",
-                    callback_data="premium"
+main_keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(
+                text="🚀 Открыть COSMIRA",
+                web_app=WebAppInfo(
+                    url="https://cosmira.netlify.app/"
                 )
-            ],
-
-            [
-                InlineKeyboardButton(
-                    text="🤖 AI Chat",
-                    callback_data="ai"
-                )
-            ],
-
-            [
-                InlineKeyboardButton(
-                    text="⚙️ Настройки",
-                    callback_data="settings"
-                )
-            ]
-
+            )
+        ],
+        [
+            KeyboardButton(text="👤 Профиль"),
+            KeyboardButton(text="💎 Premium")
+        ],
+        [
+            KeyboardButton(text="⚙️ Настройки")
         ]
-    )
+    ],
+    resize_keyboard=True
+)
 
-    return keyboard
-
-# =========================================
+# ============================================
 # START
-# =========================================
+# ============================================
 
-@dp.message(CommandStart())
-async def start(message: Message):
+@dp.message(F.text == "/start")
+async def start_handler(message: Message):
 
-    text = f"""
-☁️ <b>COSMIRA AI</b>
+    text = """
+<b>🌌 COSMIRA AI</b>
 
-Добро пожаловать,
-<b>{message.from_user.first_name}</b>
+Добро пожаловать в будущее.
 
-━━━━━━━━━━━━━━━
-
-🚀 AI платформа нового поколения
-
-✨ Возможности:
-• AI Chat
-• Premium функции
-• Умные инструменты
-• Персональный AI
-
-━━━━━━━━━━━━━━━
-
-🔥 Статус:
-ONLINE
+✨ AI Платформа нового поколения
+🚀 WebApp интерфейс
+🧠 Умный AI помощник
+💎 Premium система скоро появится
 """
 
     await message.answer(
         text,
-        reply_markup=main_menu()
+        reply_markup=main_keyboard
     )
 
-# =========================================
-# PROFILE
-# =========================================
+# ============================================
+# ПРОФИЛЬ
+# ============================================
 
-@dp.callback_query(F.data == "profile")
-async def profile(callback: CallbackQuery):
+@dp.message(F.text == "👤 Профиль")
+async def profile_handler(message: Message):
 
     text = f"""
-👤 <b>ПРОФИЛЬ</b>
+<b>👤 Ваш профиль</b>
 
-━━━━━━━━━━━━━━━
+🆔 ID: <code>{message.from_user.id}</code>
 
-🆔 ID:
-<code>{callback.from_user.id}</code>
+👑 Premium: Нет
 
-👤 Имя:
-<b>{callback.from_user.first_name}</b>
-
-💎 Premium:
-❌ Нет
-
-💰 Баланс:
-0$
-
-━━━━━━━━━━━━━━━
-
-📈 Уровень:
-Новичок
+🚀 Статус:
+Пользователь COSMIRA
 """
 
-    await callback.message.edit_text(
-        text,
-        reply_markup=main_menu()
-    )
+    await message.answer(text)
 
-# =========================================
+# ============================================
 # PREMIUM
-# =========================================
+# ============================================
 
-@dp.callback_query(F.data == "premium")
-async def premium(callback: CallbackQuery):
-
-    text = """
-💎 <b>COSMIRA PREMIUM</b>
-
-━━━━━━━━━━━━━━━
-
-🔥 Скоро здесь будет:
-
-• GPT Premium
-• AI генерация
-• Быстрые ответы
-• VIP возможности
-• Безлимитный доступ
-
-━━━━━━━━━━━━━━━
-
-⚡ В разработке
-"""
-
-    await callback.message.edit_text(
-        text,
-        reply_markup=main_menu()
-    )
-
-# =========================================
-# AI CHAT
-# =========================================
-
-@dp.callback_query(F.data == "ai")
-async def ai_chat(callback: CallbackQuery):
+@dp.message(F.text == "💎 Premium")
+async def premium_handler(message: Message):
 
     text = """
-🤖 <b>COSMIRA AI CHAT</b>
+<b>💎 COSMIRA PREMIUM</b>
 
-━━━━━━━━━━━━━━━
+Скоро здесь появится:
 
-✨ Скоро здесь появится:
+✨ AI без ограничений
+⚡ Быстрые ответы
+🧠 Мощные модели
+🎨 Генерация изображений
+🚀 Эксклюзивные функции
 
-• Умный AI чат
-• Ответы как ChatGPT
-• Генерация текста
-• Помощник
-
-━━━━━━━━━━━━━━━
-
-🚀 AI CORE ACTIVE
+Система оплаты появится позже.
 """
 
-    await callback.message.edit_text(
-        text,
-        reply_markup=main_menu()
-    )
+    await message.answer(text)
 
-# =========================================
-# SETTINGS
-# =========================================
+# ============================================
+# НАСТРОЙКИ
+# ============================================
 
-@dp.callback_query(F.data == "settings")
-async def settings(callback: CallbackQuery):
+@dp.message(F.text == "⚙️ Настройки")
+async def settings_handler(message: Message):
 
     text = """
-⚙️ <b>НАСТРОЙКИ</b>
+<b>⚙️ Настройки</b>
 
-━━━━━━━━━━━━━━━
+🌙 Темная тема
+🔔 Уведомления
+🌍 Язык
+🎨 Дизайн
 
-🌙 Тема:
-Dark
-
-🔔 Уведомления:
-ON
-
-🌐 Язык:
-Русский
-
-━━━━━━━━━━━━━━━
+Скоро здесь будет полноценная панель.
 """
 
-    await callback.message.edit_text(
-        text,
-        reply_markup=main_menu()
-    )
+    await message.answer(text)
 
-# =========================================
+# ============================================
 # MAIN
-# =========================================
+# ============================================
 
 async def main():
 
     await dp.start_polling(bot)
 
-# =========================================
-# START
-# =========================================
+# ============================================
+# START APP
+# ============================================
 
 if __name__ == "__main__":
+
     asyncio.run(main())
