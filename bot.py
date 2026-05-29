@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, F
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
-
 from aiogram.types import (
     Message,
     ReplyKeyboardMarkup,
@@ -15,37 +14,35 @@ from aiogram.types import (
     WebAppInfo
 )
 
+from aiohttp import web
+
 # ============================================
-# ЗАГРУЗКА TOKEN ИЗ RENDER
+# ENV
 # ============================================
 
 load_dotenv()
 
 TOKEN = os.getenv("TOKEN")
 
+if not TOKEN:
+    raise RuntimeError("TOKEN is missing in Render environment variables")
+
 # ============================================
-# ЛОГИ
+# LOGGING
 # ============================================
 
 logging.basicConfig(level=logging.INFO)
 
 # ============================================
-# BOT
+# DISPATCHER
 # ============================================
-
-bot = Bot(
-    token=TOKEN,
-    default=DefaultBotProperties(
-        parse_mode=ParseMode.HTML
-    )
-)
 
 dp = Dispatcher()
 
 print("COSMIRA STARTED")
 
 # ============================================
-# КНОПКИ
+# KEYBOARD
 # ============================================
 
 main_keyboard = ReplyKeyboardMarkup(
@@ -53,9 +50,7 @@ main_keyboard = ReplyKeyboardMarkup(
         [
             KeyboardButton(
                 text="🚀 Открыть COSMIRA",
-                web_app=WebAppInfo(
-                    url="https://cosmira.netlify.app/"
-                )
+                web_app=WebAppInfo(url="https://cosmira.netlify.app/")
             )
         ],
         [
@@ -70,13 +65,13 @@ main_keyboard = ReplyKeyboardMarkup(
 )
 
 # ============================================
-# START
+# HANDLERS
 # ============================================
 
 @dp.message(F.text == "/start")
 async def start_handler(message: Message):
-
-    text = """
+    await message.answer(
+        """
 <b>🌌 COSMIRA AI</b>
 
 Добро пожаловать в будущее.
@@ -85,21 +80,15 @@ async def start_handler(message: Message):
 🚀 WebApp интерфейс
 🧠 Умный AI помощник
 💎 Premium система скоро появится
-"""
-
-    await message.answer(
-        text,
+        """,
         reply_markup=main_keyboard
     )
 
-# ============================================
-# ПРОФИЛЬ
-# ============================================
 
 @dp.message(F.text == "👤 Профиль")
 async def profile_handler(message: Message):
-
-    text = f"""
+    await message.answer(
+        f"""
 <b>👤 Ваш профиль</b>
 
 🆔 ID: <code>{message.from_user.id}</code>
@@ -108,21 +97,15 @@ async def profile_handler(message: Message):
 
 🚀 Статус:
 Пользователь COSMIRA
-"""
+        """
+    )
 
-    await message.answer(text)
-
-# ============================================
-# PREMIUM
-# ============================================
 
 @dp.message(F.text == "💎 Premium")
 async def premium_handler(message: Message):
-
-    text = """
+    await message.answer(
+        """
 <b>💎 COSMIRA PREMIUM</b>
-
-Скоро здесь появится:
 
 ✨ AI без ограничений
 ⚡ Быстрые ответы
@@ -130,57 +113,37 @@ async def premium_handler(message: Message):
 🎨 Генерация изображений
 🚀 Эксклюзивные функции
 
-Система оплаты появится позже.
-"""
+Скоро запуск оплаты.
+        """
+    )
 
-    await message.answer(text)
-
-# ============================================
-# НАСТРОЙКИ
-# ============================================
 
 @dp.message(F.text == "⚙️ Настройки")
 async def settings_handler(message: Message):
-
-    text = """
+    await message.answer(
+        """
 <b>⚙️ Настройки</b>
 
-🌙 Темная тема
+🌙 Тема
 🔔 Уведомления
 🌍 Язык
 🎨 Дизайн
 
-Скоро здесь будет полноценная панель.
-"""
-
-    await message.answer(text)
-
-# ============================================
-# MAIN
-# ============================================
-
-async def main():
-
-    await dp.start_polling(bot)
+Скоро панель управления.
+        """
+    )
 
 # ============================================
-# START APP
-# ============================================
-
-if __name__ == "__main__":
-
-    from aiohttp import web
-
-# ============================================
-# FAKE WEB SERVER FOR RENDER
+# WEB SERVER (Render healthcheck)
 # ============================================
 
 async def health(request):
     return web.Response(text="COSMIRA BOT WORKING")
 
+
 async def start_web_server():
     app = web.Application()
-    app.router.add_get('/', health)
+    app.router.add_get("/", health)
 
     runner = web.AppRunner(app)
     await runner.setup()
@@ -195,15 +158,17 @@ async def start_web_server():
 # ============================================
 
 async def main():
+    bot = Bot(
+        token=TOKEN,
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+    )
 
     await start_web_server()
-
     await dp.start_polling(bot)
 
 # ============================================
-# START APP
+# START
 # ============================================
 
 if __name__ == "__main__":
-
     asyncio.run(main())
