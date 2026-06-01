@@ -1,306 +1,124 @@
-import os, json, asyncio, logging, random
-from datetime import datetime
-from pathlib import Path
-from dotenv import load_dotenv
-from aiogram import Bot, Dispatcher, F
-from aiogram.enums import ParseMode
-from aiogram.client.default import DefaultBotProperties
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
+import os
+import logging
+from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command
-from aiohttp import web
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from astro_engine import (
-    get_chart_data, 
-    generate_horoscope_text, 
-    generate_compatibility_text,
-    generate_natal_interpretation,
-    generate_horary_answer
-)
+# Твои модули
+from database import init_db, save_user, get_user, consume_free_use
+from validator import validate_date, validate_time, validate_place
+from ai_engine import ask_ai
 
-load_dotenv()
-TOKEN = os.getenv("TOKEN")
-if not TOKEN:
-    raise RuntimeError("❌ TOKEN not found in environment variables!")
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-USERS_FILE = "users.json"
-BASE_DIR = Path(__file__).parent
-STATIC_DIR = BASE_DIR / "webapp"
-
-def load_users():
-    try:
-        with open(USERS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except:
-        return {}
-
-def save_users(users):
-    with open(USERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(users, f, ensure_ascii=False, indent=4)
-
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 dp = Dispatcher()
-logging.info("✅ COSMIRA BOT STARTED")
+logging.basicConfig(level=logging.INFO)
 
-# Клавиатура
-def get_main_keyboard():
-    return ReplyKeyboardMarkup(keyboard=[
-        [KeyboardButton(text="🚀 Открыть COSMIRA", web_app=WebAppInfo(url="https://cosmira-bot.onrender.com/"))],
-        [KeyboardButton(text="👤 Профиль"), KeyboardButton(text="💎 Premium")],
-        [KeyboardButton(text="📊 Статистика")]
-    ], resize_keyboard=True)
+# Состояния для регистрации
+class RegState(StatesGroup):
+    date = State()
+    time = State()
+    place = State()
 
+# Кнопка /start
 @dp.message(Command("start"))
-async def start_cmd(m: Message):
-    users = load_users()
-    uid = str(m.from_user.id)
-    
-    if uid not in users:
-        users[uid] = {
-            "id": m.from_user.id,
-            "name": m.from_user.full_name,
-            "username": m.from_user.username,
-            "joined": datetime.now().strftime("%d.%m.%Y"),
-            "messages": 0,
-            "premium": False
-        }
-        save_users(users)
-    
-    users[uid]["messages"] = users[uid].get("messages", 0) + 1
-    save_users(users)
-    
-    await m.answer(
-        f"🌌 <b>COSMIRA</b>\n\nПривет, {m.from_user.first_name}!\n\nЯ помогу тебе узнать:\n• Гороскоп на день/месяц/год\n• Совместимость с партнёром\n• Твою натальную карту\n• Ответ на важный вопрос (Хорар)\n\nНажми кнопку ниже, чтобы начать ✨",
-        reply_markup=get_main_keyboard(),
-        parse_mode=ParseMode.HTML
-    )
-
-@dp.message(F.text == "👤 Профиль")
-async def profile_cmd(m: Message):
-    users = load_users()
-    u = users.get(str(m.from_user.id), {})
-    
-    text = f"👤 <b>Профиль</b>\n"
-    text += f"Имя: {u.get('name', m.from_user.full_name)}\n"
-    if u.get('birth_date'):
-        text += f"📅 Дата рождения: {u['birth_date']}\n"
-        text += f"⏰ Время: {u.get('birth_time', 'не указано')}\n"
-        text += f"📍 Город: {u.get('birth_city', 'не указан')}\n"
+async def cmd_start(message: types.Message, state: FSMContext):
+    user = await get_user(message.from_user.id)
+    if user:
+        await message.answer(f"👋 С возвращением, {user['name']}! Что делаем?", reply_markup=main_menu())
     else:
-        text += "⚠️ Заполни данные в приложении для расчётов"
-    text += f"\n💎 Premium: {'✅ Да' if u.get('premium') else '❌ Нет'}"
-    
-    await m.answer(text, parse_mode=ParseMode.HTML)
+        await message.answer("🔮 Привет! Чтобы звёзды заговорили, введи дату рождения (ДД.ММ.ГГГГ):")
+        await state.set_state(RegState.date)
 
-@dp.message(F.text == "💎 Premium")
-async def premium_cmd(m: Message):
-    await m.answer(
-        "💎 <b>COSMIRA PREMIUM</b>\n\n"
-        "✨ Полный доступ к:\n"
-        "• Гороскопам на месяц и год\n"
-        "• Детальной натальной карте с аспектами\n"
-        "• Неограниченным хорарным вопросам\n"
-        "• Персональным рекомендациям от астролога\n\n"
-        "💰 Тарифы:\n"
-        "• Разовый разбор: 50₽\n"
-        "• Подписка на месяц: 299₽\n"
-        "• Подписка на год: 1990₽\n\n"
-        "🔜 Оплата будет доступна в следующем обновлении!",
-        parse_mode=ParseMode.HTML
+# Регистрация: Дата
+@dp.message(RegState.date)
+async def reg_date(msg: types.Message, state: FSMContext):
+    ok, err = validate_date(msg.text)
+    if not ok: return await msg.answer(err)
+    await state.update_data(birth_date=msg.text)
+    await msg.answer(" Теперь время рождения (ЧЧ:ММ):")
+    await state.set_state(RegState.time)
+
+# Регистрация: Время
+@dp.message(RegState.time)
+async def reg_time(msg: types.Message, state: FSMContext):
+    ok, err = validate_time(msg.text)
+    if not ok: return await msg.answer(err)
+    await state.update_data(birth_time=msg.text)
+    await msg.answer(" Где родился (Город):")
+    await state.set_state(RegState.place)
+
+# Регистрация: Место
+@dp.message(RegState.place)
+async def reg_place(msg: types.Message, state: FSMContext):
+    ok, err = validate_place(msg.text)
+    if not ok: return await msg.answer(err)
+    
+    data = await state.get_data()
+    await save_user(
+        msg.from_user.id,
+        msg.from_user.username,
+        msg.from_user.full_name,
+        data['birth_date'],
+        data['birth_time'],
+        msg.text
     )
+    await state.clear()
+    await msg.answer("✅ Данные сохранены! Добро пожаловать в COSMIRA.", reply_markup=main_menu())
 
-@dp.message(F.text == "📊 Статистика")
-async def stats_cmd(m: Message):
-    users = load_users()
-    total = len(users)
-    msgs = sum(u.get("messages", 0) for u in users.values())
-    premium = sum(1 for u in users.values() if u.get("premium"))
-    
-    await m.answer(
-        f"📊 <b>Статистика COSMIRA</b>\n\n"
-        f"👥 Пользователей: {total}\n"
-        f"💬 Всего сообщений: {msgs}\n"
-        f"💎 Premium-подписок: {premium}",
-        parse_mode=ParseMode.HTML
-    )
+# Главное меню
+def main_menu():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔥 Гороскоп", callback_data="horoscope")],
+        [InlineKeyboardButton(text="💞 Совместимость", callback_data="compat")],
+        [InlineKeyboardButton(text="🌌 Натальная карта", callback_data="natal")],
+        [InlineKeyboardButton(text=" Хорар", callback_data="horary")],
+        [InlineKeyboardButton(text="👤 Профиль", callback_data="profile")]
+    ])
 
-@dp.message()
-async def echo(m: Message):
-    await m.answer("Используй кнопки меню или команду /start 🚀")
+# Обработка кнопок меню
+@dp.callback_query(F.data.in_("horoscope", "compat", "natal", "horary", "profile"))
+async def handle_menu(cb: types.CallbackQuery, state: FSMContext):
+    user = await get_user(cb.from_user.id)
+    if not user:
+        return await cb.answer("Сначала /start", show_alert=True)
 
-# ============================================
-# WEB API ENDPOINTS
-# ============================================
+    # Если нажали Профиль
+    if cb.data == "profile":
+        text = (f" {user['name']}\n"
+                f"🎂 {user['birth_date']}\n"
+                f"⏱ {user['birth_time']}\n"
+                f"🌍 {user['birth_place']}\n"
+                f"🎟 Бесплатных попыток: {user['free_uses']}")
+        return await cb.message.edit_text(text, reply_markup=main_menu())
 
-async def api_get_user(request):
-    uid = request.query.get("uid")
-    users = load_users()
-    return web.json_response(users.get(uid, {}))
+    # Если кончились попытки
+    if user['free_uses'] <= 0:
+        return await cb.answer("Лимит исчерпан. Нужен премиум.", show_alert=True)
 
-async def api_save_user(request):
-    try:
-        data = await request.json()
-        users = load_users()
-        uid = str(data.get("id"))
-        
-        users[uid] = {
-            "id": data.get("id"),
-            "name": data.get("name"),
-            "username": data.get("username"),
-            "birth_date": data.get("birth_date"),
-            "birth_time": data.get("birth_time"),
-            "birth_city": data.get("birth_city"),
-            "premium": data.get("premium", False),
-            "joined": users.get(uid, {}).get("joined", datetime.now().strftime("%d.%m.%Y")),
-            "messages": users.get(uid, {}).get("messages", 0)
-        }
-        save_users(users)
-        return web.json_response({"status": "ok", "user": users[uid]})
-    except Exception as e:
-        return web.json_response({"error": str(e)}, status=400)
+    await cb.answer()
+    await cb.message.edit_text(" Считываю звёзды и генерирую ответ...", reply_markup=main_menu())
 
-async def api_natal_chart(request):
-    uid = request.query.get("uid")
-    users = load_users()
-    u = users.get(uid)
-    
-    if not u or not u.get("birth_date") or not u.get("birth_time"):
-        return web.json_response({"error": "Заполните дату и время рождения в профиле"}, status=400)
-    
-    # Координаты по городу (упрощённо)
-    coords = {
-        "москва": (55.75, 37.62), "спб": (59.93, 30.33), "киев": (50.45, 30.52),
-        "минск": (53.90, 27.56), "алматы": (43.22, 76.85), "новосибирск": (55.00, 82.93)
-    }
-    city = u.get("birth_city", "").lower()
-    lat, lon = coords.get(city, (55.75, 37.62))  # Москва по умолчанию
-    
-    chart_data = get_chart_data(u["birth_date"], u["birth_time"], lat, lon)
-    
-    if "error" in chart_data:
-        return web.json_response(chart_data, status=500)
-    
-    # Генерируем текст интерпретации
-    interpretation = generate_natal_interpretation(chart_data)
-    
-    return web.json_response({
-        "planets": chart_data,
-        "interpretation": interpretation
-    })
+    # Промт для AI
+    prompt = (f"Пользователь: {user['name']}. Дата: {user['birth_date']}, Время: {user['birth_time']}, Место: {user['birth_place']}.\n"
+              f"Запрос: {cb.data}. \n"
+              f"Сделай точный, глубокий астрологический разбор (без воды).")
 
-async def api_horoscope(request):
-    sign = request.query.get("sign", "Leo")
-    period = request.query.get("period", "day")
-    category = request.query.get("category", "general")
+    # Запрос к AI
+    result = await ask_ai(prompt)
     
-    # Проверка Premium для месячных/годовых
-    uid = request.query.get("uid")
-    users = load_users()
-    user = users.get(uid, {})
+    # Списание попытки
+    await consume_free_use(cb.from_user.id)
     
-    if period in ["month", "year"] and not user.get("premium"):
-        return web.json_response({
-            "locked": True,
-            "message": "Полный прогноз доступен в Premium. Разовый доступ: 50₽"
-        })
-    
-    text = generate_horoscope_text(sign, period, category)
-    
-    return web.json_response({
-        "sign": sign,
-        "period": period,
-        "category": category,
-        "text": text,
-        "premium_hint": period in ["month", "year"]
-    })
+    await cb.message.edit_text(f" **Результат:**\n\n{result}", parse_mode="Markdown", reply_markup=main_menu())
 
-async def api_compatibility(request):
-    s1 = request.query.get("s1", "Leo")
-    s2 = request.query.get("s2", "Libra")
-    
-    result = generate_compatibility_text(s1, s2)
-    return web.json_response(result)
-
-async def api_horary(request):
-    try:
-        data = await request.json()
-        question = data.get("question", "")
-        uid = data.get("uid")
-        
-        if not question or len(question) < 10:
-            return web.json_response({"error": "Задайте вопрос подробнее (минимум 10 символов)"}, status=400)
-        
-        # Проверка лимитов (упрощённо)
-        users = load_users()
-        user = users.get(uid, {})
-        if not user.get("premium"):
-            # Здесь можно добавить счётчик вопросов
-            pass
-        
-        answer = generate_horary_answer(question)
-        
-        return web.json_response({
-            "question": question,
-            "answer": answer,
-            "timestamp": datetime.now().isoformat()
-        })
-    except Exception as e:
-        return web.json_response({"error": str(e)}, status=500)
-
-async def serve_webapp(request):
-    index_path = STATIC_DIR / "index.html"
-    if index_path.exists():
-        return web.FileResponse(index_path)
-    return web.Response(text="COSMIRA WebApp not found", status=404)
-
-async def start_web_server():
-    app = web.Application()
-    
-    # API routes
-    app.router.add_get("/api/user", api_get_user)
-    app.router.add_post("/api/user", api_save_user)
-    app.router.add_get("/api/natal", api_natal_chart)
-    app.router.add_get("/api/horoscope", api_horoscope)
-    app.router.add_get("/api/compatibility", api_compatibility)
-    app.router.add_post("/api/horary", api_horary)
-    
-    # WebApp
-    app.router.add_get("/", serve_webapp)
-    app.router.add_static('/static/', path=str(STATIC_DIR), name='static')
-    
-    # CORS middleware
-    @web.middleware
-    async def cors_middleware(request, handler):
-        response = await handler(request)
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-        return response
-    
-    app.middlewares.append(cors_middleware)
-    
-    runner = web.AppRunner(app)
-    await runner.setup()
-    
-    port = int(os.environ.get("PORT", 10000))
-    site = web.TCPSite(runner, "0.0.0.0", port)
-    await site.start()
-    
-    logging.info(f"🌐 Web server started on port {port}")
-
+# Запуск
 async def main():
-    bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    
-    # Запускаем веб-сервер и бота параллельно
-    web_task = asyncio.create_task(start_web_server())
-    polling_task = asyncio.create_task(dp.start_polling(bot))
-    
-    await asyncio.gather(web_task, polling_task)
+    await init_db() # Создаст таблицу в Supabase
+    bot = Bot(token=BOT_TOKEN)
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except (KeyboardInterrupt, SystemExit):
-        logging.info("🛑 Bot stopped by user")
-    except Exception as e:
-        logging.error(f"❌ Fatal error: {e}")
+    import asyncio
+    asyncio.run(main())
