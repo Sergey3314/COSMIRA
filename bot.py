@@ -15,6 +15,7 @@ from aiogram.types import (
     KeyboardButton,
     WebAppInfo
 )
+from aiogram.filters import Command  # ← ДОБАВЛЕНО!
 
 from aiohttp import web
 
@@ -27,13 +28,13 @@ load_dotenv()
 TOKEN = os.getenv("TOKEN")
 
 if not TOKEN:
-    raise RuntimeError("TOKEN is missing in Render environment variables")
+    raise RuntimeError("TOKEN is missing")
 
 # ============================================
 # LOGGING
 # ============================================
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # ============================================
 # CONFIG
@@ -72,6 +73,7 @@ def register_user(user):
             "level": 1,
             "zodiac": None
         }
+        logging.info(f"New user registered: {uid}")
     
     users[uid]["messages"] += 1
     users[uid]["level"] = 1 + (users[uid]["messages"] // 50)
@@ -96,7 +98,7 @@ def update_user_data(uid, data):
 # ============================================
 
 dp = Dispatcher()
-print("COSMIRA STARTED")
+logging.info("✅ COSMIRA BOT STARTED")
 
 # ============================================
 # KEYBOARD
@@ -112,137 +114,119 @@ main_keyboard = ReplyKeyboardMarkup(
 )
 
 # ============================================
-# TELEGRAM HANDLERS
+# HANDLERS
 # ============================================
 
-@dp.message(F.text == "/start")
+@dp.message(Command("start"))
 async def start_handler(message: Message):
-    register_user(message.from_user)
+    try:
+        logging.info(f"Start command from user: {message.from_user.id}")
+        register_user(message.from_user)
+        
+        await message.answer(
+            "🌌 <b>COSMIRA AI</b>\n\n"
+            "Добро пожаловать в будущее!\n\n"
+            "✨ AI платформа\n"
+            "🚀 WebApp\n"
+            "💎 Premium\n\n"
+            "Нажми кнопку ниже 👇",
+            reply_markup=main_keyboard,
+            parse_mode=ParseMode.HTML
+        )
+        logging.info(f"Start response sent to {message.from_user.id}")
+    except Exception as e:
+        logging.error(f"Start handler error: {e}")
+        await message.answer("Привет! Бот работает 🚀")
+
+@dp.message(Command("admin"))
+async def admin_handler(message: Message):
+    if message.from_user.id != ADMIN_ID:
+        await message.answer("⛔ Доступ запрещён")
+        return
+    
+    users = load_users()
+    total = len(users)
+    msgs = sum(u.get("messages", 0) for u in users.values())
+    
     await message.answer(
-        "🌌 <b>COSMIRA AI</b>\n\nДобро пожаловать в будущее.\n\n✨ AI платформа нового поколения\n🚀 WebApp интерфейс\n🧠 Умный помощник\n💎 Premium система\n\nНажмите кнопку ниже для запуска.",
-        reply_markup=main_keyboard,
+        f"👑 <b>ADMIN PANEL</b>\n\n"
+        f"👥 Пользователей: {total}\n"
+        f"💬 Сообщений: {msgs}",
         parse_mode=ParseMode.HTML
     )
 
 @dp.message(F.text == "👤 Профиль")
 async def profile_handler(message: Message):
-    users = load_users()
-    uid = str(message.from_user.id)
+    user = get_user(message.from_user.id)
+    if not user:
+        user = register_user(message.from_user)
     
-    if uid not in users:
-        register_user(message.from_user)
-        users = load_users()
-    
-    user = users[uid]
     await message.answer(
-        f"👤 <b>Профиль</b>\n\n🆔 ID: <code>{user['id']}</code>\n📛 Имя: {user['name']}\n⭐ Уровень: {user['level']}\n💬 Сообщений: {user['messages']}\n👑 Premium: {'Да' if user['premium'] else 'Нет'}\n📅 Регистрация:\n{user['joined']}",
+        f"👤 <b>Профиль</b>\n\n"
+        f"🆔 ID: <code>{user['id']}</code>\n"
+        f"📛 Имя: {user['name']}\n"
+        f"⭐ Уровень: {user['level']}\n"
+        f"💬 Сообщений: {user['messages']}\n"
+        f"👑 Premium: {'Да' if user['premium'] else 'Нет'}",
         parse_mode=ParseMode.HTML
     )
 
 @dp.message(F.text == "💎 Premium")
 async def premium_handler(message: Message):
     await message.answer(
-        "💎 <b>COSMIRA PREMIUM</b>\n\n✨ Безлимитный AI\n⚡ Максимальная скорость\n🧠 Продвинутые модели\n🎨 Генерация изображений\n🚀 Эксклюзивные функции\n\nСкоро запуск подписки.",
+        "💎 <b>COSMIRA PREMIUM</b>\n\n"
+        "✨ Безлимитный AI\n"
+        "⚡ Максимальная скорость\n"
+        "🚀 Эксклюзивные функции\n\n"
+        "Скоро запуск!",
+        parse_mode=ParseMode.HTML
+    )
+
+@dp.message(F.text == "📊 Статистика")
+async def stats_handler(message: Message):
+    users = load_users()
+    await message.answer(
+        f"📊 <b>Статистика</b>\n\n"
+        f"👥 Пользователей: {len(users)}\n"
+        f"💬 Всего сообщений: {sum(u.get('messages', 0) for u in users.values())}",
         parse_mode=ParseMode.HTML
     )
 
 @dp.message(F.text == "⚙️ Настройки")
 async def settings_handler(message: Message):
-    await message.answer("⚙️ <b>Настройки</b>\n\n🌙 Тема\n🔔 Уведомления\n🌍 Язык\n🎨 Интерфейс\n\nРаздел находится в разработке.", parse_mode=ParseMode.HTML)
-
-@dp.message(F.text == "📊 Статистика")
-async def stats_handler(message: Message):
-    users = load_users()
-    total_users = len(users)
-    total_messages = sum(u.get("messages", 0) for u in users.values())
-    await message.answer(f"📊 <b>COSMIRA</b>\n\n👥 Пользователей: {total_users}\n💬 Сообщений: {total_messages}", parse_mode=ParseMode.HTML)
-
-@dp.message(F.text == "/admin")
-async def admin_handler(message: Message):
-    if message.from_user.id != ADMIN_ID:
-        return
-    users = load_users()
-    total_users = len(users)
-    total_messages = sum(u.get("messages", 0) for u in users.values())
-    await message.answer(f"👑 ADMIN PANEL\n\n👥 Пользователей: {total_users}\n💬 Сообщений: {total_messages}\n🚀 COSMIRA ONLINE")
+    await message.answer("⚙️ Настройки в разработке...")
 
 @dp.message()
-async def ai_handler(message: Message):
-    register_user(message.from_user)
-    text = message.text.lower()
-    
-    if "привет" in text:
-        answer = "👋 Привет.\n\nЯ COSMIRA AI.\n\nЧем могу помочь?"
-    elif "бизнес" in text:
-        answer = "💼 Бизнес идея:\nСоздать экосистему COSMIRA:\n• AI чат\n• WebApp\n• Telegram\n• Premium подписка\n• Генерация изображений"
-    elif "ai" in text or "ии" in text:
-        answer = "🧠 Искусственный интеллект:\nCOSMIRA объединяет:\n• AI чат\n• Анализ текста\n• Генерацию изображений\n• Автоматизацию задач"
-    elif "сайт" in text:
-        answer = "🌐 Сайт COSMIRA:\nhttps://cosmira.netlify.app"
-    else:
-        answer = f"🚀 COSMIRA получила: {message.text}\n\nПолноценный AI модуль будет подключён позже."
-    
-    await message.answer(answer)
+async def echo_handler(message: Message):
+    await message.answer(f"📨 Получено: {message.text}\n\nИспользуй команды или кнопки!")
 
 # ============================================
-# WEB API (для WebApp)
+# WEB API
 # ============================================
 
 async def api_health(request):
-    return web.json_response({"status": "ok", "service": "COSMIRA BOT"})
+    return web.json_response({"status": "ok", "service": "COSMIRA"})
 
 async def api_get_user(request):
-    try:
-        uid = request.match_info.get("uid")
-        if not uid:
-            return web.json_response({"error": "No user ID"}, status=400)
-        
-        user = get_user(uid)
-        if user:
-            return web.json_response(user)
-        return web.json_response({"error": "User not found"}, status=404)
-    except Exception as e:
-        logging.error(f"API get_user error: {e}")
-        return web.json_response({"error": str(e)}, status=500)
+    uid = request.match_info.get("uid")
+    user = get_user(uid)
+    if user:
+        return web.json_response(user)
+    return web.json_response({"error": "Not found"}, status=404)
 
 async def api_update_user(request):
-    try:
-        data = await request.json()
-        uid = data.get("userId")
-        updates = data.get("updates", {})
-        
-        if not uid:
-            return web.json_response({"error": "No user ID"}, status=400)
-        
-        if update_user_data(uid, updates):
-            return web.json_response({"success": True})
-        return web.json_response({"error": "User not found"}, status=404)
-    except Exception as e:
-        logging.error(f"API update_user error: {e}")
-        return web.json_response({"error": str(e)}, status=500)
-
-# ============================================
-# WEB SERVER
-# ============================================
+    data = await request.json()
+    uid = data.get("userId")
+    updates = data.get("updates", {})
+    if update_user_data(uid, updates):
+        return web.json_response({"success": True})
+    return web.json_response({"error": "Not found"}, status=404)
 
 async def start_web_server():
     app = web.Application()
-    
-    # API routes
     app.router.add_get("/api/health", api_health)
     app.router.add_get("/api/user/{uid}", api_get_user)
     app.router.add_post("/api/update", api_update_user)
-    
-    # CORS headers (для WebApp)
-    @web.middleware
-    async def cors_middleware(request, handler):
-        response = await handler(request)
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-        return response
-    
-    app.middlewares.append(cors_middleware)
     
     runner = web.AppRunner(app)
     await runner.setup()
@@ -250,32 +234,22 @@ async def start_web_server():
     port = int(os.environ.get("PORT", 10000))
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
-    
-    print(f"🌐 Web API server started on port {port}")
-
-# ============================================
-# BOT
-# ============================================
-
-async def start_bot():
-    bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    await dp.start_polling(bot)
+    logging.info(f"🌐 Web API on port {port}")
 
 # ============================================
 # MAIN
 # ============================================
 
 async def main():
+    bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    
     web_task = asyncio.create_task(start_web_server())
-    bot_task = asyncio.create_task(start_bot())
-    await asyncio.gather(web_task, bot_task)
-
-# ============================================
-# START
-# ============================================
+    polling_task = asyncio.create_task(dp.start_polling(bot))
+    
+    await asyncio.gather(web_task, polling_task)
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
-        print("🛑 Bot stopped")
+        logging.info("🛑 Bot stopped")
