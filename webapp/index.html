@@ -4,81 +4,357 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>COSMIRA</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=2">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
     <div class="bg"></div>
     
-    <!-- ЭКРАН РЕГИСТРАЦИИ -->
+    <!-- ЗАГРУЗКА -->
+    <section id="screen-loading" class="screen">
+        <div class="loader-center">
+            <div class="spinner"></div>
+            <p>Загрузка COSMIRA...</p>
+        </div>
+    </section>
+
+    <!-- РЕГИСТРАЦИЯ -->
     <section id="screen-register" class="screen hidden">
-        <div class="header"><h1> Данные рождения</h1></div>
+        <div class="header">
+            <h1>🔮 Твои данные</h1>
+            <p class="subtitle">Для точных астрологических расчётов</p>
+        </div>
+        
         <div class="card glass">
-            <p>Для точных расчетов нужны:</p>
-            <input type="text" id="reg-name" placeholder="Твое имя">
-            <input type="date" id="reg-date">
-            <input type="time" id="reg-time">
-            <input type="text" id="reg-city" placeholder="Город рождения (Москва)">
+            <div class="form-group">
+                <label>Имя</label>
+                <input type="text" id="reg-name" placeholder="Как к тебе обращаться?">
+            </div>
+            
+            <div class="form-group">
+                <label>Дата рождения *</label>
+                <input type="date" id="reg-date">
+            </div>
+            
+            <div class="form-group">
+                <label>Время рождения *</label>
+                <input type="time" id="reg-time">
+                <small>Чем точнее — тем вернее карта</small>
+            </div>
+            
+            <div class="form-group">
+                <label>Город рождения</label>
+                <input type="text" id="reg-city" placeholder="Например: Москва">
+            </div>
+            
             <button onclick="saveProfile()" class="btn-primary">Сохранить и продолжить</button>
         </div>
     </section>
 
-    <!-- ГЛАВНОЕ МЕНЮ -->
+    <!-- ГЛАВНАЯ -->
     <section id="screen-main" class="screen hidden">
         <div class="header">
-            <div><h1>COSMIRA</h1><p class="sub" id="user-name-display">Загрузка...</p></div>
-            <button onclick="logout()" class="icon-btn">⚙️</button>
+            <div>
+                <h1>COSMIRA</h1>
+                <p class="subtitle" id="user-greeting">Загрузка...</p>
+            </div>
+            <button class="icon-btn" onclick="openProfile()">👤</button>
         </div>
         
         <div class="grid">
             <div class="card glass" onclick="openHoroscope()">
-                <div class="icon">☀️</div><h3>Гороскоп</h3><p>Прогноз на день/год</p>
+                <div class="card-icon">☀️</div>
+                <h3>Гороскоп</h3>
+                <p>Прогноз на день, месяц, год</p>
+                <div class="card-arrow">→</div>
             </div>
+            
             <div class="card glass" onclick="openNatal()">
-                <div class="icon">️</div><h3>Натальная карта</h3><p>Твои планеты</p>
+                <div class="card-icon">🗺️</div>
+                <h3>Натальная карта</h3>
+                <p>Твои планеты и дома</p>
+                <div class="card-arrow">→</div>
             </div>
+            
             <div class="card glass" onclick="openCompatibility()">
-                <div class="icon"></div><h3>Совместимость</h3><p>Синастрия</p>
+                <div class="card-icon">💞</div>
+                <h3>Совместимость</h3>
+                <p>Синастрия с партнёром</p>
+                <div class="card-arrow">→</div>
             </div>
+            
             <div class="card glass" onclick="openHorary()">
-                <div class="icon">❓</div><h3>Хорар</h3><p>Ответ на вопрос</p>
+                <div class="card-icon">❓</div>
+                <h3>Хорар</h3>
+                <p>Ответ на один вопрос</p>
+                <div class="card-arrow">→</div>
+            </div>
+        </div>
+        
+        <div class="promo-banner glass" onclick="openPremium()">
+            <span class="promo-icon">💎</span>
+            <div>
+                <strong>Premium доступ</strong>
+                <p>Полные прогнозы и разборы</p>
+            </div>
+            <span class="promo-arrow">→</span>
+        </div>
+    </section>
+
+    <!-- ГОРОСКОП -->
+    <section id="screen-horoscope" class="screen hidden">
+        <div class="header">
+            <button class="back-btn" onclick="goHome()">←</button>
+            <h2>Гороскоп</h2>
+        </div>
+        
+        <div class="card glass">
+            <select id="horoscope-sign">
+                <option value="Aries">♈ Овен</option>
+                <option value="Taurus">♉ Телец</option>
+                <option value="Gemini">♊ Близнецы</option>
+                <option value="Cancer" selected>♋ Рак</option>
+                <option value="Leo">♌ Лев</option>
+                <option value="Virgo">♍ Дева</option>
+                <option value="Libra">♎ Весы</option>
+                <option value="Scorpio">♏ Скорпион</option>
+                <option value="Sagittarius">♐ Стрелец</option>
+                <option value="Capricorn">♑ Козерог</option>
+                <option value="Aquarius">♒ Водолей</option>
+                <option value="Pisces">♓ Рыбы</option>
+            </select>
+            
+            <div class="period-tabs">
+                <button class="period-tab active" data-period="day">День</button>
+                <button class="period-tab" data-period="month">Месяц 💎</button>
+                <button class="period-tab" data-period="year">Год 💎</button>
+            </div>
+            
+            <div class="category-tabs">
+                <button class="category-tab active" data-category="general">Общий</button>
+                <button class="category-tab" data-category="love">Любовь</button>
+                <button class="category-tab" data-category="career">Карьера</button>
+            </div>
+            
+            <button onclick="loadHoroscope()" class="btn-primary">Получить прогноз</button>
+            
+            <div id="horoscope-result" class="result-box hidden">
+                <div class="result-header">
+                    <span id="result-sign">♋ Рак</span>
+                    <span id="result-period">на сегодня</span>
+                </div>
+                <p id="result-text"></p>
+            </div>
+            
+            <div id="premium-lock" class="premium-lock hidden">
+                <p>🔒 Полный прогноз доступен в Premium</p>
+                <button onclick="openPremium()" class="btn-outline">Открыть доступ</button>
             </div>
         </div>
     </section>
 
-    <!-- ЭКРАН НАТАЛЬНОЙ КАРТЫ -->
+    <!-- НАТАЛЬНАЯ КАРТА -->
     <section id="screen-natal" class="screen hidden">
-        <div class="header"><button onclick="goHome()">←</button><h2>Натальная карта</h2></div>
-        <div id="natal-content" class="card glass">
-            <div class="loader">Расчет планет...</div>
+        <div class="header">
+            <button class="back-btn" onclick="goHome()">←</button>
+            <h2>Натальная карта</h2>
         </div>
-    </section>
-    
-    <!-- ЭКРАН СОВМЕСТИМОСТИ -->
-    <section id="screen-compat" class="screen hidden">
-        <div class="header"><button onclick="goHome()">←</button><h2>Совместимость</h2></div>
-        <div class="card glass">
-            <select id="s1">
-                <option value="Aries">Овен</option><option value="Taurus">Телец</option>
-                <option value="Gemini">Близнецы</option><option value="Cancer">Рак</option>
-                <option value="Leo">Лев</option><option value="Virgo">Дева</option>
-                <option value="Libra">Весы</option><option value="Scorpio">Скорпион</option>
-                <option value="Sagittarius">Стрелец</option><option value="Capricorn">Козерог</option>
-                <option value="Aquarius">Водолей</option><option value="Pisces">Рыбы</option>
-            </select>
-            <select id="s2">
-                <option value="Aries">Овен</option><option value="Taurus">Телец</option>
-                <option value="Gemini">Близнецы</option><option value="Cancer">Рак</option>
-                <option value="Leo">Лев</option><option value="Virgo">Дева</option>
-                <option value="Libra">Весы</option><option value="Scorpio">Скорпион</option>
-                <option value="Sagittarius">Стрелец</option><option value="Capricorn">Козерог</option>
-                <option value="Aquarius">Водолей</option><option value="Pisces">Рыбы</option>
-            </select>
-            <button onclick="checkCompat()" class="btn-primary">Рассчитать</button>
-            <div id="compat-result" class="result-box"></div>
+        
+        <div id="natal-container" class="card glass">
+            <div class="loader">🔮 Рассчитываем положение планет...</div>
         </div>
     </section>
 
-    <script src="/static/app.js"></script>
+    <!-- СОВМЕСТИМОСТЬ -->
+    <section id="screen-compat" class="screen hidden">
+        <div class="header">
+            <button class="back-btn" onclick="goHome()">←</button>
+            <h2>Совместимость</h2>
+        </div>
+        
+        <div class="card glass">
+            <div class="signs-pair">
+                <div class="sign-select">
+                    <label>Твой знак</label>
+                    <select id="compat-s1">
+                        <option value="Aries">♈ Овен</option>
+                        <option value="Taurus">♉ Телец</option>
+                        <option value="Gemini">♊ Близнецы</option>
+                        <option value="Cancer" selected>♋ Рак</option>
+                        <option value="Leo">♌ Лев</option>
+                        <option value="Virgo">♍ Дева</option>
+                        <option value="Libra">♎ Весы</option>
+                        <option value="Scorpio">♏ Скорпион</option>
+                        <option value="Sagittarius">♐ Стрелец</option>
+                        <option value="Capricorn">♑ Козерог</option>
+                        <option value="Aquarius">♒ Водолей</option>
+                        <option value="Pisces">♓ Рыбы</option>
+                    </select>
+                </div>
+                
+                <div class="heart">💫</div>
+                
+                <div class="sign-select">
+                    <label>Знак партнёра</label>
+                    <select id="compat-s2">
+                        <option value="Aries">♈ Овен</option>
+                        <option value="Taurus">♉ Телец</option>
+                        <option value="Gemini">♊ Близнецы</option>
+                        <option value="Cancer">♋ Рак</option>
+                        <option value="Leo">♌ Лев</option>
+                        <option value="Virgo">♍ Дева</option>
+                        <option value="Libra" selected>♎ Весы</option>
+                        <option value="Scorpio">♏ Скорпион</option>
+                        <option value="Sagittarius">♐ Стрелец</option>
+                        <option value="Capricorn">♑ Козерог</option>
+                        <option value="Aquarius">♒ Водолей</option>
+                        <option value="Pisces">♓ Рыбы</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button onclick="checkCompatibility()" class="btn-primary">Рассчитать совместимость</button>
+            
+            <div id="compat-result" class="result-box hidden">
+                <div class="compat-score" id="compat-score">82%</div>
+                <p id="compat-text"></p>
+                <div class="compat-details" id="compat-details"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ХОРАР -->
+    <section id="screen-horary" class="screen hidden">
+        <div class="header">
+            <button class="back-btn" onclick="goHome()">←</button>
+            <h2>Хорар</h2>
+        </div>
+        
+        <div class="card glass">
+            <p class="hint">Задай один конкретный вопрос. Звёзды ответят «Да», «Нет» или подскажут, когда действовать.</p>
+            
+            <textarea id="horary-question" placeholder="Пример: Получу ли я эту работу? Стоит ли переезжать в другой город? Когда начнутся отношения?" rows="4"></textarea>
+            
+            <button onclick="askHorary()" class="btn-primary">Получить ответ</button>
+            
+            <div id="horary-result" class="result-box hidden">
+                <div class="result-header">
+                    <span>🔮 Ответ звёзд</span>
+                </div>
+                <p id="horary-answer"></p>
+                <small class="timestamp" id="horary-time"></small>
+            </div>
+        </div>
+    </section>
+
+    <!-- ПРОФИЛЬ -->
+    <section id="screen-profile" class="screen hidden">
+        <div class="header">
+            <button class="back-btn" onclick="goHome()">←</button>
+            <h2>Профиль</h2>
+        </div>
+        
+        <div class="card glass profile-card">
+            <div class="profile-avatar" id="profile-avatar">?</div>
+            <h3 id="profile-name">Загрузка...</h3>
+            
+            <div class="profile-data">
+                <div class="data-row">
+                    <span>🆔 ID</span>
+                    <span id="profile-id" class="mono">—</span>
+                </div>
+                <div class="data-row">
+                    <span>📅 Дата рождения</span>
+                    <span id="profile-birth-date">Не указана</span>
+                </div>
+                <div class="data-row">
+                    <span>⏰ Время рождения</span>
+                    <span id="profile-birth-time">Не указано</span>
+                </div>
+                <div class="data-row">
+                    <span>📍 Город рождения</span>
+                    <span id="profile-birth-city">Не указан</span>
+                </div>
+                <div class="data-row">
+                    <span>💎 Premium</span>
+                    <span id="profile-premium" class="premium-badge">Нет</span>
+                </div>
+            </div>
+            
+            <button onclick="editProfile()" class="btn-outline">Редактировать данные</button>
+        </div>
+    </section>
+
+    <!-- PREMIUM -->
+    <section id="screen-premium" class="screen hidden">
+        <div class="header">
+            <button class="back-btn" onclick="goHome()">←</button>
+            <h2>Premium</h2>
+        </div>
+        
+        <div class="card glass premium-hero">
+            <div class="premium-icon">💎</div>
+            <h3>COSMIRA PREMIUM</h3>
+            <p>Раскрой весь потенциал астрологии</p>
+        </div>
+        
+        <div class="card glass">
+            <h4>Что входит:</h4>
+            <ul class="features-list">
+                <li>✅ Гороскопы на месяц и год</li>
+                <li>✅ Детальная натальная карта с аспектами</li>
+                <li>✅ Неограниченные хорарные вопросы</li>
+                <li>✅ Персональные рекомендации астролога</li>
+                <li>✅ Приоритетная поддержка</li>
+            </ul>
+        </div>
+        
+        <div class="card glass">
+            <h4>Тарифы:</h4>
+            <div class="pricing">
+                <div class="price-item">
+                    <span>Разовый разбор</span>
+                    <strong>50 ₽</strong>
+                </div>
+                <div class="price-item">
+                    <span>Подписка на месяц</span>
+                    <strong>299 ₽</strong>
+                </div>
+                <div class="price-item featured">
+                    <span>Подписка на год</span>
+                    <strong>1 990 ₽</strong>
+                    <small>Экономия 40%</small>
+                </div>
+            </div>
+            <button class="btn-primary" disabled>Оплата скоро</button>
+            <p class="note">🔜 Платёжная система в разработке</p>
+        </div>
+    </section>
+
+    <!-- НИЖНЕЕ МЕНЮ -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-screen="screen-main">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Главная</span>
+        </button>
+        <button class="nav-item" data-screen="screen-horoscope">
+            <span class="nav-icon">☀️</span>
+            <span class="nav-label">Гороскоп</span>
+        </button>
+        <button class="nav-item" data-screen="screen-natal">
+            <span class="nav-icon">🗺️</span>
+            <span class="nav-label">Натал</span>
+        </button>
+        <button class="nav-item" data-screen="screen-compat">
+            <span class="nav-icon">💞</span>
+            <span class="nav-label">Совместимость</span>
+        </button>
+        <button class="nav-item" data-screen="screen-profile">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Профиль</span>
+        </button>
+    </nav>
+
+    <script src="/static/app.js?v=2"></script>
 </body>
 </html>
