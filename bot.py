@@ -78,7 +78,7 @@ def main_menu():
     ])
 
 # Обработка кнопок меню
-@dp.callback_query(F.data.in_("horoscope", "compat", "natal", "horary", "profile"))
+@dp.callback_query(F.data.in_(["horoscope", "compat", "natal", "horary", "profile"]))
 async def handle_menu(cb: types.CallbackQuery, state: FSMContext):
     user = await get_user(cb.from_user.id)
     if not user:
