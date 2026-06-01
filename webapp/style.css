@@ -1,3 +1,7 @@
+/* ============================================
+   COSMIRA AI - STYLES
+   ============================================ */
+
 * {
     margin: 0;
     padding: 0;
@@ -12,7 +16,9 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
-/* BACKGROUND */
+/* ============================================
+   BACKGROUND
+   ============================================ */
 
 .background {
     position: fixed;
@@ -32,9 +38,7 @@ body {
     background-image: 
         radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.8), transparent),
         radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.6), transparent),
-        radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.7), transparent),
-        radial-gradient(2px 2px at 160px 120px, rgba(255,255,255,0.5), transparent),
-        radial-gradient(1px 1px at 230px 80px, rgba(255,255,255,0.6), transparent);
+        radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.7), transparent);
     background-size: 250px 150px;
     opacity: 0.3;
     animation: starsMove 100s linear infinite;
@@ -70,7 +74,9 @@ body {
     right: -80px;
 }
 
-/* APP CONTAINER */
+/* ============================================
+   APP CONTAINER
+   ============================================ */
 
 .app {
     padding: 16px;
@@ -79,7 +85,9 @@ body {
     padding-bottom: 90px;
 }
 
-/* SCREENS */
+/* ============================================
+   SCREENS
+   ============================================ */
 
 .screen {
     display: none;
@@ -91,11 +99,19 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
 }
 
-/* TOPBAR */
+/* ============================================
+   TOPBAR
+   ============================================ */
 
 .topbar {
     display: flex;
@@ -130,7 +146,9 @@ body {
     border: 1px solid rgba(0, 255, 136, 0.3);
 }
 
-/* HERO */
+/* ============================================
+   HERO SECTION
+   ============================================ */
 
 .hero {
     background: rgba(255, 255, 255, 0.03);
@@ -171,7 +189,9 @@ body {
     50% { transform: translateY(-10px); }
 }
 
-/* MENU GRID */
+/* ============================================
+   MENU GRID
+   ============================================ */
 
 .menu-grid {
     display: grid;
@@ -213,7 +233,9 @@ body {
     opacity: 0.6;
 }
 
-/* SCREEN HEADER */
+/* ============================================
+   SCREEN HEADER
+   ============================================ */
 
 .screen-header {
     display: flex;
@@ -244,7 +266,9 @@ body {
     font-weight: 700;
 }
 
-/* GLASS CARD */
+/* ============================================
+   GLASS CARD
+   ============================================ */
 
 .glass {
     background: rgba(255, 255, 255, 0.03);
@@ -255,7 +279,9 @@ body {
     margin-bottom: 16px;
 }
 
-/* CHAT */
+/* ============================================
+   CHAT
+   ============================================ */
 
 .roles {
     display: flex;
@@ -300,8 +326,14 @@ body {
 }
 
 @keyframes messageSlide {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
 }
 
 .chat-message.bot {
@@ -380,11 +412,9 @@ body {
     transition: 0.2s;
 }
 
-.chat-input button:hover {
-    transform: scale(1.05);
-}
-
-/* SELECT */
+/* ============================================
+   SELECT & BUTTONS
+   ============================================ */
 
 select {
     width: 100%;
@@ -404,8 +434,6 @@ select option {
     color: white;
 }
 
-/* BUTTONS */
-
 button {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
@@ -424,12 +452,6 @@ button:hover {
     box-shadow: 0 8px 24px rgba(108, 99, 255, 0.3);
 }
 
-button:active {
-    transform: translateY(0);
-}
-
-/* RESULT BOX */
-
 .result-box {
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -441,7 +463,9 @@ button:active {
     white-space: pre-wrap;
 }
 
-/* COMPATIBILITY */
+/* ============================================
+   COMPATIBILITY
+   ============================================ */
 
 .compatibility-box {
     text-align: center;
@@ -485,7 +509,9 @@ button:active {
     transition: width 0.5s ease;
 }
 
-/* PROFILE */
+/* ============================================
+   PROFILE
+   ============================================ */
 
 .profile-card {
     text-align: center;
@@ -522,7 +548,9 @@ button:active {
     border-bottom: none;
 }
 
-/* PREMIUM */
+/* ============================================
+   PREMIUM
+   ============================================ */
 
 .premium-card {
     text-align: center;
@@ -559,7 +587,9 @@ button:active {
     font-weight: 700;
 }
 
-/* SETTINGS */
+/* ============================================
+   SETTINGS
+   ============================================ */
 
 .setting-row {
     display: flex;
@@ -579,7 +609,9 @@ button:active {
     cursor: pointer;
 }
 
-/* BOTTOM NAV */
+/* ============================================
+   BOTTOM NAV
+   ============================================ */
 
 .bottom-nav {
     position: fixed;
@@ -611,7 +643,9 @@ button:active {
     transform: scale(1.1);
 }
 
-/* SCROLLBAR */
+/* ============================================
+   SCROLLBAR
+   ============================================ */
 
 ::-webkit-scrollbar {
     width: 6px;
@@ -630,7 +664,9 @@ button:active {
     background: rgba(108, 99, 255, 0.7);
 }
 
-/* RESPONSIVE */
+/* ============================================
+   RESPONSIVE
+   ============================================ */
 
 @media (max-width: 480px) {
     .menu-grid {

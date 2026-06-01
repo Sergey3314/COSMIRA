@@ -2,430 +2,136 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>COSMIRA AI</title>
-
-    <meta
-        name="theme-color"
-        content="#070b1a"
-    >
-
-    <link rel="stylesheet" href="style.css">
-
+    <link rel="stylesheet" href="/static/style.css?v=3">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-
-    <!-- BACKGROUND -->
-
     <div class="background"></div>
     <div class="stars"></div>
-
     <div class="glow glow1"></div>
     <div class="glow glow2"></div>
-    <div class="glow glow3"></div>
-
-    <!-- APP -->
 
     <div class="app">
-
         <!-- HOME -->
-
         <section class="screen active" id="homeScreen">
-
             <div class="topbar">
-
-                <div>
-                    <h1>COSMIRA AI</h1>
-                    <p>Будущее начинается здесь</p>
-                </div>
-
-                <div class="online-badge">
-                    ONLINE
-                </div>
-
+                <div><h1>COSMIRA AI</h1><p>Будущее начинается здесь</p></div>
+                <div class="online-badge">ONLINE</div>
             </div>
-
             <div class="hero glass">
-
                 <div class="hero-content">
-
-                    <div>
-                        <h2 id="welcomeName">
-                            Привет!
-                        </h2>
-
-                        <p>
-                            COSMIRA AI — твой цифровой помощник
-                            для бизнеса, технологий и развития.
-                        </p>
-                    </div>
-
-                    <div class="planet">
-                        🪐
-                    </div>
-
+                    <div><h2 id="welcomeName">Привет!</h2><p>COSMIRA AI — твой цифровой помощник для бизнеса и развития.</p></div>
+                    <div class="planet">🪐</div>
                 </div>
-
             </div>
-
             <div class="menu-grid">
-
-                <div class="menu-card" data-screen="chatScreen">
-                    <span>🧠</span>
-                    <h3>AI Chat</h3>
-                    <p>Умный помощник</p>
-                </div>
-
-                <div class="menu-card" data-screen="horoscopeScreen">
-                    <span>🔮</span>
-                    <h3>Гороскоп</h3>
-                    <p>Прогноз дня</p>
-                </div>
-
-                <div class="menu-card" data-screen="compatibilityScreen">
-                    <span>💞</span>
-                    <h3>Совместимость</h3>
-                    <p>Проверка знаков</p>
-                </div>
-
-                <div class="menu-card" data-screen="ideasScreen">
-                    <span>💼</span>
-                    <h3>Бизнес идеи</h3>
-                    <p>Генератор идей</p>
-                </div>
-
-                <div class="menu-card" data-screen="profileScreen">
-                    <span>👤</span>
-                    <h3>Профиль</h3>
-                    <p>Аккаунт</p>
-                </div>
-
-                <div class="menu-card" data-screen="premiumScreen">
-                    <span>💎</span>
-                    <h3>Premium</h3>
-                    <p>Возможности</p>
-                </div>
-
+                <div class="menu-card" data-screen="chatScreen"><span>🧠</span><h3>AI Chat</h3><p>Умный помощник</p></div>
+                <div class="menu-card" data-screen="horoscopeScreen"><span>🔮</span><h3>Гороскоп</h3><p>Прогноз дня</p></div>
+                <div class="menu-card" data-screen="compatibilityScreen"><span>💞</span><h3>Совместимость</h3><p>Проверка знаков</p></div>
+                <div class="menu-card" data-screen="ideasScreen"><span>💼</span><h3>Бизнес идеи</h3><p>Генератор идей</p></div>
+                <div class="menu-card" data-screen="profileScreen"><span>👤</span><h3>Профиль</h3><p>Аккаунт</p></div>
+                <div class="menu-card" data-screen="premiumScreen"><span>💎</span><h3>Premium</h3><p>Возможности</p></div>
             </div>
-
         </section>
 
-        <!-- AI CHAT -->
-
+        <!-- CHAT -->
         <section class="screen" id="chatScreen">
-
-            <div class="screen-header">
-                <button class="back-btn">←</button>
-                <h2>AI Chat</h2>
-            </div>
-
+            <div class="screen-header"><button class="back-btn">←</button><h2>AI Chat</h2></div>
             <div class="roles">
-
-                <button class="role-btn active-role" data-role="business">
-                    💼 Бизнес
-                </button>
-
-                <button class="role-btn" data-role="marketing">
-                    📈 Маркетолог
-                </button>
-
-                <button class="role-btn" data-role="developer">
-                    💻 Программист
-                </button>
-
-                <button class="role-btn" data-role="startup">
-                    🚀 Стартап
-                </button>
-
+                <button class="role-btn active-role" data-role="business">💼 Бизнес</button>
+                <button class="role-btn" data-role="marketing">📈 Маркетолог</button>
+                <button class="role-btn" data-role="developer">💻 Программист</button>
+                <button class="role-btn" data-role="startup">🚀 Стартап</button>
             </div>
-
-            <div
-                class="chat-box glass"
-                id="chatBox"
-            >
-            </div>
-
+            <div class="chat-box glass" id="chatBox"></div>
             <div class="chat-input">
-
-                <input
-                    type="text"
-                    id="userInput"
-                    placeholder="Напиши вопрос..."
-                >
-
-                <button id="sendBtn">
-                    ➤
-                </button>
-
+                <input type="text" id="userInput" placeholder="Напиши вопрос...">
+                <button id="sendBtn">➤</button>
             </div>
-
         </section>
 
         <!-- HOROSCOPE -->
-
         <section class="screen" id="horoscopeScreen">
-
-            <div class="screen-header">
-                <button class="back-btn">←</button>
-                <h2>Гороскоп</h2>
-            </div>
-
+            <div class="screen-header"><button class="back-btn">←</button><h2>Гороскоп</h2></div>
             <div class="glass horoscope-panel">
-
                 <select id="zodiacSelect">
-
-                    <option>♈ Овен</option>
-                    <option>♉ Телец</option>
-                    <option>♊ Близнецы</option>
-                    <option>♋ Рак</option>
-                    <option>♌ Лев</option>
-                    <option>♍ Дева</option>
-                    <option>♎ Весы</option>
-                    <option>♏ Скорпион</option>
-                    <option>♐ Стрелец</option>
-                    <option>♑ Козерог</option>
-                    <option>♒ Водолей</option>
-                    <option>♓ Рыбы</option>
-
+                    <option>♈ Овен</option><option>♉ Телец</option><option>♊ Близнецы</option><option>♋ Рак</option>
+                    <option>♌ Лев</option><option>♍ Дева</option><option>♎ Весы</option><option>♏ Скорпион</option>
+                    <option>♐ Стрелец</option><option>♑ Козерог</option><option>♒ Водолей</option><option>♓ Рыбы</option>
                 </select>
-
-                <button id="showHoroscope">
-                    Получить прогноз
-                </button>
-
+                <button id="showHoroscope">Получить прогноз</button>
                 <div id="horoscopeResult"></div>
-
             </div>
-
         </section>
 
         <!-- COMPATIBILITY -->
-
         <section class="screen" id="compatibilityScreen">
-
-            <div class="screen-header">
-                <button class="back-btn">←</button>
-                <h2>Совместимость</h2>
-            </div>
-
+            <div class="screen-header"><button class="back-btn">←</button><h2>Совместимость</h2></div>
             <div class="glass compatibility-box">
-
-                <select id="sign1">
-
-                    <option>Овен</option>
-                    <option>Телец</option>
-                    <option>Близнецы</option>
-                    <option>Рак</option>
-                    <option>Лев</option>
-                    <option>Дева</option>
-                    <option>Весы</option>
-                    <option>Скорпион</option>
-                    <option>Стрелец</option>
-                    <option>Козерог</option>
-                    <option>Водолей</option>
-                    <option>Рыбы</option>
-
-                </select>
-
-                <select id="sign2">
-
-                    <option>Овен</option>
-                    <option>Телец</option>
-                    <option>Близнецы</option>
-                    <option>Рак</option>
-                    <option>Лев</option>
-                    <option>Дева</option>
-                    <option>Весы</option>
-                    <option>Скорпион</option>
-                    <option>Стрелец</option>
-                    <option>Козерог</option>
-                    <option>Водолей</option>
-                    <option>Рыбы</option>
-
-                </select>
-
-                <button id="checkCompatibility">
-                    Проверить
-                </button>
-
+                <select id="sign1"><option>Овен</option><option>Телец</option><option>Близнецы</option><option>Рак</option><option>Лев</option><option>Дева</option><option>Весы</option><option>Скорпион</option><option>Стрелец</option><option>Козерог</option><option>Водолей</option><option>Рыбы</option></select>
+                <select id="sign2"><option>Овен</option><option>Телец</option><option>Близнецы</option><option>Рак</option><option>Лев</option><option>Дева</option><option>Весы</option><option>Скорпион</option><option>Стрелец</option><option>Козерог</option><option>Водолей</option><option>Рыбы</option></select>
+                <button id="checkCompatibility">Проверить</button>
                 <div id="compatibilityResult"></div>
-
             </div>
-
         </section>
 
-        <!-- BUSINESS IDEAS -->
-
+        <!-- IDEAS -->
         <section class="screen" id="ideasScreen">
-
-            <div class="screen-header">
-                <button class="back-btn">←</button>
-                <h2>Бизнес идеи</h2>
-            </div>
-
+            <div class="screen-header"><button class="back-btn">←</button><h2>Бизнес идеи</h2></div>
             <div class="glass">
-
                 <div class="categories">
-
-                    <button class="cat-btn">AI</button>
-                    <button class="cat-btn">IT</button>
-                    <button class="cat-btn">SaaS</button>
-                    <button class="cat-btn">Telegram</button>
-
+                    <button class="cat-btn">AI</button><button class="cat-btn">IT</button><button class="cat-btn">SaaS</button><button class="cat-btn">Telegram</button>
                 </div>
-
-                <button
-                    class="generate-btn"
-                    id="generateIdea"
-                >
-                    Сгенерировать идею
-                </button>
-
+                <button class="generate-btn" id="generateIdea">Сгенерировать идею</button>
                 <div id="ideaResult"></div>
-
             </div>
-
         </section>
 
         <!-- PROFILE -->
-
         <section class="screen" id="profileScreen">
-
-            <div class="screen-header">
-                <button class="back-btn">←</button>
-                <h2>Профиль</h2>
-            </div>
-
+            <div class="screen-header"><button class="back-btn">←</button><h2>Профиль</h2></div>
             <div class="glass profile-card">
-
-                <div class="avatar" id="avatarLetter">
-                    C
-                </div>
-
-                <h3 id="profileName">
-                    Пользователь
-                </h3>
-
-                <div class="profile-item">
-                    <span>ID</span>
-                    <span id="profileId">—</span>
-                </div>
-
-                <div class="profile-item">
-                    <span>Username</span>
-                    <span id="profileUsername">—</span>
-                </div>
-
-                <div class="profile-item">
-                    <span>Уровень</span>
-                    <span>1</span>
-                </div>
-
-                <div class="profile-item">
-                    <span>Premium</span>
-                    <span>Нет</span>
-                </div>
-
+                <div class="avatar" id="avatarLetter">C</div>
+                <h3 id="profileName">Пользователь</h3>
+                <div class="profile-item"><span>ID</span><span id="profileId">—</span></div>
+                <div class="profile-item"><span>Username</span><span id="profileUsername">—</span></div>
+                <div class="profile-item"><span>Уровень</span><span id="profileLevel">1</span></div>
+                <div class="profile-item"><span>Premium</span><span id="profilePremium">Нет</span></div>
             </div>
-
         </section>
 
         <!-- PREMIUM -->
-
         <section class="screen" id="premiumScreen">
-
-            <div class="screen-header">
-                <button class="back-btn">←</button>
-                <h2>Premium</h2>
-            </div>
-
+            <div class="screen-header"><button class="back-btn">←</button><h2>Premium</h2></div>
             <div class="glass premium-card">
-
                 <h3>💎 COSMIRA PREMIUM</h3>
-
-                <ul>
-
-                    <li>Безлимитный AI Chat</li>
-
-                    <li>Будущая генерация изображений</li>
-
-                    <li>Приоритетные функции</li>
-
-                    <li>Новые возможности раньше всех</li>
-
-                </ul>
-
-                <button class="premium-btn">
-                    Скоро запуск
-                </button>
-
+                <ul><li>Безлимитный AI Chat</li><li>Генерация изображений</li><li>Приоритетные функции</li><li>Новые возможности раньше всех</li></ul>
+                <button class="premium-btn">Скоро запуск</button>
             </div>
-
         </section>
 
         <!-- SETTINGS -->
-
         <section class="screen" id="settingsScreen">
-
-            <div class="screen-header">
-                <button class="back-btn">←</button>
-                <h2>Настройки</h2>
-            </div>
-
+            <div class="screen-header"><button class="back-btn">←</button><h2>Настройки</h2></div>
             <div class="glass settings-card">
-
-                <div class="setting-row">
-                    <span>🌙 Тёмная тема</span>
-                    <input type="checkbox" checked>
-                </div>
-
-                <div class="setting-row">
-                    <span>🔔 Уведомления</span>
-                    <input type="checkbox" checked>
-                </div>
-
-                <div class="setting-row">
-                    <span>🌍 Русский язык</span>
-                </div>
-
+                <div class="setting-row"><span>🌙 Тёмная тема</span><input type="checkbox" checked></div>
+                <div class="setting-row"><span>🔔 Уведомления</span><input type="checkbox" checked></div>
+                <div class="setting-row"><span>🌍 Русский язык</span></div>
             </div>
-
         </section>
-
     </div>
 
     <!-- BOTTOM NAV -->
-
     <nav class="bottom-nav">
-
-        <button data-screen="homeScreen">
-            🏠
-        </button>
-
-        <button data-screen="chatScreen">
-            🧠
-        </button>
-
-        <button data-screen="horoscopeScreen">
-            🔮
-        </button>
-
-        <button data-screen="profileScreen">
-            👤
-        </button>
-
-        <button data-screen="settingsScreen">
-            ⚙️
-        </button>
-
+        <button data-screen="homeScreen" class="active">🏠</button>
+        <button data-screen="chatScreen">🧠</button>
+        <button data-screen="horoscopeScreen">🔮</button>
+        <button data-screen="profileScreen">👤</button>
+        <button data-screen="settingsScreen">⚙️</button>
     </nav>
 
-    <script src="app.js"></script>
-
+    <script src="/static/app.js?v=3"></script>
 </body>
 </html>
