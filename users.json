@@ -1,6 +1,12 @@
 {
-    "8789067375": {
-        "zodiac": "♋ Рак",
-        "premium": false
-    }
+  "8789067375": {
+    "id": 8789067375,
+    "username": null,
+    "name": "Братан",
+    "joined": "01.06.2026 09:00",
+    "messages": 0,
+    "premium": false,
+    "level": 1,
+    "zodiac": "♋ Рак"
+  }
 }

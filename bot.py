@@ -1,51 +1,22 @@
-import os
-import json
-import asyncio
-import logging
+import os, json, logging
 from datetime import datetime
-
 from dotenv import load_dotenv
-
 from aiogram import Bot, Dispatcher, F
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
-from aiogram.types import (
-    Message,
-    ReplyKeyboardMarkup,
-    KeyboardButton,
-    WebAppInfo
-)
-from aiogram.filters import Command  # ← ДОБАВЛЕНО!
-
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
+from aiogram.filters import Command
 from aiohttp import web
 
-# ============================================
-# ENV
-# ============================================
-
 load_dotenv()
-
 TOKEN = os.getenv("TOKEN")
-
 if not TOKEN:
-    raise RuntimeError("TOKEN is missing")
-
-# ============================================
-# LOGGING
-# ============================================
+    raise RuntimeError("TOKEN missing!")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# ============================================
-# CONFIG
-# ============================================
-
 USERS_FILE = "users.json"
 ADMIN_ID = 8789067375
-
-# ============================================
-# USERS
-# ============================================
 
 def load_users():
     try:
@@ -61,7 +32,6 @@ def save_users(users):
 def register_user(user):
     users = load_users()
     uid = str(user.id)
-    
     if uid not in users:
         users[uid] = {
             "id": user.id,
@@ -70,186 +40,73 @@ def register_user(user):
             "joined": datetime.now().strftime("%d.%m.%Y %H:%M"),
             "messages": 0,
             "premium": False,
-            "level": 1,
-            "zodiac": None
+            "level": 1
         }
-        logging.info(f"New user registered: {uid}")
-    
-    users[uid]["messages"] += 1
+    users[uid]["messages"] = users[uid].get("messages", 0) + 1
     users[uid]["level"] = 1 + (users[uid]["messages"] // 50)
-    
     save_users(users)
     return users[uid]
 
-def get_user(uid):
-    users = load_users()
-    return users.get(str(uid))
-
-def update_user_data(uid, data):
-    users = load_users()
-    if str(uid) in users:
-        users[str(uid)].update(data)
-        save_users(users)
-        return True
-    return False
-
-# ============================================
-# DISPATCHER
-# ============================================
-
 dp = Dispatcher()
-logging.info("✅ COSMIRA BOT STARTED")
+logging.info("✅ COSMIRA STARTED")
 
-# ============================================
-# KEYBOARD
-# ============================================
-
-main_keyboard = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="🚀 Открыть COSMIRA", web_app=WebAppInfo(url="https://cosmira.netlify.app/"))],
-        [KeyboardButton(text="👤 Профиль"), KeyboardButton(text="💎 Premium")],
-        [KeyboardButton(text="📊 Статистика"), KeyboardButton(text="⚙️ Настройки")]
-    ],
-    resize_keyboard=True
-)
-
-# ============================================
-# HANDLERS
-# ============================================
+# 🔘 КНОПКИ
+main_kb = ReplyKeyboardMarkup(keyboard=[
+    [KeyboardButton(text="🚀 Открыть COSMIRA", web_app=WebAppInfo(url="https://cosmira.netlify.app/"))],
+    [KeyboardButton(text="👤 Профиль"), KeyboardButton(text="💎 Premium")],
+    [KeyboardButton(text="📊 Статистика"), KeyboardButton(text="⚙️ Настройки")]
+], resize_keyboard=True)
 
 @dp.message(Command("start"))
-async def start_handler(message: Message):
-    try:
-        logging.info(f"Start command from user: {message.from_user.id}")
-        register_user(message.from_user)
-        
-        await message.answer(
-            "🌌 <b>COSMIRA AI</b>\n\n"
-            "Добро пожаловать в будущее!\n\n"
-            "✨ AI платформа\n"
-            "🚀 WebApp\n"
-            "💎 Premium\n\n"
-            "Нажми кнопку ниже 👇",
-            reply_markup=main_keyboard,
-            parse_mode=ParseMode.HTML
-        )
-        logging.info(f"Start response sent to {message.from_user.id}")
-    except Exception as e:
-        logging.error(f"Start handler error: {e}")
-        await message.answer("Привет! Бот работает 🚀")
-
-@dp.message(Command("admin"))
-async def admin_handler(message: Message):
-    if message.from_user.id != ADMIN_ID:
-        await message.answer("⛔ Доступ запрещён")
-        return
-    
-    users = load_users()
-    total = len(users)
-    msgs = sum(u.get("messages", 0) for u in users.values())
-    
-    await message.answer(
-        f"👑 <b>ADMIN PANEL</b>\n\n"
-        f"👥 Пользователей: {total}\n"
-        f"💬 Сообщений: {msgs}",
-        parse_mode=ParseMode.HTML
-    )
+async def start_cmd(m: Message):
+    register_user(m.from_user)
+    await m.answer("🌌 <b>COSMIRA AI</b>\n\nЖми кнопку ниже 👇", reply_markup=main_kb, parse_mode=ParseMode.HTML)
 
 @dp.message(F.text == "👤 Профиль")
-async def profile_handler(message: Message):
-    user = get_user(message.from_user.id)
-    if not user:
-        user = register_user(message.from_user)
-    
-    await message.answer(
-        f"👤 <b>Профиль</b>\n\n"
-        f"🆔 ID: <code>{user['id']}</code>\n"
-        f"📛 Имя: {user['name']}\n"
-        f"⭐ Уровень: {user['level']}\n"
-        f"💬 Сообщений: {user['messages']}\n"
-        f"👑 Premium: {'Да' if user['premium'] else 'Нет'}",
-        parse_mode=ParseMode.HTML
-    )
+async def profile_cmd(m: Message):
+    u = load_users().get(str(m.from_user.id), {})
+    await m.answer(f"👤 {u.get('name','')}\n⭐ Уровень: {u.get('level',1)}\n💬 Сообщений: {u.get('messages',0)}")
 
 @dp.message(F.text == "💎 Premium")
-async def premium_handler(message: Message):
-    await message.answer(
-        "💎 <b>COSMIRA PREMIUM</b>\n\n"
-        "✨ Безлимитный AI\n"
-        "⚡ Максимальная скорость\n"
-        "🚀 Эксклюзивные функции\n\n"
-        "Скоро запуск!",
-        parse_mode=ParseMode.HTML
-    )
+async def prem_cmd(m: Message):
+    await m.answer("💎 Premium скоро! ✨")
 
 @dp.message(F.text == "📊 Статистика")
-async def stats_handler(message: Message):
+async def stats_cmd(m: Message):
     users = load_users()
-    await message.answer(
-        f"📊 <b>Статистика</b>\n\n"
-        f"👥 Пользователей: {len(users)}\n"
-        f"💬 Всего сообщений: {sum(u.get('messages', 0) for u in users.values())}",
-        parse_mode=ParseMode.HTML
-    )
+    await m.answer(f"👥 {len(users)} пользователей\n💬 {sum(u.get('messages',0) for u in users.values())} сообщений")
 
 @dp.message(F.text == "⚙️ Настройки")
-async def settings_handler(message: Message):
-    await message.answer("⚙️ Настройки в разработке...")
+async def settings_cmd(m: Message):
+    await m.answer("⚙️ В разработке...")
 
 @dp.message()
-async def echo_handler(message: Message):
-    await message.answer(f"📨 Получено: {message.text}\n\nИспользуй команды или кнопки!")
+async def echo(m: Message):
+    await m.answer("Используй кнопки или /start 🚀")
 
-# ============================================
-# WEB API
-# ============================================
+# 🌐 Простой веб-сервер для health-check
+async def health(req):
+    return web.Response(text="OK")
 
-async def api_health(request):
-    return web.json_response({"status": "ok", "service": "COSMIRA"})
-
-async def api_get_user(request):
-    uid = request.match_info.get("uid")
-    user = get_user(uid)
-    if user:
-        return web.json_response(user)
-    return web.json_response({"error": "Not found"}, status=404)
-
-async def api_update_user(request):
-    data = await request.json()
-    uid = data.get("userId")
-    updates = data.get("updates", {})
-    if update_user_data(uid, updates):
-        return web.json_response({"success": True})
-    return web.json_response({"error": "Not found"}, status=404)
-
-async def start_web_server():
+async def start_web():
     app = web.Application()
-    app.router.add_get("/api/health", api_health)
-    app.router.add_get("/api/user/{uid}", api_get_user)
-    app.router.add_post("/api/update", api_update_user)
-    
+    app.router.add_get("/", health)
+    app.router.add_get("/api/health", health)
     runner = web.AppRunner(app)
     await runner.setup()
-    
     port = int(os.environ.get("PORT", 10000))
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
-    logging.info(f"🌐 Web API on port {port}")
-
-# ============================================
-# MAIN
-# ============================================
+    logging.info(f"🌐 Web on port {port}")
 
 async def main():
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    
-    web_task = asyncio.create_task(start_web_server())
-    polling_task = asyncio.create_task(dp.start_polling(bot))
-    
-    await asyncio.gather(web_task, polling_task)
+    await start_web()
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
+    import asyncio
     try:
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
-        logging.info("🛑 Bot stopped")
+        logging.info("🛑 Stopped")
