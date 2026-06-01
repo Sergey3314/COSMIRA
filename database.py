@@ -5,7 +5,8 @@ from datetime import datetime
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 async def get_conn():
-    return await asyncpg.connect(DATABASE_URL, server_settings={"sslmode": "require"})
+    # SSL берётся из строки подключения (?sslmode=require)
+    return await asyncpg.connect(DATABASE_URL)
 
 async def init_db():
     conn = await get_conn()
