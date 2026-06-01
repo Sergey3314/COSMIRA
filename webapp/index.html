@@ -3,602 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>COSMIRA AI</title>
-    <link rel="stylesheet" href="/static/style.css?v=4">
+    <title>COSMIRA</title>
+    <link rel="stylesheet" href="/static/style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <div class="background"></div>
-    <div class="stars"></div>
-    <div class="glow glow1"></div>
-    <div class="glow glow2"></div>
+    <div class="bg"></div>
+    
+    <!-- ЭКРАН РЕГИСТРАЦИИ -->
+    <section id="screen-register" class="screen hidden">
+        <div class="header"><h1> Данные рождения</h1></div>
+        <div class="card glass">
+            <p>Для точных расчетов нужны:</p>
+            <input type="text" id="reg-name" placeholder="Твое имя">
+            <input type="date" id="reg-date">
+            <input type="time" id="reg-time">
+            <input type="text" id="reg-city" placeholder="Город рождения (Москва)">
+            <button onclick="saveProfile()" class="btn-primary">Сохранить и продолжить</button>
+        </div>
+    </section>
 
-    <div class="app">
-        <!-- HOME SCREEN -->
-        <section class="screen active" id="homeScreen">
-            <div class="header">
-                <div>
-                    <h1>COSMIRA AI</h1>
-                    <p class="subtitle">Будущее начинается здесь</p>
-                </div>
-                <div class="online-badge">ONLINE</div>
+    <!-- ГЛАВНОЕ МЕНЮ -->
+    <section id="screen-main" class="screen hidden">
+        <div class="header">
+            <div><h1>COSMIRA</h1><p class="sub" id="user-name-display">Загрузка...</p></div>
+            <button onclick="logout()" class="icon-btn">⚙️</button>
+        </div>
+        
+        <div class="grid">
+            <div class="card glass" onclick="openHoroscope()">
+                <div class="icon">☀️</div><h3>Гороскоп</h3><p>Прогноз на день/год</p>
             </div>
-
-            <div class="hero glass">
-                <div class="hero-content">
-                    <div class="hero-text">
-                        <h2 id="welcomeName">Привет, Сергей! 👋</h2>
-                        <p>Я COSMIRA AI — твой умный помощник в любой задаче.</p>
-                    </div>
-                    <div class="planet-visual">🪐</div>
-                </div>
+            <div class="card glass" onclick="openNatal()">
+                <div class="icon">️</div><h3>Натальная карта</h3><p>Твои планеты</p>
             </div>
-
-            <div class="menu-grid">
-                <div class="menu-card glass" data-screen="chatScreen">
-                    <div class="card-icon">🧠</div>
-                    <div class="card-content">
-                        <h3>AI Chat</h3>
-                        <p>Умный ассистент для любых задач</p>
-                    </div>
-                    <div class="card-arrow">→</div>
-                </div>
-
-                <div class="menu-card glass" data-screen="horoscopeScreen">
-                    <div class="card-icon">🔮</div>
-                    <div class="card-content">
-                        <h3>Гороскоп</h3>
-                        <p>Ежедневный прогноз для всех знаков</p>
-                    </div>
-                    <div class="card-arrow">→</div>
-                </div>
-
-                <div class="menu-card glass" data-screen="compatibilityScreen">
-                    <div class="card-icon">💞</div>
-                    <div class="card-content">
-                        <h3>Совместимость</h3>
-                        <p>Узнай совместимость двух знаков</p>
-                    </div>
-                    <div class="card-arrow">→</div>
-                </div>
-
-                <div class="menu-card glass" data-screen="ideasScreen">
-                    <div class="card-icon">💼</div>
-                    <div class="card-content">
-                        <h3>Бизнес идеи</h3>
-                        <p>Генератор идей для бизнеса</p>
-                    </div>
-                    <div class="card-arrow">→</div>
-                </div>
-
-                <div class="menu-card glass" data-screen="profileScreen">
-                    <div class="card-icon">👤</div>
-                    <div class="card-content">
-                        <h3>Профиль</h3>
-                        <p>Твой профиль и статистика</p>
-                    </div>
-                    <div class="card-arrow">→</div>
-                </div>
-
-                <div class="menu-card glass" data-screen="premiumScreen">
-                    <div class="card-icon">💎</div>
-                    <div class="card-content">
-                        <h3>Premium</h3>
-                        <p>Premium возможности и преимущества</p>
-                    </div>
-                    <div class="card-arrow">→</div>
-                </div>
-
-                <div class="menu-card glass" data-screen="settingsScreen">
-                    <div class="card-icon">⚙️</div>
-                    <div class="card-content">
-                        <h3>Настройки</h3>
-                        <p>Тема, язык, уведомления и другое</p>
-                    </div>
-                    <div class="card-arrow">→</div>
-                </div>
+            <div class="card glass" onclick="openCompatibility()">
+                <div class="icon"></div><h3>Совместимость</h3><p>Синастрия</p>
             </div>
-        </section>
-
-        <!-- AI CHAT SCREEN -->
-        <section class="screen" id="chatScreen">
-            <div class="screen-header">
-                <button class="back-btn">←</button>
-                <div>
-                    <h2>AI Chat</h2>
-                    <p class="subtitle-small">COSMIRA AI</p>
-                </div>
+            <div class="card glass" onclick="openHorary()">
+                <div class="icon">❓</div><h3>Хорар</h3><p>Ответ на вопрос</p>
             </div>
+        </div>
+    </section>
 
-            <div class="roles-tabs">
-                <button class="role-tab active" data-role="business">
-                    <span class="tab-icon">💼</span>
-                    <span>Бизнес</span>
-                </button>
-                <button class="role-tab" data-role="marketing">
-                    <span class="tab-icon">📈</span>
-                    <span>Маркетолог</span>
-                </button>
-                <button class="role-tab" data-role="developer">
-                    <span class="tab-icon">💻</span>
-                    <span>Программист</span>
-                </button>
-                <button class="role-tab" data-role="consultant">
-                    <span class="tab-icon">🤝</span>
-                    <span>Консультант</span>
-                </button>
-            </div>
+    <!-- ЭКРАН НАТАЛЬНОЙ КАРТЫ -->
+    <section id="screen-natal" class="screen hidden">
+        <div class="header"><button onclick="goHome()">←</button><h2>Натальная карта</h2></div>
+        <div id="natal-content" class="card glass">
+            <div class="loader">Расчет планет...</div>
+        </div>
+    </section>
+    
+    <!-- ЭКРАН СОВМЕСТИМОСТИ -->
+    <section id="screen-compat" class="screen hidden">
+        <div class="header"><button onclick="goHome()">←</button><h2>Совместимость</h2></div>
+        <div class="card glass">
+            <select id="s1">
+                <option value="Aries">Овен</option><option value="Taurus">Телец</option>
+                <option value="Gemini">Близнецы</option><option value="Cancer">Рак</option>
+                <option value="Leo">Лев</option><option value="Virgo">Дева</option>
+                <option value="Libra">Весы</option><option value="Scorpio">Скорпион</option>
+                <option value="Sagittarius">Стрелец</option><option value="Capricorn">Козерог</option>
+                <option value="Aquarius">Водолей</option><option value="Pisces">Рыбы</option>
+            </select>
+            <select id="s2">
+                <option value="Aries">Овен</option><option value="Taurus">Телец</option>
+                <option value="Gemini">Близнецы</option><option value="Cancer">Рак</option>
+                <option value="Leo">Лев</option><option value="Virgo">Дева</option>
+                <option value="Libra">Весы</option><option value="Scorpio">Скорпион</option>
+                <option value="Sagittarius">Стрелец</option><option value="Capricorn">Козерог</option>
+                <option value="Aquarius">Водолей</option><option value="Pisces">Рыбы</option>
+            </select>
+            <button onclick="checkCompat()" class="btn-primary">Рассчитать</button>
+            <div id="compat-result" class="result-box"></div>
+        </div>
+    </section>
 
-            <div class="chat-container glass">
-                <div class="chat-messages" id="chatMessages">
-                    <div class="message bot">
-                        <div class="message-avatar">🤖</div>
-                        <div class="message-content">
-                            <div class="message-text">Привет! Я твой бизнес-помощник. Задавай любые вопросы о бизнесе, стартапах, стратегии и росте.</div>
-                            <div class="message-time">12:30</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="chat-input-area">
-                    <input type="text" id="chatInput" placeholder="Напиши свой вопрос...">
-                    <button id="sendBtn" class="send-btn">➤</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- HOROSCOPE SCREEN -->
-        <section class="screen" id="horoscopeScreen">
-            <div class="screen-header">
-                <button class="back-btn">←</button>
-                <div>
-                    <h2>Гороскоп</h2>
-                    <p class="subtitle-small">Ежедневный прогноз</p>
-                </div>
-            </div>
-
-            <div class="zodiac-selector glass">
-                <select id="zodiacSign">
-                    <option value="aries">♈ Овен (21 марта — 19 апреля)</option>
-                    <option value="taurus">♉ Телец (20 апреля — 20 мая)</option>
-                    <option value="gemini">♊ Близнецы (21 мая — 20 июня)</option>
-                    <option value="cancer" selected>♋ Рак (21 июня — 22 июля)</option>
-                    <option value="leo">♌ Лев (23 июля — 22 августа)</option>
-                    <option value="virgo">♍ Дева (23 августа — 22 сентября)</option>
-                    <option value="libra">♎ Весы (23 сентября — 22 октября)</option>
-                    <option value="scorpio">♏ Скорпион (23 октября — 21 ноября)</option>
-                    <option value="sagittarius">♐ Стрелец (22 ноября — 21 декабря)</option>
-                    <option value="capricorn">♑ Козерог (22 декабря — 19 января)</option>
-                    <option value="aquarius">♒ Водолей (20 января — 18 февраля)</option>
-                    <option value="pisces">♓ Рыбы (19 февраля — 20 марта)</option>
-                </select>
-            </div>
-
-            <div class="horoscope-card glass">
-                <div class="sign-header">
-                    <div class="sign-icon">♋</div>
-                    <div>
-                        <h3>Рак</h3>
-                        <p class="sign-dates">22 июня — 22 июля</p>
-                    </div>
-                </div>
-                <div class="date-display">17 ноября 2024</div>
-                
-                <div class="predictions">
-                    <div class="prediction-item">
-                        <div class="prediction-icon">🔮</div>
-                        <div class="prediction-content">
-                            <div class="prediction-title">Общий прогноз</div>
-                            <div class="prediction-text">Хороший день для важных решений и новых начинаний.</div>
-                            <div class="prediction-score">8/10</div>
-                        </div>
-                    </div>
-
-                    <div class="prediction-item">
-                        <div class="prediction-icon">❤️</div>
-                        <div class="prediction-content">
-                            <div class="prediction-title">Любовь</div>
-                            <div class="prediction-text">В отношениях гармония и понимание. Одиноким — интересные знакомства.</div>
-                            <div class="prediction-score">9/10</div>
-                        </div>
-                    </div>
-
-                    <div class="prediction-item">
-                        <div class="prediction-icon">💼</div>
-                        <div class="prediction-content">
-                            <div class="prediction-title">Карьера</div>
-                            <div class="prediction-text">Удачный день для работы и переговоров. Возможен рост и признание.</div>
-                            <div class="prediction-score">8/10</div>
-                        </div>
-                    </div>
-
-                    <div class="prediction-item">
-                        <div class="prediction-icon">⚡</div>
-                        <div class="prediction-content">
-                            <div class="prediction-title">Энергия</div>
-                            <div class="prediction-text">Энергия на высоком уровне. Отличное время для активности.</div>
-                            <div class="prediction-score">9/10</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- COMPATIBILITY SCREEN -->
-        <section class="screen" id="compatibilityScreen">
-            <div class="screen-header">
-                <button class="back-btn">←</button>
-                <div>
-                    <h2>Совместимость</h2>
-                    <p class="subtitle-small">Узнай совместимость знаков</p>
-                </div>
-            </div>
-
-            <div class="compatibility-container">
-                <div class="signs-pair glass">
-                    <div class="sign-card">
-                        <div class="sign-symbol">♌</div>
-                        <h3>Лев</h3>
-                        <p class="sign-dates">23 июля — 22 августа</p>
-                    </div>
-                    <div class="heart-icon">💖</div>
-                    <div class="sign-card">
-                        <div class="sign-symbol">♎</div>
-                        <h3>Весы</h3>
-                        <p class="sign-dates">23 сентября — 22 октября</p>
-                    </div>
-                </div>
-
-                <div class="compatibility-result glass">
-                    <div class="compatibility-percentage">82%</div>
-                    <div class="compatibility-label">Высокая совместимость</div>
-                    <p class="compatibility-desc">Лев и Весы отлично дополняют друг друга. Оба ценят гармонию, красоту и комфорт. Вместе вы можете достичь больших высот!</p>
-                    
-                    <div class="compatibility-bars">
-                        <div class="comp-bar">
-                            <div class="comp-bar-label">Любовь</div>
-                            <div class="comp-bar-bg">
-                                <div class="comp-bar-fill" style="width: 85%"></div>
-                            </div>
-                            <div class="comp-bar-value">85%</div>
-                        </div>
-                        <div class="comp-bar">
-                            <div class="comp-bar-label">Дружба</div>
-                            <div class="comp-bar-bg">
-                                <div class="comp-bar-fill" style="width: 80%"></div>
-                            </div>
-                            <div class="comp-bar-value">80%</div>
-                        </div>
-                        <div class="comp-bar">
-                            <div class="comp-bar-label">Карьера</div>
-                            <div class="comp-bar-bg">
-                                <div class="comp-bar-fill" style="width: 75%"></div>
-                            </div>
-                            <div class="comp-bar-value">75%</div>
-                        </div>
-                        <div class="comp-bar">
-                            <div class="comp-bar-label">Эмоции</div>
-                            <div class="comp-bar-bg">
-                                <div class="comp-bar-fill" style="width: 85%"></div>
-                            </div>
-                            <div class="comp-bar-value">85%</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- BUSINESS IDEAS SCREEN -->
-        <section class="screen" id="ideasScreen">
-            <div class="screen-header">
-                <button class="back-btn">←</button>
-                <div>
-                    <h2>Бизнес идеи</h2>
-                    <p class="subtitle-small">Генератор идей</p>
-                </div>
-            </div>
-
-            <div class="ideas-container">
-                <div class="categories-tabs glass">
-                    <button class="category-tab active" data-category="all">Все</button>
-                    <button class="category-tab" data-category="it">IT</button>
-                    <button class="category-tab" data-category="ai">AI</button>
-                    <button class="category-tab" data-category="saas">SaaS</button>
-                    <button class="category-tab" data-category="telegram">Telegram</button>
-                    <button class="category-tab" data-category="online">Онлайн</button>
-                </div>
-
-                <button class="generate-btn" id="generateIdea">
-                    <span class="btn-icon">✨</span>
-                    Сгенерировать идею
-                </button>
-
-                <div class="ideas-list glass" id="ideasList">
-                    <div class="idea-item">
-                        <div class="idea-icon">🧠</div>
-                        <div class="idea-content">
-                            <h4>AI-помощник для учебы</h4>
-                            <p>Сервис на базе AI, который помогает студентам учиться эффективнее.</p>
-                            <span class="idea-tag">AI</span>
-                        </div>
-                        <button class="idea-star">☆</button>
-                    </div>
-
-                    <div class="idea-item">
-                        <div class="idea-icon">✈️</div>
-                        <div class="idea-content">
-                            <h4>Telegram CRM</h4>
-                            <p>CRM-система внутри Telegram для малого бизнеса.</p>
-                            <span class="idea-tag">Telegram</span>
-                        </div>
-                        <button class="idea-star">☆</button>
-                    </div>
-
-                    <div class="idea-item">
-                        <div class="idea-icon">✨</div>
-                        <div class="idea-content">
-                            <h4>Сервис генерации контента</h4>
-                            <p>AI-сервис для генерации текстов, изображений и видео.</p>
-                            <span class="idea-tag">SaaS</span>
-                        </div>
-                        <button class="idea-star">☆</button>
-                    </div>
-
-                    <div class="idea-item">
-                        <div class="idea-icon">🎓</div>
-                        <div class="idea-content">
-                            <h4>Платформа онлайн-курсов</h4>
-                            <p>Платформа для создания и продажи онлайн-курсов под ключ.</p>
-                            <span class="idea-tag">Онлайн</span>
-                        </div>
-                        <button class="idea-star">☆</button>
-                    </div>
-
-                    <div class="idea-item">
-                        <div class="idea-icon">💼</div>
-                        <div class="idea-content">
-                            <h4>AI-ассистент для бизнеса</h4>
-                            <p>Умный ассистент для автоматизации рутины в компаниях.</p>
-                            <span class="idea-tag">AI</span>
-                        </div>
-                        <button class="idea-star">☆</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- PROFILE SCREEN -->
-        <section class="screen" id="profileScreen">
-            <div class="screen-header">
-                <button class="back-btn">←</button>
-                <div>
-                    <h2>Профиль</h2>
-                    <p class="subtitle-small">Твой аккаунт</p>
-                </div>
-            </div>
-
-            <div class="profile-container">
-                <div class="profile-header glass">
-                    <div class="profile-avatar">
-                        <span id="profileAvatar">С</span>
-                        <button class="avatar-edit">📷</button>
-                    </div>
-                    <h2 id="profileName">Сергей</h2>
-                    <div class="profile-badge">COSMIRA Explorer</div>
-                </div>
-
-                <div class="profile-stats glass">
-                    <div class="stat-item">
-                        <div class="stat-label">Уровень</div>
-                        <div class="stat-value">⭐ 12</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Сообщений</div>
-                        <div class="stat-value">💬 248</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Дней с нами</div>
-                        <div class="stat-value">📅 37</div>
-                    </div>
-                </div>
-
-                <div class="profile-info glass">
-                    <div class="info-row">
-                        <span>Telegram ID</span>
-                        <span id="profileId" class="mono">8789067375</span>
-                    </div>
-                    <div class="info-row">
-                        <span>Username</span>
-                        <span id="profileUsername" class="mono">@sergey</span>
-                    </div>
-                    <div class="info-row">
-                        <span>Premium статус</span>
-                        <span class="premium-label">Неактивен →</span>
-                    </div>
-                </div>
-
-                <div class="level-progress glass">
-                    <div class="progress-header">
-                        <span>До следующего уровня</span>
-                        <span>1 250 / 2 000 XP</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 62.5%"></div>
-                    </div>
-                    <p class="progress-desc">Чем больше ты активен, тем выше твой уровень!</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- PREMIUM SCREEN -->
-        <section class="screen" id="premiumScreen">
-            <div class="screen-header">
-                <button class="back-btn">←</button>
-                <div>
-                    <h2>Premium</h2>
-                    <p class="subtitle-small">Раскрой максимум возможностей</p>
-                </div>
-            </div>
-
-            <div class="premium-container">
-                <div class="premium-hero glass">
-                    <div class="premium-icon">💎</div>
-                    <h2>COSMIRA PREMIUM</h2>
-                    <p>Раскрой максимум возможностей</p>
-                </div>
-
-                <div class="premium-features glass">
-                    <div class="feature-item">
-                        <div class="feature-icon">🔮</div>
-                        <div class="feature-content">
-                            <h4>Безлимитный AI Chat</h4>
-                            <p>Общайся без ограничений</p>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">⚡</div>
-                        <div class="feature-content">
-                            <h4>Приоритетный доступ</h4>
-                            <p>Быстрые ответы и высокая скорость</p>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">🎨</div>
-                        <div class="feature-content">
-                            <h4>Эксклюзивные функции</h4>
-                            <p>Уникальные инструменты и фишки</p>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">🖼️</div>
-                        <div class="feature-content">
-                            <h4>Генерация изображений</h4>
-                            <p>Создавай изображения в AI</p>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">🚀</div>
-                        <div class="feature-content">
-                            <h4>Будущие обновления</h4>
-                            <p>Получай новые функции первым</p>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="activate-premium-btn">
-                    Активировать Premium
-                </button>
-                <p class="premium-note">Скоро появится подписка</p>
-            </div>
-        </section>
-
-        <!-- SETTINGS SCREEN -->
-        <section class="screen" id="settingsScreen">
-            <div class="screen-header">
-                <button class="back-btn">←</button>
-                <div>
-                    <h2>Настройки</h2>
-                    <p class="subtitle-small">Управление приложением</p>
-                </div>
-            </div>
-
-            <div class="settings-container">
-                <div class="settings-section glass">
-                    <h3>Внешний вид</h3>
-                    <div class="setting-item">
-                        <div class="setting-left">
-                            <span class="setting-icon">🌙</span>
-                            <span>Тема приложения</span>
-                        </div>
-                        <span class="setting-value">Тёмная →</span>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-left">
-                            <span class="setting-icon">🌍</span>
-                            <span>Язык</span>
-                        </div>
-                        <span class="setting-value">Русский →</span>
-                    </div>
-                </div>
-
-                <div class="settings-section glass">
-                    <h3>Уведомления</h3>
-                    <div class="setting-item toggle">
-                        <div class="setting-left">
-                            <span class="setting-icon">🔔</span>
-                            <span>Уведомления</span>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="setting-item toggle">
-                        <div class="setting-left">
-                            <span class="setting-icon">📅</span>
-                            <span>Ежедневный гороскоп</span>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="setting-item toggle">
-                        <div class="setting-left">
-                            <span class="setting-icon">📰</span>
-                            <span>Новости и обновления</span>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="settings-section glass">
-                    <h3>Другое</h3>
-                    <div class="setting-item">
-                        <div class="setting-left">
-                            <span class="setting-icon">🗑️</span>
-                            <span>Очистить кэш</span>
-                        </div>
-                        <span class="setting-value">12.4 MB →</span>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-left">
-                            <span class="setting-icon">ℹ️</span>
-                            <span>О приложении</span>
-                        </div>
-                        <span class="setting-value">v 1.0.0 →</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <!-- BOTTOM NAVIGATION -->
-    <nav class="bottom-nav">
-        <button class="nav-item active" data-screen="homeScreen">
-            <span class="nav-icon">🏠</span>
-            <span class="nav-label">Главная</span>
-        </button>
-        <button class="nav-item" data-screen="chatScreen">
-            <span class="nav-icon">🧠</span>
-            <span class="nav-label">AI Chat</span>
-        </button>
-        <button class="nav-item" data-screen="horoscopeScreen">
-            <span class="nav-icon">🔮</span>
-            <span class="nav-label">Гороскоп</span>
-        </button>
-        <button class="nav-item" data-screen="profileScreen">
-            <span class="nav-icon">👤</span>
-            <span class="nav-label">Профиль</span>
-        </button>
-        <button class="nav-item" data-screen="settingsScreen">
-            <span class="nav-icon">⚙️</span>
-            <span class="nav-label">Настройки</span>
-        </button>
-    </nav>
-
-    <script src="/static/app.js?v=4"></script>
+    <script src="/static/app.js"></script>
 </body>
 </html>

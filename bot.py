@@ -1,10 +1,6 @@
-import os
-import json
-import asyncio
-import logging
+import os, json, asyncio, logging
 from datetime import datetime
 from pathlib import Path
-
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, F
 from aiogram.enums import ParseMode
@@ -13,188 +9,132 @@ from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, WebAppIn
 from aiogram.filters import Command
 from aiohttp import web
 
-# ============================================
-# ENV
-# ============================================
+from astro_engine import get_chart_data, generate_horoscope_text, generate_compatibility_text
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
-if not TOKEN:
-    raise RuntimeError("TOKEN missing in .env!")
-
-# ============================================
-# LOGGING
-# ============================================
+if not TOKEN: raise RuntimeError("TOKEN missing!")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# ============================================
-# CONFIG
-# ============================================
-
 USERS_FILE = "users.json"
-ADMIN_ID = 8789067375
 BASE_DIR = Path(__file__).parent
 STATIC_DIR = BASE_DIR / "webapp"
 
-# ============================================
-# USERS
-# ============================================
-
 def load_users():
     try:
-        with open(USERS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except:
-        return {}
+        with open(USERS_FILE, "r", encoding="utf-8") as f: return json.load(f)
+    except: return {}
 
 def save_users(users):
-    with open(USERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(users, f, ensure_ascii=False, indent=4)
-
-def register_user(user):
-    users = load_users()
-    uid = str(user.id)
-    if uid not in users:
-        users[uid] = {
-            "id": user.id,
-            "username": user.username,
-            "name": user.full_name,
-            "joined": datetime.now().strftime("%d.%m.%Y %H:%M"),
-            "messages": 0,
-            "premium": False,
-            "level": 1
-        }
-        logging.info(f"✅ New user: {uid}")
-    users[uid]["messages"] = users[uid].get("messages", 0) + 1
-    users[uid]["level"] = 1 + (users[uid]["messages"] // 50)
-    save_users(users)
-    return users[uid]
-
-def get_user(uid):
-    return load_users().get(str(uid))
-
-# ============================================
-# BOT
-# ============================================
+    with open(USERS_FILE, "w", encoding="utf-8") as f: json.dump(users, f, ensure_ascii=False, indent=4)
 
 dp = Dispatcher()
-logging.info("✅ COSMIRA BOT STARTED")
+logging.info("✅ COSMIRA ENGINE STARTED")
 
-WEBAPP_URL = "https://cosmira-bot.onrender.com/?v=3"
-
-main_kb = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text="🚀 Открыть COSMIRA", web_app=WebAppInfo(url=WEBAPP_URL))],
-    [KeyboardButton(text="👤 Профиль"), KeyboardButton(text="💎 Premium")],
-    [KeyboardButton(text="📊 Статистика"), KeyboardButton(text="⚙️ Настройки")]
-], resize_keyboard=True)
-
-# ============================================
-# HANDLERS
-# ============================================
+# --- TELEGRAM HANDLERS ---
 
 @dp.message(Command("start"))
 async def start_cmd(m: Message):
-    register_user(m.from_user)
-    await m.answer("🌌 <b>COSMIRA AI</b>\n\nЖми кнопку ниже 👇", reply_markup=main_kb, parse_mode=ParseMode.HTML)
-
-@dp.message(F.text == "👤 Профиль")
-async def profile_cmd(m: Message):
-    u = get_user(m.from_user.id) or {"name": "", "level": 1, "messages": 0}
-    await m.answer(f"👤 <b>{u.get('name', m.from_user.full_name)}</b>\n⭐ Уровень: {u.get('level', 1)}\n💬 Сообщений: {u.get('messages', 0)}", parse_mode=ParseMode.HTML)
-
-@dp.message(F.text == "💎 Premium")
-async def prem_cmd(m: Message):
-    await m.answer("💎 <b>Premium</b>\n\nСкоро запуск! ✨", parse_mode=ParseMode.HTML)
-
-@dp.message(F.text == "📊 Статистика")
-async def stats_cmd(m: Message):
     users = load_users()
-    await m.answer(f"📊 <b>Статистика</b>\n👥 {len(users)} пользователей\n💬 {sum(u.get('messages', 0) for u in users.values())} сообщений", parse_mode=ParseMode.HTML)
-
-@dp.message(F.text == "⚙️ Настройки")
-async def settings_cmd(m: Message):
-    await m.answer("⚙️ В разработке...")
+    uid = str(m.from_user.id)
+    user = users.get(uid)
+    
+    if not user or not user.get("birth_date"):
+        # Если нет данных - просим заполнить (в WebApp)
+        btn = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="🔮 Заполнить профиль", web_app=WebAppInfo(url="https://cosmira-bot.onrender.com/?mode=register"))]], resize_keyboard=True)
+        await m.answer("Привет! Чтобы строить карты, мне нужно знать дату и время твоего рождения. Нажми кнопку ниже.", reply_markup=btn)
+    else:
+        btn = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="🚀 Открыть COSMIRA", web_app=WebAppInfo(url="https://cosmira-bot.onrender.com/"))]], resize_keyboard=True)
+        await m.answer(f"Привет, {user.get('name', 'Звездный Странник')}! Твоя карта готова.", reply_markup=btn)
 
 @dp.message()
 async def echo(m: Message):
-    await m.answer("Используй кнопки или /start 🚀")
+    await m.answer("Используй кнопку меню или /start")
 
-# ============================================
-# WEB API
-# ============================================
-
-async def api_health(request):
-    return web.json_response({"status": "ok", "service": "COSMIRA"})
+# --- WEB API (Для WebApp) ---
 
 async def api_get_user(request):
-    uid = request.match_info.get("uid")
-    user = get_user(uid)
-    if user:
-        return web.json_response(user)
-    return web.json_response({"error": "Not found"}, status=404)
+    uid = request.query.get("uid")
+    users = load_users()
+    return web.json_response(users.get(uid, {}))
 
-async def api_update_user(request):
-    try:
-        data = await request.json()
-        uid = data.get("userId")
-        updates = data.get("updates", {})
-        users = load_users()
-        if str(uid) in users:
-            users[str(uid)].update(updates)
-            save_users(users)
-            return web.json_response({"success": True})
-        return web.json_response({"error": "Not found"}, status=404)
-    except:
-        return web.json_response({"error": "Server error"}, status=500)
+async def api_save_user(request):
+    data = await request.json()
+    users = load_users()
+    uid = str(data.get("id"))
+    
+    # Сохраняем астроданные
+    users[uid] = {
+        "id": data.get("id"),
+        "name": data.get("name"),
+        "birth_date": data.get("birth_date"), # YYYY-MM-DD
+        "birth_time": data.get("birth_time"), # HH:MM
+        "birth_city": data.get("birth_city"),
+        "premium": False
+    }
+    save_users(users)
+    return web.json_response({"status": "ok"})
 
-# ============================================
-# SERVE WEBAPP
-# ============================================
+async def api_natal_chart(request):
+    uid = request.query.get("uid")
+    users = load_users()
+    u = users.get(uid)
+    if not u or not u.get("birth_date"):
+        return web.json_response({"error": "No data"}, status=400)
+    
+    # Реальный расчет
+    chart = get_chart_data(u["birth_date"], u["birth_time"])
+    return web.json_response(chart)
+
+async def api_horoscope(request):
+    sign = request.query.get("sign")
+    period = request.query.get("period", "day")
+    text = generate_horoscope_text(sign, period)
+    return web.json_response({"text": text})
+
+async def api_compatibility(request):
+    s1 = request.query.get("s1")
+    s2 = request.query.get("s2")
+    res = generate_compatibility_text(s1, s2)
+    return web.json_response(res)
 
 async def serve_webapp(request):
+    mode = request.query.get("mode")
+    # Если режим регистрации - можно подгрузить другой html, но пока используем один
     index_path = STATIC_DIR / "index.html"
-    if index_path.exists():
-        return web.FileResponse(index_path)
-    return web.Response(text="WebApp not found", status=404)
+    return web.FileResponse(index_path) if index_path.exists() else web.Response(text="404", status=404)
 
-# ============================================
-# WEB SERVER
-# ============================================
-
-async def start_web_server():
+async def start_web():
     app = web.Application()
-    app.router.add_get("/api/health", api_health)
-    app.router.add_get("/api/user/{uid}", api_get_user)
-    app.router.add_post("/api/update", api_update_user)
     app.router.add_get("/", serve_webapp)
     app.router.add_static('/static/', path=str(STATIC_DIR), name='static')
     
+    # API
+    app.router.add_get("/api/user", api_get_user)
+    app.router.add_post("/api/user", api_save_user)
+    app.router.add_get("/api/natal", api_natal_chart)
+    app.router.add_get("/api/horoscope", api_horoscope)
+    app.router.add_get("/api/compatibility", api_compatibility)
+    
     @web.middleware
-    async def cors_middleware(request, handler):
-        response = await handler(request)
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        return response
-    app.middlewares.append(cors_middleware)
+    async def cors(req, handler):
+        resp = await handler(req)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp
+    app.middlewares.append(cors)
     
     runner = web.AppRunner(app)
     await runner.setup()
-    port = int(os.environ.get("PORT", 10000))
-    site = web.TCPSite(runner, "0.0.0.0", port)
+    site = web.TCPSite(runner, "0.0.0.0", int(os.environ.get("PORT", 10000)))
     await site.start()
-    logging.info(f"🌐 Server on port {port}")
-
-# ============================================
-# MAIN
-# ============================================
+    logging.info("🌐 WebApp Online")
 
 async def main():
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    await start_web_server()
+    await start_web()
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except (KeyboardInterrupt, SystemExit):
-        logging.info("🛑 Bot stopped")
+    try: asyncio.run(main())
+    except: logging.info("Stopped")
