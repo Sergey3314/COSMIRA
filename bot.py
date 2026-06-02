@@ -98,15 +98,33 @@ async def get_user(user_id):
 # ==========================================
 # TELEGRAM БОТ
 # ==========================================
+from aiogram.types import FSInputFile  # Убедись, что этот импорт есть в самом верху файла!
+
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="✨ Открыть COSMIRA", web_app=WebAppInfo(url=WEBAPP_URL))]
     ])
-    await message.answer(
-        "Привет! Я COSMIRA — твой персональный астролог. 🌌\n\n"
-        "Нажми кнопку ниже, чтобы открыть приложение!",
-        reply_markup=kb
+    
+    # Путь к твоей картинке
+    photo = FSInputFile("static/welcome.png")
+    
+    caption = (
+        "**🌌 Добро пожаловать в COSMIRA**\n\n"
+        "*Твой персональный проводник в мир звёзд*\n\n"
+        "✨ **Что мы умеем:**\n"
+        "• 🔮 Натальные карты и расчёт планет\n"
+        "• 🌟 Персональные гороскопы каждый день\n"
+        "• 💫 Совместимость партнёров\n"
+        "•  Ответы на главные вопросы (Хорар)\n\n"
+        "Нажми кнопку, чтобы начать путешествие! 👇"
+    )
+    
+    await message.answer_photo(
+        photo=photo,
+        caption=caption,
+        reply_markup=kb,
+        parse_mode="Markdown"
     )
 
 @dp.message(lambda m: m.web_app_data)

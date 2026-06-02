@@ -231,8 +231,14 @@ window.loadHoroscope = async () => {
     try {
         const res = await fetch(`${API_BASE}/api/horoscope?sign=${selectedHoroscopeSign}`);
         const data = await res.json();
+        
         document.getElementById('result-sign').textContent = `${sign.icon} ${sign.name}`;
+        const period = document.querySelector('.period-tab.active').textContent;
+        document.getElementById('result-period').textContent = `на ${period.toLowerCase()}`;
+        
+        // Красивое форматирование текста
         resultText.textContent = data.text || "Звёзды пока молчат. Попробуй позже.";
+        
     } catch (e) {
         resultText.textContent = "Связь с космосом потеряна. Проверь интернет.";
     }
@@ -250,8 +256,11 @@ window.checkCompatibility = async () => {
     try {
         const res = await fetch(`${API_BASE}/api/compatibility?s1=${selectedCompat1}&s2=${selectedCompat2}`);
         const data = await res.json();
+        
         document.getElementById('compat-score').textContent = `${data.score || 85}%`;
-        document.getElementById('compat-text').textContent = data.text || `Союз ${s1.name} и ${s2.name} наполнен глубокой энергией. Вы способны понять друг друга без слов.`;
+        document.getElementById('compat-text').textContent = 
+            data.text || `Энергия союза ${s1.name} ${s1.icon} и ${s2.name} ${s2.icon} наполнена глубокой гармонией. Вы способны понять друг друга без слов.`;
+        
     } catch (e) {
         document.getElementById('compat-text').textContent = "Не удалось рассчитать энергию союза.";
     }
@@ -259,7 +268,7 @@ window.checkCompatibility = async () => {
 
 window.askHorary = async () => {
     const question = document.getElementById('horary-question').value.trim();
-    if (question.length < 10) return tg.showAlert('❓ Задай вопрос подробнее');
+    if (question.length < 10) return tg.showAlert('❓ Задай вопрос подробнее (минимум 10 символов)');
     
     const resultBox = document.getElementById('horary-result');
     resultBox.classList.add('hidden');
@@ -273,8 +282,10 @@ window.askHorary = async () => {
             body: JSON.stringify({ question, uid: currentUser?.id })
         });
         const data = await res.json();
+        
         document.getElementById('horary-answer').textContent = data.answer || "Звёзды говорят: да, но действуй мягко.";
-        document.getElementById('horary-time').textContent = new Date().toLocaleTimeString('ru-RU');
+        document.getElementById('horary-time').textContent = new Date(data.timestamp).toLocaleString('ru-RU');
+        
     } catch (e) {
         document.getElementById('horary-answer').textContent = "Космос недоступен.";
     }
