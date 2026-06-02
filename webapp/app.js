@@ -64,14 +64,12 @@ function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
     
-    // Показываем навигацию на всех экранах КРОМЕ регистрации
+    // Показываем/скрываем навигацию
     const nav = document.getElementById('bottom-nav');
-    if (nav) {
-        if (id === 'screen-register') {
-            nav.style.display = 'none';
-        } else {
-            nav.style.display = 'flex';
-        }
+    if (id === 'screen-register') {
+        nav.style.display = 'none';
+    } else {
+        nav.style.display = 'flex';
     }
     
     document.querySelectorAll('.nav-item').forEach(btn => {
