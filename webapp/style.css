@@ -885,3 +885,160 @@ small {
     transform: scale(1.08);
     filter: drop-shadow(0 0 14px rgba(255, 215, 0, 0.7));
 }
+/* ===== ИКОНКИ - ЯРКИЕ И ВИДИМЫЕ ===== */
+.cosmic-icon, .golden-icon, .card-icon, .nav-icon, .back-btn img, .card-arrow, .promo-icon, .premium-hero-icon {
+    object-fit: contain;
+    mix-blend-mode: normal !important;
+}
+.card-icon {
+    width: 64px !important;
+    height: 64px !important;
+    margin: 0 auto 12px !important;
+    display: block !important;
+    filter: brightness(1.5) contrast(1.2) drop-shadow(0 0 10px rgba(255, 215, 0, 0.8)) !important;
+}
+.nav-icon {
+    width: 28px !important;
+    height: 28px !important;
+    filter: brightness(2) contrast(1.3) drop-shadow(0 0 6px rgba(255, 215, 0, 0.9)) !important;
+    opacity: 0.7 !important;
+}
+.nav-item.active .nav-icon {
+    opacity: 1 !important;
+    filter: brightness(2.5) contrast(1.4) drop-shadow(0 0 10px rgba(255, 215, 0, 1)) !important;
+}
+.back-btn img {
+    width: 28px !important;
+    height: 28px !important;
+    filter: brightness(2) contrast(1.3) drop-shadow(0 0 8px rgba(255, 215, 0, 0.8)) !important;
+}
+.card-arrow {
+    width: 20px !important;
+    height: 20px !important;
+    filter: brightness(1.8) drop-shadow(0 0 6px rgba(255, 215, 0, 0.6)) !important;
+    opacity: 0.8 !important;
+}
+.icon-btn img {
+    width: 24px !important;
+    height: 24px !important;
+    filter: brightness(2) drop-shadow(0 0 6px rgba(255, 215, 0, 0.7)) !important;
+}
+.premium-hero-icon {
+    width: 80px !important;
+    height: 80px !important;
+    filter: brightness(2) contrast(1.3) drop-shadow(0 4px 16px rgba(255, 215, 0, 1)) !important;
+}
+.promo-icon {
+    width: 36px !important;
+    height: 36px !important;
+    filter: brightness(2) drop-shadow(0 0 8px rgba(255, 215, 0, 0.8)) !important;
+}
+.bottom-nav {
+    background: rgba(10, 15, 36, 0.98) !important;
+    border-top: 1px solid rgba(255, 215, 0, 0.2) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+.card.glass {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 215, 0, 0.15) !important;
+}
+.card:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 215, 0, 0.4) !important;
+    box-shadow: 0 8px 24px rgba(255, 215, 0, 0.2) !important;
+}
+
+/* ===== ФИКС: КОМПАКТНЫЕ КАРТОЧКИ ===== */
+.grid .card.glass {
+    height: auto !important;
+    min-height: 140px !important;
+    max-height: 180px !important;
+    padding: 16px 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.grid .card-icon {
+    width: 48px !important;
+    height: 48px !important;
+    margin-bottom: 8px !important;
+    flex-shrink: 0 !important;
+}
+.grid .card h3 {
+    font-size: 14px !important;
+    margin-bottom: 4px !important;
+    flex-shrink: 0 !important;
+}
+.grid .card p {
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+}
+.profile-preview {
+    padding: 12px 14px !important;
+    min-height: auto !important;
+}
+.screen .card.glass:not(.grid .card) {
+    min-height: auto !important;
+    max-height: none !important;
+}
+
+/* ===== ЗАГОЛОВКИ ПО ЦЕНТРУ — КРУПНЕЕ ===== */
+.header-top {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+.header-top::before,
+.header-top::after {
+    content: '';
+    flex: 1;
+    max-width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.5), transparent);
+}
+.header-decor {
+    font-size: 11px !important;
+    letter-spacing: 5px !important;
+    color: #FFD700 !important;
+    padding: 0 16px;
+    font-weight: 500;
+}
+.header-title {
+    font-size: 34px !important;
+    font-weight: 700 !important;
+    letter-spacing: 3px !important;
+    text-align: center !important;
+    margin-top: 0 !important;
+    background: linear-gradient(180deg, #fff 0%, #FFD700 60%, #b8860b 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    filter: drop-shadow(0 2px 8px rgba(255, 215, 0, 0.3));
+}
+.back-btn {
+    position: absolute !important;
+    left: 16px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 10 !important;
+    padding: 0 !important;
+}
+.page-header {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-top: 12px;
+}
+.bottom-nav {
+    height: 68px !important;
+    padding: 8px 0 12px 0 !important;
+}
+.nav-item {
+    padding: 4px 8px !important;
+}
