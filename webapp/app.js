@@ -4,22 +4,57 @@ tg.ready();
 
 let currentUser = null;
 let selectedAvatar = '🔮';
-let selectedHoroscopeSign = 'Cancer'; // По умолчанию
+let selectedHoroscopeSign = 'Cancer';
 let selectedCompat1 = 'Cancer';
 let selectedCompat2 = 'Libra';
 
 const API_BASE = window.location.origin;
 
 const ZODIAC_SIGNS = [
-    { id: 'Aries', name: 'Овен', icon: '♈' }, { id: 'Taurus', name: 'Телец', icon: '♉' },
-    { id: 'Gemini', name: 'Близнецы', icon: '♊' }, { id: 'Cancer', name: 'Рак', icon: '♋' },
-    { id: 'Leo', name: 'Лев', icon: '♌' }, { id: 'Virgo', name: 'Дева', icon: '♍' },
-    { id: 'Libra', name: 'Весы', icon: '♎' }, { id: 'Scorpio', name: 'Скорпион', icon: '' },
-    { id: 'Sagittarius', name: 'Стрелец', icon: '♐' }, { id: 'Capricorn', name: 'Козерог', icon: '♑' },
-    { id: 'Aquarius', name: 'Водолей', icon: '' }, { id: 'Pisces', name: 'Рыбы', icon: '♓' }
+    { id: 'Aries', name: 'Овен', icon: '♈', month: 3, day: 21 },
+    { id: 'Taurus', name: 'Телец', icon: '♉', month: 4, day: 20 },
+    { id: 'Gemini', name: 'Близнецы', icon: '♊', month: 5, day: 21 },
+    { id: 'Cancer', name: 'Рак', icon: '♋', month: 6, day: 21 },
+    { id: 'Leo', name: 'Лев', icon: '♌', month: 7, day: 23 },
+    { id: 'Virgo', name: 'Дева', icon: '♍', month: 8, day: 23 },
+    { id: 'Libra', name: 'Весы', icon: '', month: 9, day: 23 },
+    { id: 'Scorpio', name: 'Скорпион', icon: '', month: 10, day: 23 },
+    { id: 'Sagittarius', name: 'Стрелец', icon: '♐', month: 11, day: 22 },
+    { id: 'Capricorn', name: 'Козерог', icon: '♑', month: 12, day: 22 },
+    { id: 'Aquarius', name: 'Водолей', icon: '♒', month: 1, day: 20 },
+    { id: 'Pisces', name: 'Рыбы', icon: '♓', month: 2, day: 19 }
 ];
 
-// --- ИНИЦИАЛИЗАЦИЯ ---
+// ===== ПУНКТ 8: ТОЧНЫЙ РАСЧЁТ ЗОДИАКА =====
+function getZodiacSign(dateStr) {
+    if (!dateStr) return { name: '—', icon: '' };
+    const [, month, day] = dateStr.split('-').map(Number);
+    if (!month || !day) return { name: '—', icon: '✦' };
+
+    // Определяем знак: если день >= порогового для этого месяца — это он
+    // Иначе — предыдущий знак
+    for (let i = 0; i < ZODIAC_SIGNS.length; i++) {
+        const current = ZODIAC_SIGNS[i];
+        const next = ZODIAC_SIGNS[(i + 1) % ZODIAC_SIGNS.length];
+        
+        if (month === current.month && day >= current.day) {
+            return { name: current.name, icon: current.icon };
+        }
+        // Переход между годами (Козерог -> Водолей)
+        if (current.month > next.month && month === current.month && day >= current.day) {
+            return { name: current.name, icon: current.icon };
+        }
+    }
+    
+    // Если дата до 20 января — это Козерог
+    if (month === 1 && day < 20) {
+        return { name: 'Козерог', icon: '♑' };
+    }
+    
+    return { name: '—', icon: '✦' };
+}
+
+// ===== ИНИЦИАЛИЗАЦИЯ =====
 document.addEventListener('DOMContentLoaded', async () => {
     const uid = tg.initDataUnsafe?.user?.id;
     if (!uid) {
@@ -27,28 +62,78 @@ document.addEventListener('DOMContentLoaded', async () => {
         showScreen('screen-register');
         return;
     }
+    
     currentUser = { id: String(uid), name: tg.initDataUnsafe.user?.first_name || 'Пользователь' };
     
+    // ===== ПУНКТ 7: НАДЁЖНАЯ ЗАГРУЗКА =====
+    // 1. Проверяем localStorage (быстрый кэш)
+    const cached = localStorage.getItem(`cosmira_user_${currentUser.id}`);
+    if (cached) {
+        try {
+            const parsed = JSON.parse(cached);
+            if (parsed.birth_date && parsed.birth_time) {
+                currentUser = { ...currentUser, ...parsed, id: String(uid) };
+                updateProfileUI();
+                updateMainAvatar();
+                renderZodiacScrolls();
+                showScreen('screen-main');
+                // В фоне обновляем данные с сервера
+                await refreshFromServer();
+                return;
+            }
+        } catch (e) { console.warn('Cache parse error:', e); }
+    }
+    
+    // 2. Если кэша нет — грузим с сервера
     try {
         const res = await fetch(`${API_BASE}/api/user?uid=${currentUser.id}`);
         const data = await res.json();
         if (data.user_id) {
-            currentUser = { ...currentUser, ...data, id: String(uid), birth_city: data.birth_city || data.birth_place };
+            currentUser = {
+                id: String(uid),
+                name: data.name || currentUser.name,
+                birth_date: data.birth_date,
+                birth_time: data.birth_time,
+                birth_city: data.birth_city || data.birth_place,
+                zodiac: data.zodiac,
+                avatar: data.avatar || '🔮',
+                premium: data.premium
+            };
+            localStorage.setItem(`cosmira_user_${currentUser.id}`, JSON.stringify(currentUser));
             updateProfileUI();
+            updateMainAvatar();
+            renderZodiacScrolls();
             showScreen('screen-main');
         } else {
             showScreen('screen-register');
         }
     } catch (e) {
+        console.error('Load error:', e);
         showScreen('screen-register');
     }
-    
-    renderZodiacScrolls();
-    setupTabs();
-    setupNavigation();
 });
 
-// --- РЕНДЕР ЗНАКОВ (Красивые карточки вместо select) ---
+async function refreshFromServer() {
+    try {
+        const res = await fetch(`${API_BASE}/api/user?uid=${currentUser.id}`);
+        const data = await res.json();
+        if (data.user_id) {
+            currentUser = {
+                ...currentUser,
+                name: data.name || currentUser.name,
+                birth_city: data.birth_city || data.birth_place,
+                zodiac: data.zodiac,
+                avatar: data.avatar || currentUser.avatar,
+                premium: data.premium
+            };
+            localStorage.setItem(`cosmira_user_${currentUser.id}`, JSON.stringify(currentUser));
+            updateProfileUI();
+            updateMainAvatar();
+        }
+    } catch (e) { /* молча */ }
+}
+
+// ===== РЕНДЕР ЗНАКОВ =====
 function renderZodiacScrolls() {
     // Гороскоп
     const hContainer = document.getElementById('horoscope-signs');
@@ -60,22 +145,18 @@ function renderZodiacScrolls() {
             </div>
         `).join('');
     }
-
-    // Совместимость 1
-    const c1Container = document.getElementById('compat-s1');
-    if (c1Container) {
-        c1Container.innerHTML = ZODIAC_SIGNS.map(s => `
+    const c1 = document.getElementById('compat-s1');
+    if (c1) {
+        c1.innerHTML = ZODIAC_SIGNS.map(s => `
             <div class="zodiac-item ${s.id === selectedCompat1 ? 'active' : ''}" onclick="selectCompatSign(1, '${s.id}')">
                 <span class="zodiac-icon">${s.icon}</span>
                 <span class="zodiac-name">${s.name}</span>
             </div>
         `).join('');
     }
-
-    // Совместимость 2
-    const c2Container = document.getElementById('compat-s2');
-    if (c2Container) {
-        c2Container.innerHTML = ZODIAC_SIGNS.map(s => `
+    const c2 = document.getElementById('compat-s2');
+    if (c2) {
+        c2.innerHTML = ZODIAC_SIGNS.map(s => `
             <div class="zodiac-item ${s.id === selectedCompat2 ? 'active' : ''}" onclick="selectCompatSign(2, '${s.id}')">
                 <span class="zodiac-icon">${s.icon}</span>
                 <span class="zodiac-name">${s.name}</span>
@@ -86,15 +167,21 @@ function renderZodiacScrolls() {
 
 window.selectHoroscopeSign = (id) => {
     selectedHoroscopeSign = id;
-    renderZodiacScrolls();
+    document.querySelectorAll('#horoscope-signs .zodiac-item').forEach(el => el.classList.remove('active'));
+    const target = document.querySelector(`#horoscope-signs .zodiac-item:nth-child(${ZODIAC_SIGNS.findIndex(s => s.id === id) + 1})`);
+    if (target) target.classList.add('active');
 };
+
 window.selectCompatSign = (num, id) => {
     if (num === 1) selectedCompat1 = id;
     else selectedCompat2 = id;
-    renderZodiacScrolls();
+    const container = document.getElementById(num === 1 ? 'compat-s1' : 'compat-s2');
+    container.querySelectorAll('.zodiac-item').forEach(el => el.classList.remove('active'));
+    const target = container.querySelector(`.zodiac-item:nth-child(${ZODIAC_SIGNS.findIndex(s => s.id === id) + 1})`);
+    if (target) target.classList.add('active');
 };
 
-// --- ВАЛИДАЦИЯ И СОХРАНЕНИЕ ---
+// ===== ПУНКТ 7: СОХРАНЕНИЕ ПРОФИЛЯ =====
 async function saveProfile() {
     const name = document.getElementById('reg-name').value.trim();
     const birthDate = document.getElementById('reg-date').value;
@@ -109,39 +196,42 @@ async function saveProfile() {
     }
     
     const zodiac = getZodiacSign(birthDate);
+    
+    const payload = {
+        id: currentUser.id,
+        name,
+        username: tg.initDataUnsafe.user?.username || '',
+        birth_date: birthDate,
+        birth_time: birthTime,
+        birth_city: birthCity,
+        avatar: selectedAvatar,
+        zodiac: zodiac
+    };
+    
     try {
-        await fetch(`${API_BASE}/api/user`, {
+        const res = await fetch(`${API_BASE}/api/user`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: currentUser.id, name, username: tg.initDataUnsafe.user?.username || '',
-                birth_date: birthDate, birth_time: birthTime, birth_city: birthCity,
-                avatar: selectedAvatar, zodiac: zodiac
-            })
+            body: JSON.stringify(payload)
         });
-        currentUser = { ...currentUser, name, birth_date: birthDate, birth_time: birthTime, birth_city: birthCity, zodiac, avatar: selectedAvatar };
-        updateProfileUI();
-        showScreen('screen-main');
-        tg.showAlert('✨ Данные сохранены!');
+        const result = await res.json();
+        
+        if (result.status === 'ok' || res.ok) {
+            currentUser = { ...currentUser, ...payload };
+            // Сохраняем в localStorage сразу
+            localStorage.setItem(`cosmira_user_${currentUser.id}`, JSON.stringify(currentUser));
+            updateProfileUI();
+            updateMainAvatar();
+            renderZodiacScrolls();
+            showScreen('screen-main');
+            tg.showAlert('✨ Данные звёзд сохранены!');
+        } else {
+            throw new Error(result.error || 'Ошибка сервера');
+        }
     } catch (e) {
-        tg.showAlert('❌ Ошибка сети');
+        console.error('Save error:', e);
+        tg.showAlert('❌ Ошибка сети: ' + e.message);
     }
-}
-
-function getZodiacSign(dateStr) {
-    const [, month, day] = dateStr.split('-').map(Number);
-    const signs = [
-        [1, 20, 'Водолей', '♒'], [2, 18, 'Водолей', '♒'], [2, 19, 'Рыбы', '♓'], [3, 20, 'Рыбы', '♓'],
-        [3, 21, 'Овен', '♈'], [4, 19, 'Овен', '♈'], [4, 20, 'Телец', '♉'], [5, 20, 'Телец', '♉'],
-        [5, 21, 'Близнецы', '♊'], [6, 20, 'Близнецы', '♊'], [6, 21, 'Рак', '♋'], [7, 22, 'Рак', '♋'],
-        [7, 23, 'Лев', '♌'], [8, 22, 'Лев', '♌'], [8, 23, 'Дева', '♍'], [9, 22, 'Дева', '♍'],
-        [9, 23, 'Весы', '♎'], [10, 22, 'Весы', '♎'], [10, 23, 'Скорпион', '♏'], [11, 21, 'Скорпион', '♏'],
-        [11, 22, 'Стрелец', '♐'], [12, 21, 'Стрелец', '♐'], [12, 22, 'Козерог', '♑'], [1, 19, 'Козерог', '♑']
-    ];
-    for (let s of signs) {
-        if (month === s[0] && day >= s[1]) return { name: s[2], icon: s[3] };
-    }
-    return { name: 'Козерог', icon: '♑' };
 }
 
 function selectAvatar(icon) {
@@ -153,8 +243,7 @@ function selectAvatar(icon) {
 window.selectAvatar = selectAvatar;
 
 function updateProfileUI() {
-    document.getElementById('user-greeting').textContent = `Привет, ${currentUser.name} ✨`;
-    document.getElementById('profile-name').textContent = currentUser.name;
+    document.getElementById('profile-name').textContent = currentUser.name || '—';
     document.getElementById('profile-id').textContent = currentUser.id;
     document.getElementById('profile-avatar').textContent = currentUser.avatar || '🔮';
     
@@ -171,9 +260,21 @@ function updateProfileUI() {
     
     const premEl = document.getElementById('profile-premium');
     if (premEl) {
-        premEl.textContent = currentUser.premium ? '✅ Активен' : '❌ Нет';
+        premEl.textContent = currentUser.premium ? '✓ Активен' : '— Нет';
         premEl.className = currentUser.premium ? 'premium-badge active' : 'premium-badge';
     }
+}
+
+function updateMainAvatar() {
+    const greeting = document.getElementById('user-greeting');
+    const zodiac = document.getElementById('user-zodiac');
+    const avatar = document.getElementById('main-avatar');
+    if (greeting) greeting.textContent = `${currentUser.name || 'Странник'} ✦`;
+    if (zodiac && currentUser.zodiac) {
+        const z = typeof currentUser.zodiac === 'string' ? JSON.parse(currentUser.zodiac) : currentUser.zodiac;
+        zodiac.textContent = `${z.icon} ${z.name}`;
+    }
+    if (avatar) avatar.textContent = currentUser.avatar || '🔮';
 }
 
 function editProfile() {
@@ -181,32 +282,30 @@ function editProfile() {
     document.getElementById('reg-date').value = currentUser.birth_date || '';
     document.getElementById('reg-time').value = currentUser.birth_time || '';
     document.getElementById('reg-city').value = currentUser.birth_city || '';
+    selectedAvatar = currentUser.avatar || '🔮';
     showScreen('screen-register');
 }
 
-// --- НАВИГАЦИЯ И ЭКРАНЫ ---
+// ===== НАВИГАЦИЯ =====
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     const target = document.getElementById(id);
     if (target) {
         target.classList.remove('hidden');
-        target.classList.add('animate-in'); // Добавляем анимацию появления
+        target.classList.add('animate-in');
     }
-    window.scrollTo(0, 0);
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.screen === id);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 function goHome() { showScreen('screen-main'); }
 
 function setupNavigation() {
     document.querySelectorAll('.nav-item').forEach(btn => {
         btn.addEventListener('click', () => showScreen(btn.dataset.screen));
     });
-    // Экспорт для inline onclick
-    window.openProfile = () => showScreen('screen-profile');
-    window.openHoroscope = () => { renderZodiacScrolls(); showScreen('screen-horoscope'); };
-    window.openNatal = () => showScreen('screen-natal');
-    window.openCompatibility = () => { renderZodiacScrolls(); showScreen('screen-compat'); };
-    window.openHorary = () => showScreen('screen-horary');
-    window.openPremium = () => showScreen('screen-premium');
 }
 
 function setupTabs() {
@@ -218,32 +317,33 @@ function setupTabs() {
     });
 }
 
-// --- API ЗАПРОСЫ (Заглушки с красивым UI) ---
+// ===== API: ГОРОСКОП =====
 window.loadHoroscope = async () => {
     const sign = ZODIAC_SIGNS.find(s => s.id === selectedHoroscopeSign);
     const resultBox = document.getElementById('horoscope-result');
     const resultText = document.getElementById('result-text');
     
     resultBox.classList.add('hidden');
-    resultText.textContent = '✨ Считываем энергии звёзд...';
+    resultText.textContent = 'Считываем энергии звёзд...';
     resultBox.classList.remove('hidden');
     
+    const periodEl = document.querySelector('.period-tab.active');
+    const period = periodEl ? periodEl.dataset.period : 'day';
+    const periodNames = { day: 'сегодня', month: 'этот месяц', year: 'этот год' };
+    
+    document.getElementById('result-sign').textContent = `${sign.icon} ${sign.name}`;
+    document.getElementById('result-period').textContent = periodNames[period];
+    
     try {
-        const res = await fetch(`${API_BASE}/api/horoscope?sign=${selectedHoroscopeSign}`);
+        const res = await fetch(`${API_BASE}/api/horoscope?sign=${selectedHoroscopeSign}&period=${period}`);
         const data = await res.json();
-        
-        document.getElementById('result-sign').textContent = `${sign.icon} ${sign.name}`;
-        const period = document.querySelector('.period-tab.active').textContent;
-        document.getElementById('result-period').textContent = `на ${period.toLowerCase()}`;
-        
-        // Красивое форматирование текста
         resultText.textContent = data.text || "Звёзды пока молчат. Попробуй позже.";
-        
     } catch (e) {
-        resultText.textContent = "Связь с космосом потеряна. Проверь интернет.";
+        resultText.textContent = "Связь с космосом потеряна.";
     }
 };
 
+// ===== API: СОВМЕСТИМОСТЬ =====
 window.checkCompatibility = async () => {
     const s1 = ZODIAC_SIGNS.find(s => s.id === selectedCompat1);
     const s2 = ZODIAC_SIGNS.find(s => s.id === selectedCompat2);
@@ -256,23 +356,22 @@ window.checkCompatibility = async () => {
     try {
         const res = await fetch(`${API_BASE}/api/compatibility?s1=${selectedCompat1}&s2=${selectedCompat2}`);
         const data = await res.json();
-        
-        document.getElementById('compat-score').textContent = `${data.score || 85}%`;
+        document.getElementById('compat-score').textContent = `${data.score || '85'}%`;
         document.getElementById('compat-text').textContent = 
-            data.text || `Энергия союза ${s1.name} ${s1.icon} и ${s2.name} ${s2.icon} наполнена глубокой гармонией. Вы способны понять друг друга без слов.`;
-        
+            data.text || `Союз ${s1.icon} ${s1.name} и ${s2.icon} ${s2.name} наполнен глубокой энергией. Вы способны понять друг друга без слов.`;
     } catch (e) {
         document.getElementById('compat-text').textContent = "Не удалось рассчитать энергию союза.";
     }
 };
 
+// ===== API: ХОРАР =====
 window.askHorary = async () => {
     const question = document.getElementById('horary-question').value.trim();
-    if (question.length < 10) return tg.showAlert('❓ Задай вопрос подробнее (минимум 10 символов)');
+    if (question.length < 10) return tg.showAlert('Задай вопрос подробнее (минимум 10 символов)');
     
     const resultBox = document.getElementById('horary-result');
     resultBox.classList.add('hidden');
-    document.getElementById('horary-answer').textContent = '🔮 Анализирую хорарную карту...';
+    document.getElementById('horary-answer').textContent = 'Анализирую хорарную карту...';
     resultBox.classList.remove('hidden');
     
     try {
@@ -282,15 +381,66 @@ window.askHorary = async () => {
             body: JSON.stringify({ question, uid: currentUser?.id })
         });
         const data = await res.json();
-        
         document.getElementById('horary-answer').textContent = data.answer || "Звёзды говорят: да, но действуй мягко.";
         document.getElementById('horary-time').textContent = new Date(data.timestamp).toLocaleString('ru-RU');
-        
     } catch (e) {
         document.getElementById('horary-answer').textContent = "Космос недоступен.";
     }
 };
 
+// ===== НАТАЛЬНАЯ КАРТА =====
+window.openNatal = async () => {
+    if (!currentUser?.birth_date) {
+        tg.showAlert('⚠️ Сначала заполни дату рождения в профиле');
+        showScreen('screen-profile');
+        return;
+    }
+    showScreen('screen-natal');
+    const container = document.getElementById('natal-container');
+    container.innerHTML = '<div class="loader">Рассчитываем положение планет...</div>';
+    
+    try {
+        const res = await fetch(`${API_BASE}/api/natal?uid=${currentUser.id}`);
+        const data = await res.json();
+        
+        if (data.planets && Object.keys(data.planets).length > 0) {
+            const planetNames = {
+                'Sun': 'Солнце', 'Moon': 'Луна', 'Mercury': 'Меркурий', 'Venus': 'Венера',
+                'Mars': 'Марс', 'Jupiter': 'Юпитер', 'Saturn': 'Сатурн',
+                'Ascendant': 'Асцендент'
+            };
+            let html = '';
+            for (let key in planetNames) {
+                if (data.planets[key]) {
+                    const p = data.planets[key];
+                    html += `<div class="planet-row"><span class="planet-name">${planetNames[key]}</span><span class="planet-value"><strong>${p.sign_ru}</strong> ${p.degree}°${p.house ? ` • Дом ${p.house}` : ''}</span></div>`;
+                }
+            }
+            if (data.interpretation) {
+                html += `<p style="margin-top:16px; font-size:14px; line-height:1.7; color:rgba(255,255,255,0.85); font-weight:300;">${data.interpretation}</p>`;
+            }
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-secondary);">Расчёт карты временно недоступен. Скоро добавим!</p>';
+        }
+    } catch (e) {
+        container.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-secondary);">Связь с космосом потеряна</p>';
+    }
+};
+
+// ===== ЭКСПОРТ =====
 window.saveProfile = saveProfile;
 window.goHome = goHome;
 window.editProfile = editProfile;
+window.openProfile = () => showScreen('screen-profile');
+window.openHoroscope = () => { renderZodiacScrolls(); showScreen('screen-horoscope'); };
+window.openNatal = window.openNatal;
+window.openCompatibility = () => { renderZodiacScrolls(); showScreen('screen-compat'); };
+window.openHorary = () => showScreen('screen-horary');
+window.openPremium = () => showScreen('screen-premium');
+window.loadHoroscope = window.loadHoroscope;
+window.checkCompatibility = window.checkCompatibility;
+window.askHorary = window.askHorary;
+
+setupNavigation();
+setupTabs();
