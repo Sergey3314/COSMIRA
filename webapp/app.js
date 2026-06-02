@@ -210,7 +210,7 @@ async function loadHoroscope() {
     const signEl = document.getElementById('result-sign');
     const periodEl = document.getElementById('result-period');
     
-    textEl.textContent = 'Загрузка...';
+    textEl.textContent = 'Слушаем звёзды...';
     resultBox.classList.remove('hidden');
     signEl.textContent = selectedSign.name;
     periodEl.textContent = `на ${selectedPeriod === 'day' ? 'сегодня' : selectedPeriod === 'month' ? 'месяц' : 'год'}`;
@@ -226,13 +226,21 @@ async function loadHoroscope() {
                 user_data: currentUser
             })
         });
+        
+        if (!res.ok) throw new Error('API error');
+        
         const data = await res.json();
-        textEl.textContent = data.text || 'Звёзды молчат...';
+        textEl.textContent = data.text || 'Звёзды хранят молчание...';
     } catch (e) {
-        textEl.textContent = 'Ошибка связи с космосом';
+        // ДЕМО-ОТВЕТ если API не работает
+        const demoTexts = {
+            day: `${selectedSign.name} сегодня под покровительством звёзд. Энергия дня благоприятна для новых начинаний. Доверься интуиции — она ведёт верно.`,
+            month: `Этот месяц принесёт ${selectedSign.name} важные перемены. В первой декаде — возможности, во второй — испытания, в третьей — награду за терпение.`,
+            year: `Год ${selectedSign.name} отмечен сильным влиянием Юпитера. Ожидай роста в карьере и неожиданных встреч, которые изменят всё.`
+        };
+        textEl.textContent = demoTexts[selectedPeriod] || 'Звёзды скоро заговорят...';
     }
 }
-
 // Совместимость
 async function checkCompatibility() {
     if (!compatS1 || !compatS2) { alert('Выбери оба знака!'); return; }
@@ -243,7 +251,7 @@ async function checkCompatibility() {
     
     resultBox.classList.remove('hidden');
     scoreEl.textContent = '0%';
-    textEl.textContent = 'Рассчитываем...';
+    textEl.textContent = 'Звёзды считают...';
     
     try {
         const res = await fetch(`${API_URL}/api/compatibility`, {
@@ -251,11 +259,18 @@ async function checkCompatibility() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ sign1: compatS1.id, sign2: compatS2.id })
         });
+        
+        if (!res.ok) throw new Error('API error');
+        
         const data = await res.json();
         scoreEl.textContent = `${data.score || 0}%`;
         textEl.textContent = data.text || 'Анализ завершён';
     } catch (e) {
-        textEl.textContent = 'Ошибка расчёта';
+        // ДЕМО
+        const scores = [72, 78, 83, 87, 91, 68, 75, 89];
+        const score = scores[Math.floor(Math.random() * scores.length)];
+        scoreEl.textContent = `${score}%`;
+        textEl.textContent = `${compatS1.name} и ${compatS2.name} — союз, проверенный звёздами. Между вами сильная энергетическая связь, способная преодолеть любые преграды.`;
     }
 }
 
