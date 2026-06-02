@@ -12,6 +12,7 @@
 <body>
     <div class="bg"></div>
     
+    <!-- Загрузка -->
     <section id="screen-loading" class="screen">
         <div class="loader-center">
             <div class="spinner"></div>
@@ -19,9 +20,10 @@
         </div>
     </section>
 
+    <!-- Регистрация -->
     <section id="screen-register" class="screen hidden">
         <div class="page-header">
-            <div class="header-top"><span class="header-decor">✦ ASTROLOGY </span></div>
+            <div class="header-top"><span class="header-decor">✦ ASTROLOGY ✦</span></div>
             <h2 class="header-title">Твои данные</h2>
         </div>
         <div class="card glass">
@@ -30,75 +32,64 @@
             <div class="form-group"><label>Дата рождения *</label><input type="date" id="reg-date"></div>
             <div class="form-group"><label>Время рождения *</label><input type="time" id="reg-time"><small>Чем точнее — тем вернее карта</small></div>
             <div class="form-group"><label>Город рождения</label><input type="text" id="reg-city" placeholder="Например: Москва"></div>
-            
-            <label class="label-title">Выбери свой символ:</label>
-            <div class="avatar-grid" id="avatar-selector">
-                <div class="avatar-item active" data-icon="" onclick="selectAvatar('🔮')"></div>
-                <div class="avatar-item" data-icon="🌌" onclick="selectAvatar('')">🌌</div>
-                <div class="avatar-item" data-icon="" onclick="selectAvatar('')">🌙</div>
-                <div class="avatar-item" data-icon="☀️" onclick="selectAvatar('️')">☀️</div>
-                <div class="avatar-item" data-icon="⭐" onclick="selectAvatar('⭐')">⭐</div>
-                <div class="avatar-item" data-icon="" onclick="selectAvatar('🪐')">🪐</div>
-            </div>
-            
             <button onclick="saveProfile()" class="btn-primary">Сохранить и продолжить</button>
         </div>
     </section>
 
+    <!-- Главная -->
     <section id="screen-main" class="screen hidden">
         <div class="page-header">
-            <div class="header-top"><span class="header-decor">✦ COSMIRA ✦</span></div>
+            <div class="header-top">
+                <span class="header-decor"> COSMIRA ✦</span>
+            </div>
             <h2 class="header-title">Главная</h2>
+            <button class="profile-btn-header" onclick="openProfile()">
+                <img src="/webapp/icons/nav-profile.png" class="header-icon" alt="Профиль">
+            </button>
         </div>
+        
         <div class="card glass profile-preview">
-            <div class="profile-avatar-sm" id="main-avatar"></div>
+            <div class="profile-avatar-sm" id="main-avatar">🔮</div>
             <div>
                 <p class="greeting" id="user-greeting">Загрузка...</p>
                 <p class="greeting-sub" id="user-zodiac">—</p>
             </div>
-            <button class="icon-btn" onclick="openProfile()">
-                <img src="/webapp/icons/nav-profile.png" class="cosmic-icon" alt="">
-            </button>
         </div>
+        
         <div class="grid">
             <div class="card glass" onclick="openHoroscope()">
-                <img src="/webapp/icons/horoscope.png" class="golden-icon" alt="">
+                <div class="icon-wrap"><img src="/webapp/icons/horoscope.png" class="icon-main" alt=""></div>
                 <h3>Гороскоп</h3>
                 <p>Прогноз на день, месяц, год</p>
-                <img src="/webapp/icons/arrow.png" class="card-arrow cosmic-icon" alt="">
             </div>
             <div class="card glass" onclick="openNatal()">
-                <img src="/webapp/icons/natal.png" class="golden-icon" alt="">
+                <div class="icon-wrap"><img src="/webapp/icons/natal.png" class="icon-main" alt=""></div>
                 <h3>Натальная карта</h3>
                 <p>Твои планеты и дома</p>
-                <img src="/webapp/icons/arrow.png" class="card-arrow cosmic-icon" alt="">
             </div>
             <div class="card glass" onclick="openCompatibility()">
-                <img src="/webapp/icons/compat.png" class="golden-icon" alt="">
+                <div class="icon-wrap"><img src="/webapp/icons/compat.png" class="icon-main" alt=""></div>
                 <h3>Совместимость</h3>
                 <p>Синастрия с партнёром</p>
-                <img src="/webapp/icons/arrow.png" class="card-arrow cosmic-icon" alt="">
             </div>
             <div class="card glass" onclick="openHorary()">
-                <img src="/webapp/icons/horary.png" class="cosmic-icon" style="width:56px;height:56px;" alt="">
+                <div class="icon-wrap"><img src="/webapp/icons/horary.png" class="icon-main" alt=""></div>
                 <h3>Хорар</h3>
                 <p>Ответ на один вопрос</p>
-                <img src="/webapp/icons/arrow.png" class="card-arrow cosmic-icon" alt="">
             </div>
         </div>
+        
         <div class="promo-banner glass" onclick="openPremium()">
-            <img src="/webapp/icons/vip.png" class="promo-icon cosmic-icon" alt="">
+            <div class="icon-wrap-sm"><img src="/webapp/icons/nav-sun.png" class="icon-gold" alt=""></div>
             <div><strong>Premium доступ</strong><p>Полные прогнозы и разборы</p></div>
-            <img src="/webapp/icons/arrow.png" class="card-arrow cosmic-icon" style="position:static;opacity:0.7;" alt="">
         </div>
     </section>
 
+    <!-- Гороскоп -->
     <section id="screen-horoscope" class="screen hidden">
         <div class="page-header">
-            <button class="back-btn" onclick="goHome()">
-                <img src="/webapp/icons/back.png" class="cosmic-icon" alt="←">
-            </button>
-            <div class="header-top"><span class="header-decor">✦ ASTROLOGY ✦</span></div>
+            <button class="back-btn" onclick="goHome()">←</button>
+            <div class="header-top"><span class="header-decor"> ASTROLOGY ✦</span></div>
             <h2 class="header-title">Гороскоп</h2>
         </div>
         <div class="card glass">
@@ -107,7 +98,7 @@
             
             <div class="period-tabs">
                 <button class="period-tab active" data-period="day">День</button>
-                <button class="period-tab" data-period="month">Месяц </button>
+                <button class="period-tab" data-period="month">Месяц ✦</button>
                 <button class="period-tab" data-period="year">Год ✦</button>
             </div>
             
@@ -126,31 +117,25 @@
         </div>
     </section>
 
+    <!-- Совместимость -->
     <section id="screen-compat" class="screen hidden">
         <div class="page-header">
-            <button class="back-btn" onclick="goHome()">
-                <img src="/webapp/icons/back.png" class="cosmic-icon" alt="←">
-            </button>
+            <button class="back-btn" onclick="goHome()">←</button>
             <div class="header-top"><span class="header-decor">✦ ASTROLOGY ✦</span></div>
             <h2 class="header-title">Совместимость</h2>
         </div>
         <div class="card glass">
-            <p class="section-subtitle">Выбери два знака, чтобы узнать их энергию:</p>
-            
+            <p class="section-subtitle">Выбери два знака:</p>
             <div class="compat-block">
                 <span class="compat-label">Ты</span>
                 <div class="zodiac-scroll" id="compat-s1"></div>
             </div>
-            
             <div class="energy-divider"><span class="pulse-icon">✦</span></div>
-            
             <div class="compat-block">
                 <span class="compat-label">Партнёр</span>
                 <div class="zodiac-scroll" id="compat-s2"></div>
             </div>
-            
             <button onclick="checkCompatibility()" class="btn-primary btn-glow">✨ Рассчитать союз</button>
-            
             <div id="compat-result" class="result-box hidden">
                 <div class="compat-score" id="compat-score">0%</div>
                 <p id="compat-text"></p>
@@ -158,23 +143,21 @@
         </div>
     </section>
 
+    <!-- Натальная карта -->
     <section id="screen-natal" class="screen hidden">
         <div class="page-header">
-            <button class="back-btn" onclick="goHome()">
-                <img src="/webapp/icons/back.png" class="cosmic-icon" alt="←">
-            </button>
+            <button class="back-btn" onclick="goHome()">←</button>
             <div class="header-top"><span class="header-decor">✦ ASTROLOGY ✦</span></div>
             <h2 class="header-title">Натальная карта</h2>
         </div>
         <div id="natal-container" class="card glass"><div class="loader">🔮 Рассчитываем положение планет...</div></div>
     </section>
 
+    <!-- Хорар -->
     <section id="screen-horary" class="screen hidden">
         <div class="page-header">
-            <button class="back-btn" onclick="goHome()">
-                <img src="/webapp/icons/back.png" class="cosmic-icon" alt="←">
-            </button>
-            <div class="header-top"><span class="header-decor"> ASTROLOGY ✦</span></div>
+            <button class="back-btn" onclick="goHome()">←</button>
+            <div class="header-top"><span class="header-decor">✦ ASTROLOGY ✦</span></div>
             <h2 class="header-title">Хорар</h2>
         </div>
         <div class="card glass">
@@ -189,11 +172,10 @@
         </div>
     </section>
 
+    <!-- Профиль -->
     <section id="screen-profile" class="screen hidden">
         <div class="page-header">
-            <button class="back-btn" onclick="goHome()">
-                <img src="/webapp/icons/back.png" class="cosmic-icon" alt="←">
-            </button>
+            <button class="back-btn" onclick="goHome()">←</button>
             <div class="header-top"><span class="header-decor">✦ ASTROLOGY ✦</span></div>
             <h2 class="header-title">Профиль</h2>
         </div>
@@ -212,16 +194,15 @@
         </div>
     </section>
 
+    <!-- Premium -->
     <section id="screen-premium" class="screen hidden">
         <div class="page-header">
-            <button class="back-btn" onclick="goHome()">
-                <img src="/webapp/icons/back.png" class="cosmic-icon" alt="←">
-            </button>
-            <div class="header-top"><span class="header-decor">✦ ASTROLOGY </span></div>
+            <button class="back-btn" onclick="goHome()">←</button>
+            <div class="header-top"><span class="header-decor">✦ ASTROLOGY ✦</span></div>
             <h2 class="header-title">Premium</h2>
         </div>
         <div class="card glass premium-hero">
-            <img src="/webapp/icons/premium.png" class="premium-hero-icon cosmic-icon" alt="">
+            <div class="icon-wrap-lg"><img src="/webapp/icons/nav-sun.png" class="icon-gold" alt=""></div>
             <h3>COSMIRA PREMIUM</h3>
             <p>Раскрой весь потенциал астрологии</p>
         </div>
@@ -246,25 +227,26 @@
         </div>
     </section>
 
+    <!-- Нижняя навигация -->
     <nav class="bottom-nav">
         <button class="nav-item active" data-screen="screen-main">
-            <img src="/webapp/icons/nav-home.png" class="nav-icon cosmic-icon" alt="">
+            <img src="/webapp/icons/nav-home.png" class="nav-icon" alt="">
             <span class="nav-label">Главная</span>
         </button>
         <button class="nav-item" data-screen="screen-horoscope">
-            <img src="/webapp/icons/nav-horoscope.png" class="nav-icon cosmic-icon" alt="">
+            <img src="/webapp/icons/nav-sun.png" class="nav-icon" alt="">
             <span class="nav-label">Гороскоп</span>
         </button>
         <button class="nav-item" data-screen="screen-natal">
-            <img src="/webapp/icons/natal.png" class="nav-icon golden-icon" alt="">
+            <img src="/webapp/icons/nav-book.png" class="nav-icon" alt="">
             <span class="nav-label">Натал</span>
         </button>
         <button class="nav-item" data-screen="screen-compat">
-            <img src="/webapp/icons/nav-compat.png" class="nav-icon cosmic-icon" alt="">
+            <img src="/webapp/icons/nav-heart.png" class="nav-icon" alt="">
             <span class="nav-label">Совместимость</span>
         </button>
         <button class="nav-item" data-screen="screen-profile">
-            <img src="/webapp/icons/nav-profile.png" class="nav-icon cosmic-icon" alt="">
+            <img src="/webapp/icons/nav-profile.png" class="nav-icon" alt="">
             <span class="nav-label">Профиль</span>
         </button>
     </nav>
