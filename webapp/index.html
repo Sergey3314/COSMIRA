@@ -257,7 +257,7 @@
         </div>
     </section>
 
-        <!-- ПРОФИЛЬ -->
+           <!-- ПРОФИЛЬ -->
     <section id="screen-profile" class="screen hidden">
         <div class="header">
             <button class="back-btn" onclick="goHome()">←</button>
@@ -265,15 +265,19 @@
         </div>
         
         <div class="card glass profile-card">
-            <div class="profile-avatar" id="profile-avatar"></div>
+            <div class="profile-avatar" id="profile-avatar">🔮</div>
             <h3 id="profile-name">Загрузка...</h3>
-            <p id="profile-zodiac" class="zodiac-badge">--</p>
+            <p id="profile-zodiac" class="zodiac-badge">—</p>
             
             <div class="profile-data">
-                <div class="data-row"><span> ID</span><span id="profile-id" class="mono">—</span></div>
-                <div class="data-row"><span>📅 Дата</span><span id="profile-birth-date">Не указана</span></div>
-                <div class="data-row"><span>⏰ Время</span><span id="profile-birth-time">Не указано</span></div>
-                <div class="data-row"><span>📍 Город</span><span id="profile-birth-city">Не указан</span></div>
+                <div class="data-row"><span>🆔 ID</span><span id="profile-id" class="mono">—</span></div>
+                <div class="data-row"><span>📅 Дата рождения</span><span id="profile-birth-date">—</span></div>
+                <div class="data-row"><span>⏰ Время рождения</span><span id="profile-birth-time">—</span></div>
+                <div class="data-row"><span>📍 Город рождения</span><span id="profile-birth-city">—</span></div>
+                <div class="data-row">
+                    <span>💎 Premium</span>
+                    <span id="profile-premium" class="premium-badge">Нет</span>
+                </div>
             </div>
             
             <button onclick="editProfile()" class="btn-outline">Редактировать данные</button>
