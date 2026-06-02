@@ -8,17 +8,17 @@ let compatS1 = null;
 let compatS2 = null;
 
 const ZODIAC_SIGNS = [
-    { id: 'aries', name: 'Овен', emoji: '♈', icon: 'aries.png' },
+    { id: 'aries', name: 'Овен', emoji: '', icon: 'aries.png' },
     { id: 'taurus', name: 'Телец', emoji: '♉', icon: 'taurus.png' },
-    { id: 'gemini', name: 'Близнецы', emoji: '♊', icon: 'gemini.png' },
+    { id: 'gemini', name: 'Близнецы', emoji: '', icon: 'gemini.png' },
     { id: 'cancer', name: 'Рак', emoji: '♋', icon: 'cancer.png' },
     { id: 'leo', name: 'Лев', emoji: '♌', icon: 'leo.png' },
     { id: 'virgo', name: 'Дева', emoji: '♍', icon: 'virgo.png' },
     { id: 'libra', name: 'Весы', emoji: '♎', icon: 'libra.png' },
     { id: 'scorpio', name: 'Скорпион', emoji: '♏', icon: 'scorpio.png' },
-    { id: 'sagittarius', name: 'Стрелец', emoji: '♐', icon: 'sagittarius.png' },
+    { id: 'sagittarius', name: 'Стрелец', emoji: '', icon: 'sagittarius.png' },
     { id: 'capricorn', name: 'Козерог', emoji: '♑', icon: 'capricorn.png' },
-    { id: 'aquarius', name: 'Водолей', emoji: '', icon: 'aquarius.png' },
+    { id: 'aquarius', name: 'Водолей', emoji: '♒', icon: 'aquarius.png' },
     { id: 'pisces', name: 'Рыбы', emoji: '♓', icon: 'pisces.png' }
 ];
 
@@ -54,16 +54,27 @@ async function initApp() {
             updateMainProfile();
         } else {
             showScreen('screen-register');
+            // Скрываем навигацию при регистрации
+            document.getElementById('bottom-nav').style.display = 'none';
         }
     } catch (e) {
         console.error(e);
         showScreen('screen-register');
+        document.getElementById('bottom-nav').style.display = 'none';
     }
 }
 
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
+    
+    // Показываем/скрываем навигацию
+    const nav = document.getElementById('bottom-nav');
+    if (id === 'screen-register') {
+        nav.style.display = 'none';
+    } else {
+        nav.style.display = 'flex';
+    }
     
     // Обновить нижнюю навигацию
     document.querySelectorAll('.nav-item').forEach(btn => {
@@ -112,21 +123,22 @@ async function saveProfile() {
     }
     
     const tg = window.Telegram?.WebApp;
-    await fetch(`${API_URL}/api/profile`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            telegram_id: tg?.initDataUnsafe?.user?.id || 123456789,
-            name, birth_date: date, birth_time: time, birth_city: city,
-            avatar: selectedAvatar
-        })
-    });
-    
-    currentUser.has_profile = true;
-    currentUser.name = name;
-    currentUser.birth_date = date;
-    currentUser.birth_time = time;
-    currentUser.birth_city = city;
+    try {
+        const res = await fetch(`${API_URL}/api/profile`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                telegram_id: tg?.initDataUnsafe?.user?.id || 123456789,
+                name, birth_date: date, birth_time: time, birth_city: city,
+                avatar: selectedAvatar
+            })
+        });
+        
+        const data = await res.json();
+        currentUser = { ...currentUser, ...data, has_profile: true };
+    } catch (e) {
+        console.error(e);
+    }
     
     showScreen('screen-main');
     updateMainProfile();
@@ -143,10 +155,10 @@ function updateMainProfile() {
 function updateProfileScreen() {
     if (!currentUser) return;
     const zodiac = calculateZodiac(currentUser.birth_date);
-    document.getElementById('profile-avatar').textContent = currentUser.avatar || '';
-    document.getElementById('profile-name').textContent = currentUser.name;
+    document.getElementById('profile-avatar').textContent = currentUser.avatar || '🔮';
+    document.getElementById('profile-name').textContent = currentUser.name || '—';
     document.getElementById('profile-zodiac').textContent = zodiac ? `${zodiac.emoji} ${zodiac.name}` : '—';
-    document.getElementById('profile-id').textContent = currentUser.telegram_id;
+    document.getElementById('profile-id').textContent = currentUser.telegram_id || '—';
     document.getElementById('profile-birth-date').textContent = currentUser.birth_date || '—';
     document.getElementById('profile-birth-time').textContent = currentUser.birth_time || '—';
     document.getElementById('profile-birth-city').textContent = currentUser.birth_city || '—';
@@ -241,6 +253,7 @@ async function loadHoroscope() {
         textEl.textContent = demoTexts[selectedPeriod] || 'Звёзды скоро заговорят...';
     }
 }
+
 // Совместимость
 async function checkCompatibility() {
     if (!compatS1 || !compatS2) { alert('Выбери оба знака!'); return; }
@@ -277,7 +290,7 @@ async function checkCompatibility() {
 // Натальная карта
 async function loadNatalChart() {
     const container = document.getElementById('natal-container');
-    container.innerHTML = '<div class="loader">🔮 Рассчитываем положение планет...</div>';
+    container.innerHTML = '<div class="loader"> Рассчитываем положение планет...</div>';
     
     if (!currentUser?.birth_date || !currentUser?.birth_time) {
         container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">Заполни данные в профиле для расчёта карты</p>';
@@ -343,14 +356,14 @@ function calculateZodiac(dateStr) {
     const day = d.getDate();
     
     const signs = [
-        { name: 'Козерог', emoji: '♑', start: [1,1], end: [1,19] },
+        { name: 'Козерог', emoji: '', start: [1,1], end: [1,19] },
         { name: 'Водолей', emoji: '♒', start: [1,20], end: [2,18] },
         { name: 'Рыбы', emoji: '♓', start: [2,19], end: [3,20] },
         { name: 'Овен', emoji: '♈', start: [3,21], end: [4,19] },
-        { name: 'Телец', emoji: '', start: [4,20], end: [5,20] },
+        { name: 'Телец', emoji: '♉', start: [4,20], end: [5,20] },
         { name: 'Близнецы', emoji: '♊', start: [5,21], end: [6,20] },
         { name: 'Рак', emoji: '♋', start: [6,21], end: [7,22] },
-        { name: 'Лев', emoji: '♌', start: [7,23], end: [8,22] },
+        { name: 'Лев', emoji: '', start: [7,23], end: [8,22] },
         { name: 'Дева', emoji: '♍', start: [8,23], end: [9,22] },
         { name: 'Весы', emoji: '♎', start: [9,23], end: [10,22] },
         { name: 'Скорпион', emoji: '♏', start: [10,23], end: [11,21] },
