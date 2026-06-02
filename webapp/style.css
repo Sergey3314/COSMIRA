@@ -1,3 +1,7 @@
+/* ============================================
+   COSMIRA PREMIUM STYLES v2
+   ============================================ */
+
 :root {
     --bg: #050814;
     --bg-gradient: linear-gradient(180deg, #0a0f24 0%, #050814 100%);
@@ -10,22 +14,28 @@
     --gold: #FFD700;
     --radius: 20px;
     --radius-sm: 12px;
-    --nav-height: 72px;
+    --nav-height: 70px;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
 
 body {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Montserrat', -apple-system, sans-serif;
     font-weight: 400;
     background: var(--bg);
     color: var(--text);
     line-height: 1.5;
     min-height: 100vh;
-    padding-bottom: var(--nav-height);
+    padding-bottom: calc(var(--nav-height) + 20px);
     overflow-x: hidden;
 }
 
+/* Фон */
 .bg {
     position: fixed;
     inset: 0;
@@ -42,75 +52,85 @@ body {
     z-index: -1;
 }
 
-/* ===== ШРИФТЫ ===== */
-h1, h2, h3, .header-title, .premium-hero h3 {
+/* Шрифты */
+h1, h2, h3, .header-title {
     font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
     letter-spacing: 1px;
 }
 
-/* ===== СТРЕЛКА НАЗАД (ПУНКТ 1) ===== */
+/* ===== ЭКРАНЫ ===== */
+.screen {
+    padding: 20px 16px;
+    padding-bottom: 90px;
+    animation: fadeIn 0.4s ease;
+}
+.screen.hidden { display: none; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== ЗАГОЛОВОК ЭКРАНА (по центру, нормальный размер) ===== */
+.page-header {
+    text-align: center;
+    margin-bottom: 24px;
+    position: relative;
+    padding-top: 10px;
+}
+
+.header-decor {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 6px;
+    color: var(--gold);
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 8px;
+}
+
+.header-title {
+    font-size: 28px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #fff 0%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 2px;
+    display: block;
+    text-align: center;
+}
+
+/* ===== СТРЕЛКА НАЗАД ===== */
 .back-btn {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
     background: none;
     border: none;
     color: var(--text);
-    font-size: 26px;
-    padding: 0;
-    width: auto;
-    height: auto;
+    font-size: 24px;
+    padding: 8px;
     cursor: pointer;
-    transition: transform 0.3s ease, filter 0.3s ease;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 36px;
     height: 36px;
+    z-index: 10;
 }
-.back-btn::before {
-    content: '←';
-    font-weight: 300;
-    transition: all 0.3s ease;
-}
-.back-btn:hover { filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6)); }
-.back-btn:active { transform: translateX(-3px); }
-
-/* ===== ЗАГОЛОВОК ЭКРАНА (ВАРИАНТ 1) ===== */
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 20px;
-    padding-top: 8px;
-}
-.header-top {
-    width: 100%;
-    text-align: center;
-    margin-bottom: 4px;
-}
-.header-decor {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 4px;
+.back-btn:hover {
     color: var(--gold);
-    text-transform: uppercase;
-    opacity: 0.8;
+    transform: translateY(-50%) translateX(-3px);
 }
-.header-title {
-    width: 100%;
-    text-align: center;
-    font-size: 34px;
-    font-weight: 600;
-    background: linear-gradient(135deg, #fff 0%, var(--gold) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin: 4px 0 0 0;
-    letter-spacing: 2px;
-}
+.back-btn:active { transform: translateY(-50%) scale(0.95); }
 
 /* ===== КАРТОЧКИ ===== */
-.screen { padding: 16px; padding-bottom: 90px; }
-.screen.hidden { display: none; }
-
 .card.glass {
     background: var(--glass);
     border: 1px solid var(--glass-border);
@@ -121,7 +141,13 @@ h1, h2, h3, .header-title, .premium-hero h3 {
     margin-bottom: 16px;
 }
 
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+/* Сетка главной */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
 
 .card {
     text-align: center;
@@ -132,9 +158,23 @@ h1, h2, h3, .header-title, .premium-hero h3 {
 }
 .card:active { transform: scale(0.97); }
 
-.card-icon { font-size: 30px; margin-bottom: 10px; }
-.card h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-.card p { font-size: 12px; color: var(--text-secondary); line-height: 1.3; }
+.card-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+    color: var(--gold);
+}
+.card h3 {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: var(--text);
+}
+.card p {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.3;
+    font-weight: 300;
+}
 .card-arrow {
     position: absolute;
     top: 14px;
@@ -143,13 +183,16 @@ h1, h2, h3, .header-title, .premium-hero h3 {
     font-size: 14px;
     transition: all 0.3s;
 }
-.card:hover .card-arrow { color: var(--gold); transform: translateX(3px); }
+.card:hover .card-arrow {
+    color: var(--gold);
+    transform: translateX(3px);
+}
 
 /* ===== ФОРМЫ ===== */
 .form-group { margin-bottom: 16px; }
 .form-group label {
     display: block;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-secondary);
     margin-bottom: 6px;
     text-transform: uppercase;
@@ -163,22 +206,28 @@ input, select, textarea {
     border-radius: var(--radius-sm);
     padding: 14px;
     color: var(--text);
-    font-size: 15px;
+    font-size: 14px;
     outline: none;
     transition: all 0.3s;
     font-family: inherit;
 }
 input:focus, select:focus, textarea:focus {
     border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.1);
 }
 input[type="date"], input[type="time"] { color-scheme: dark; }
 textarea { resize: vertical; min-height: 80px; }
-small { display: block; font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+small {
+    display: block;
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    font-weight: 300;
+}
 
 .label-title {
     display: block;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-secondary);
     margin-bottom: 10px;
     text-transform: uppercase;
@@ -202,7 +251,7 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     border: none;
     border-radius: var(--radius-sm);
     color: white;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
     letter-spacing: 0.5px;
     cursor: pointer;
@@ -210,7 +259,10 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     margin-top: 12px;
     font-family: inherit;
 }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px var(--accent-glow); }
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px var(--accent-glow);
+}
 .btn-primary:active { transform: translateY(0); }
 
 .btn-glow {
@@ -224,22 +276,28 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-sm);
     color: var(--text);
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
     transition: 0.3s;
     font-family: inherit;
 }
-.btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+.btn-outline:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+}
 
 .icon-btn {
     background: var(--glass);
     border: 1px solid var(--glass-border);
     border-radius: 12px;
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
     cursor: pointer;
     transition: 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .icon-btn:hover { background: rgba(255,255,255,0.08); }
 
@@ -253,7 +311,7 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
 .avatar-item {
     flex: 1;
     text-align: center;
-    font-size: 24px;
+    font-size: 22px;
     padding: 12px 0;
     background: rgba(0,0,0,0.3);
     border: 1px solid var(--glass-border);
@@ -267,17 +325,17 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
 }
 
-/* ===== ЗНАКИ ЗОДИАКА (ПУНКТ 4, 5) ===== */
+/* ===== ЗНАКИ ЗОДИАКА (стабильные, не прыгают) ===== */
 .zodiac-scroll {
     display: flex;
     overflow-x: auto;
     gap: 10px;
-    padding: 6px 4px 12px;
+    padding: 8px 4px;
     margin-bottom: 16px;
     scrollbar-width: none;
     scroll-behavior: smooth;
-    /* Фиксированная высота чтобы не прыгало */
-    min-height: 80px;
+    min-height: 82px; /* Фиксированная высота */
+    align-items: center;
 }
 .zodiac-scroll::-webkit-scrollbar { display: none; }
 
@@ -287,7 +345,7 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 70px;
+    width: 68px;
     height: 76px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -295,41 +353,29 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    overflow: hidden;
 }
-.zodiac-item::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at center, rgba(255, 215, 0, 0.2), transparent 70%);
-    opacity: 0;
-    transition: opacity 0.4s;
-}
-.zodiac-item:hover::before { opacity: 1; }
 .zodiac-item.active {
     border-color: var(--gold);
     background: rgba(255, 215, 0, 0.08);
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.25);
     transform: translateY(-2px);
 }
 .zodiac-icon {
-    font-size: 26px;
+    font-size: 24px;
     color: #a78bfa;
     transition: all 0.3s;
-    z-index: 1;
 }
 .zodiac-item.active .zodiac-icon {
     color: var(--gold);
     filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
 }
 .zodiac-name {
-    font-size: 10px;
+    font-size: 9px;
     color: var(--text-secondary);
     margin-top: 4px;
-    z-index: 1;
     transition: all 0.3s;
     font-weight: 400;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
 }
 .zodiac-item.active .zodiac-name {
     color: var(--gold);
@@ -344,12 +390,13 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     overflow-x: auto;
     padding-bottom: 4px;
 }
-.period-tabs::-webkit-scrollbar, .category-tabs::-webkit-scrollbar { display: none; }
+.period-tabs::-webkit-scrollbar,
+.category-tabs::-webkit-scrollbar { display: none; }
 
 .period-tab, .category-tab {
-    padding: 10px 18px;
+    padding: 10px 16px;
     border-radius: 24px;
-    font-size: 13px;
+    font-size: 12px;
     background: rgba(255,255,255,0.05);
     border: 1px solid transparent;
     color: var(--text-secondary);
@@ -365,7 +412,7 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     box-shadow: 0 4px 12px var(--accent-glow);
 }
 
-/* ===== РЕЗУЛЬТАТЫ (ПУНКТ 1, 2) ===== */
+/* ===== РЕЗУЛЬТАТЫ ===== */
 .result-box {
     margin-top: 20px;
     background: linear-gradient(135deg, rgba(112, 0, 255, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
@@ -373,13 +420,8 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     border-radius: 18px;
     padding: 22px;
     position: relative;
-    animation: fadeInUp 0.5s ease;
+    animation: fadeIn 0.5s ease;
 }
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
 .result-header {
     display: flex;
     justify-content: space-between;
@@ -388,23 +430,11 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     padding-bottom: 12px;
     border-bottom: 1px solid rgba(255, 215, 0, 0.15);
 }
-.result-header::after {
-    content: '';
-    position: absolute;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    opacity: 0.4;
-}
 .result-header span:first-child {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 600;
     color: var(--gold);
-    letter-spacing: 0.5px;
 }
 .result-header span:last-child {
     font-size: 11px;
@@ -446,7 +476,7 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
 }
 .compat-score {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 56px;
+    font-size: 52px;
     font-weight: 700;
     background: linear-gradient(135deg, var(--gold), #fff);
     -webkit-background-clip: text;
@@ -481,11 +511,11 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
 }
 .planet-name {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 16px;
+    font-size: 15px;
     color: var(--gold);
     font-weight: 600;
 }
-.planet-value { font-size: 14px; color: var(--text-secondary); }
+.planet-value { font-size: 13px; color: var(--text-secondary); }
 .planet-value strong { color: var(--text); font-weight: 500; }
 
 /* ===== ХОРАР ===== */
@@ -495,6 +525,7 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     margin-bottom: 16px;
     line-height: 1.6;
     text-align: center;
+    font-weight: 300;
 }
 .timestamp {
     display: block;
@@ -504,7 +535,7 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     text-align: right;
 }
 #horary-answer {
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.7;
     padding: 14px;
     background: rgba(0, 0, 0, 0.2);
@@ -530,14 +561,14 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     box-shadow: 0 0 25px rgba(112, 0, 255, 0.3);
 }
 .profile-card h3 {
-    font-size: 22px;
+    font-size: 20px;
     margin-bottom: 4px;
     color: var(--gold);
     letter-spacing: 1px;
 }
 .zodiac-badge {
     color: var(--gold);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     margin-bottom: 18px;
     letter-spacing: 1px;
@@ -555,7 +586,7 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
 .premium-badge { color: var(--text-secondary); font-weight: 500; }
 .premium-badge.active { color: var(--gold); }
 
-/* ===== ГЛАВНАЯ: превью профиля ===== */
+/* Главная: превью профиля */
 .profile-preview {
     display: flex;
     align-items: center;
@@ -575,8 +606,8 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     border: 1px solid rgba(255, 215, 0, 0.3);
     flex-shrink: 0;
 }
-.greeting { font-size: 15px; font-weight: 500; color: var(--text); margin: 0; }
-.greeting-sub { font-size: 12px; color: var(--gold); margin: 2px 0 0 0; }
+.greeting { font-size: 14px; font-weight: 500; color: var(--text); margin: 0; }
+.greeting-sub { font-size: 11px; color: var(--gold); margin: 2px 0 0 0; }
 .profile-preview .icon-btn { margin-left: auto; }
 
 /* ===== PREMIUM ===== */
@@ -586,20 +617,31 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(112, 0, 255, 0.04) 100%);
     border-color: rgba(255, 215, 0, 0.2);
 }
-.premium-icon { font-size: 48px; margin-bottom: 12px; filter: drop-shadow(0 4px 12px rgba(255, 215, 0, 0.4)); }
-.premium-hero h3 { font-size: 22px; color: var(--gold); margin-bottom: 6px; letter-spacing: 2px; }
-.premium-hero p { font-size: 13px; color: var(--text-secondary); font-weight: 300; }
-
+.premium-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 4px 12px rgba(255, 215, 0, 0.4));
+}
+.premium-hero h3 {
+    font-size: 20px;
+    color: var(--gold);
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+}
+.premium-hero p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 300;
+}
 .features-list { list-style: none; text-align: left; }
 .features-list li {
     padding: 10px 0;
-    font-size: 14px;
+    font-size: 13px;
     border-bottom: 1px solid var(--glass-border);
     font-weight: 300;
     color: rgba(255, 255, 255, 0.9);
 }
 .features-list li:last-child { border-bottom: none; }
-
 .pricing { margin: 16px 0; }
 .price-item {
     display: flex;
@@ -609,7 +651,7 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     border-bottom: 1px solid var(--glass-border);
 }
 .price-item:last-child { border-bottom: none; }
-.price-item strong { font-size: 18px; font-weight: 600; color: var(--gold); }
+.price-item strong { font-size: 17px; font-weight: 600; color: var(--gold); }
 .price-item.featured {
     background: rgba(255, 215, 0, 0.05);
     border-radius: 12px;
@@ -626,7 +668,7 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
 }
 .note { text-align: center; font-size: 12px; color: var(--text-secondary); margin-top: 12px; }
 
-/* ===== ПРОМО БАННЕР ===== */
+/* Промо баннер */
 .promo-banner {
     display: flex;
     align-items: center;
@@ -637,11 +679,11 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
 .promo-icon { font-size: 26px; }
 .promo-banner div { flex: 1; text-align: left; }
 .promo-banner strong { display: block; font-size: 14px; margin-bottom: 2px; font-weight: 500; }
-.promo-banner p { font-size: 12px; color: var(--text-secondary); margin: 0; font-weight: 300; }
+.promo-banner p { font-size: 11px; color: var(--text-secondary); margin: 0; font-weight: 300; }
 .promo-arrow { color: var(--text-secondary); font-size: 18px; transition: 0.3s; }
 .promo-banner:hover .promo-arrow { color: var(--gold); transform: translateX(3px); }
 
-/* ===== ЛОАДЕР ===== */
+/* Лоадер */
 .loader-center {
     display: flex;
     flex-direction: column;
@@ -661,10 +703,12 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
 @keyframes spin { to { transform: rotate(360deg); } }
 .loader { text-align: center; padding: 20px; color: var(--text-secondary); font-size: 14px; }
 
-/* ===== НИЖНЯЯ НАВИГАЦИЯ ===== */
+/* ===== НИЖНЯЯ НАВИГАЦИЯ (ЧИСТАЯ) ===== */
 .bottom-nav {
     position: fixed;
-    bottom: 0; left: 0; right: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
     height: var(--nav-height);
     background: rgba(5, 8, 20, 0.95);
     backdrop-filter: blur(20px);
@@ -684,24 +728,160 @@ small { display: block; font-size: 11px; color: var(--text-secondary); margin-to
     background: none;
     border: none;
     color: var(--text-secondary);
-    font-size: 10px;
+    font-size: 9px;
     cursor: pointer;
     transition: 0.3s;
-    padding: 8px 10px;
+    padding: 8px 12px;
     font-family: inherit;
     font-weight: 400;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
 }
-.nav-icon { font-size: 20px; transition: 0.3s; color: var(--gold); opacity: 0.6; }
+.nav-icon {
+    font-size: 20px;
+    transition: 0.3s;
+    color: var(--gold);
+    opacity: 0.5;
+}
 .nav-label { font-weight: 400; }
 .nav-item.active { color: var(--gold); }
-.nav-item.active .nav-icon { opacity: 1; filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.5)); }
+.nav-item.active .nav-icon {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.5));
+}
 
-/* ===== UTILITIES ===== */
+/* Утилиты */
 .hidden { display: none !important; }
 
 @media (max-width: 360px) {
     .grid { grid-template-columns: 1fr; }
     .card p { display: none; }
-    .header-title { font-size: 28px; }
+    .header-title { font-size: 24px; }
+    .zodiac-item { width: 60px; height: 70px; }
+}
+/* ===== ВСЕ ИКОНКИ COSMIRA ===== */
+
+/* Универсальный класс для ВСЕХ иконок с космическим фоном */
+.cosmic-icon {
+    object-fit: contain;
+    mix-blend-mode: screen; /* Убирает чёрный фон, оставляет свечение */
+    transition: all 0.3s ease;
+}
+
+/* Размер для карточек главной */
+.card-icon {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 8px;
+}
+.card:hover .card-icon {
+    transform: scale(1.08);
+}
+
+/* Размер для стрелки в карточках */
+.card-arrow {
+    width: 18px;
+    height: 18px;
+    opacity: 0.6;
+    position: absolute;
+    top: 14px;
+    right: 14px;
+}
+.card:hover .card-arrow {
+    opacity: 1;
+    transform: translateX(3px);
+}
+
+/* Стрелка назад */
+.back-btn {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.back-btn .cosmic-icon {
+    width: 28px;
+    height: 28px;
+    filter: drop-shadow(0 0 6px rgba(200, 150, 255, 0.6));
+}
+.back-btn:hover .cosmic-icon {
+    transform: translateX(-3px);
+    filter: drop-shadow(0 0 10px rgba(200, 150, 255, 0.9));
+}
+.back-btn:hover {
+    transform: translateY(-50%) translateX(-2px);
+}
+
+/* Нижнее меню */
+.nav-icon {
+    width: 26px;
+    height: 26px;
+    opacity: 0.45;
+    filter: drop-shadow(0 0 3px rgba(200, 150, 255, 0.3));
+}
+.nav-item.active .nav-icon {
+    opacity: 1;
+    filter: drop-shadow(0 0 8px rgba(200, 150, 255, 0.7));
+}
+.nav-item:active .nav-icon {
+    transform: scale(0.92);
+}
+
+/* Кнопка профиля в шапке */
+.icon-btn {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.icon-btn .cosmic-icon {
+    width: 22px;
+    height: 22px;
+    filter: drop-shadow(0 0 4px rgba(200, 150, 255, 0.5));
+}
+
+/* Промо-баннер иконка (премиум) */
+.promo-icon {
+    width: 34px;
+    height: 34px;
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
+}
+
+/* Большая иконка в Premium блоке */
+.premium-hero-icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 12px;
+    display: block;
+    filter: drop-shadow(0 4px 16px rgba(255, 215, 0, 0.6));
+    animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+/* Золотые иконки (компас, солнце, колесо) — без screen, они и так чистые */
+.golden-icon {
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.4));
+    transition: all 0.3s ease;
+}
+.card:hover .golden-icon {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 14px rgba(255, 215, 0, 0.7));
 }
