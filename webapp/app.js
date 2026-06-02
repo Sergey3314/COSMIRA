@@ -87,23 +87,32 @@ async function saveProfile() {
 // --- РАСЧЁТ ЗОДИАКА ---
 function getZodiacSign(dateStr) {
     const [, month, day] = dateStr.split('-').map(Number);
-    const signs = [
-        [1, 20, 'Водолей', '♒'], [2, 18, 'Водолей', '♒'],
-        [2, 19, 'Рыбы', '♓'], [3, 20, 'Рыбы', '♓'],
-        [3, 21, 'Овен', '♈'], [4, 19, 'Овен', '♈'],
-        [4, 20, 'Телец', '♉'], [5, 20, 'Телец', '♉'],
-        [5, 21, 'Близнецы', '♊'], [6, 20, 'Близнецы', '♊'],
-        [6, 21, 'Рак', '♋'], [7, 22, 'Рак', '♋'],
-        [7, 23, 'Лев', ''], [8, 22, 'Лев', '♌'],
-        [8, 23, 'Дева', '♍'], [9, 22, 'Дева', ''],
-        [9, 23, 'Весы', '♎'], [10, 22, 'Весы', '♎'],
-        [10, 23, 'Скорпион', '♏'], [11, 21, 'Скорпион', '♏'],
-        [11, 22, 'Стрелец', '♐'], [12, 21, 'Стрелец', '♐'],
-        [12, 22, 'Козерог', '♑'], [1, 19, 'Козерог', '♑']
-    ];
-    for (let s of signs) {
-        if (month === s[0] && day >= s[1]) return { name: s[2], icon: s[3] };
-    }
+    
+    if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) 
+        return { name: 'Овен', icon: '♈' };
+    if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) 
+        return { name: 'Телец', icon: '♉' };
+    if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) 
+        return { name: 'Близнецы', icon: '♊' };
+    if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) 
+        return { name: 'Рак', icon: '♋' };
+    if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) 
+        return { name: 'Лев', icon: '♌' };
+    if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) 
+        return { name: 'Дева', icon: '♍' };
+    if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) 
+        return { name: 'Весы', icon: '♎' };
+    if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) 
+        return { name: 'Скорпион', icon: '♏' };
+    if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) 
+        return { name: 'Стрелец', icon: '♐' };
+    if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) 
+        return { name: 'Козерог', icon: '♑' };
+    if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) 
+        return { name: 'Водолей', icon: '♒' };
+    if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) 
+        return { name: 'Рыбы', icon: '♓' };
+    
     return { name: 'Козерог', icon: '♑' };
 }
 
