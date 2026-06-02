@@ -844,3 +844,105 @@ small {
     background: rgba(255, 215, 0, 0.1);
     transform: scale(1.05);
 }
+/* === ПРЕМИУМ ШРИФТЫ (Пункт 11) === */
+body {
+    font-family: 'Montserrat', sans-serif;
+}
+h1, h2, h3, .gradient-text {
+    font-family: 'Cormorant Garamond', serif !important;
+    letter-spacing: 0.5px;
+}
+.gradient-text {
+    background: linear-gradient(90deg, #fff, #FFD700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 28px;
+    margin: 0;
+}
+
+/* === УБИРАЕМ WINDOWS 98 (Пункт 11) === */
+.back-btn {
+    background: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    color: #fff !important;
+    font-size: 28px !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 0 10px 0 0 !important;
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.4));
+    display: flex;
+    align-items: center;
+    transition: 0.3s;
+}
+.back-btn:active {
+    transform: translateX(-4px);
+    filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.8));
+}
+
+/* === КРАСИВЫЙ ВЫБОР ЗНАКОВ (Пункт 9, 10) === */
+.zodiac-scroll {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    scrollbar-width: none; /* Firefox */
+}
+.zodiac-scroll::-webkit-scrollbar { display: none; } /* Chrome */
+
+.zodiac-item {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 65px;
+    height: 75px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.zodiac-item.active {
+    background: rgba(255, 215, 0, 0.15);
+    border-color: #FFD700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+    transform: translateY(-2px);
+}
+.zodiac-icon { font-size: 24px; margin-bottom: 4px; }
+.zodiac-name { font-size: 10px; color: var(--text-secondary); text-align: center; line-height: 1.1; }
+.zodiac-item.active .zodiac-name { color: #FFD700; }
+
+/* === ЭНЕРГИЯ СОВМЕСТИМОСТИ (Пункт 10) === */
+.compat-block { margin-bottom: 10px; }
+.compat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    display: block;
+}
+.energy-divider {
+    display: flex;
+    justify-content: center;
+    margin: 15px 0;
+}
+.pulse-icon {
+    font-size: 32px;
+    animation: pulse 1.5s infinite;
+}
+
+/* === КНОПКА С СВЕЧЕНИЕМ (Пункт 9) === */
+.btn-glow {
+    background: linear-gradient(135deg, #7000ff, #9d4edd);
+    box-shadow: 0 4px 20px rgba(112, 0, 255, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+.btn-glow:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 10px rgba(112, 0, 255, 0.4);
+}
