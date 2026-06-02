@@ -8,21 +8,20 @@ let compatS1 = null;
 let compatS2 = null;
 
 const ZODIAC_SIGNS = [
-    { id: 'aries', name: 'Овен', emoji: '', icon: 'aries.png' },
+    { id: 'aries', name: 'Овен', emoji: '♈', icon: 'aries.png' },
     { id: 'taurus', name: 'Телец', emoji: '♉', icon: 'taurus.png' },
-    { id: 'gemini', name: 'Близнецы', emoji: '', icon: 'gemini.png' },
+    { id: 'gemini', name: 'Близнецы', emoji: '♊', icon: 'gemini.png' },
     { id: 'cancer', name: 'Рак', emoji: '♋', icon: 'cancer.png' },
     { id: 'leo', name: 'Лев', emoji: '♌', icon: 'leo.png' },
     { id: 'virgo', name: 'Дева', emoji: '♍', icon: 'virgo.png' },
     { id: 'libra', name: 'Весы', emoji: '♎', icon: 'libra.png' },
     { id: 'scorpio', name: 'Скорпион', emoji: '♏', icon: 'scorpio.png' },
-    { id: 'sagittarius', name: 'Стрелец', emoji: '', icon: 'sagittarius.png' },
+    { id: 'sagittarius', name: 'Стрелец', emoji: '♐', icon: 'sagittarius.png' },
     { id: 'capricorn', name: 'Козерог', emoji: '♑', icon: 'capricorn.png' },
     { id: 'aquarius', name: 'Водолей', emoji: '♒', icon: 'aquarius.png' },
     { id: 'pisces', name: 'Рыбы', emoji: '♓', icon: 'pisces.png' }
 ];
 
-// Telegram WebApp init
 document.addEventListener('DOMContentLoaded', () => {
     if (window.Telegram?.WebApp) {
         window.Telegram.WebApp.ready();
@@ -36,6 +35,8 @@ async function initApp() {
         const tg = window.Telegram?.WebApp;
         const user = tg?.initDataUnsafe?.user;
         
+        console.log('Telegram user:', user);
+        
         const res = await fetch(`${API_URL}/api/user`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -47,6 +48,8 @@ async function initApp() {
         });
         
         const data = await res.json();
+        console.log('User data:', data);
+        
         currentUser = data;
         
         if (data.has_profile) {
@@ -54,11 +57,10 @@ async function initApp() {
             updateMainProfile();
         } else {
             showScreen('screen-register');
-            // Скрываем навигацию при регистрации
             document.getElementById('bottom-nav').style.display = 'none';
         }
     } catch (e) {
-        console.error(e);
+        console.error('Init error:', e);
         showScreen('screen-register');
         document.getElementById('bottom-nav').style.display = 'none';
     }
@@ -68,7 +70,6 @@ function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
     
-    // Показываем/скрываем навигацию
     const nav = document.getElementById('bottom-nav');
     if (id === 'screen-register') {
         nav.style.display = 'none';
@@ -76,13 +77,11 @@ function showScreen(id) {
         nav.style.display = 'flex';
     }
     
-    // Обновить нижнюю навигацию
     document.querySelectorAll('.nav-item').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.screen === id);
     });
 }
 
-// Навигация
 document.querySelectorAll('.nav-item').forEach(btn => {
     btn.addEventListener('click', () => {
         const screen = btn.dataset.screen;
@@ -104,11 +103,10 @@ function openHorary() { showScreen('screen-horary'); }
 function openProfile() { showScreen('screen-profile'); updateProfileScreen(); }
 function openPremium() { showScreen('screen-premium'); }
 
-// Регистрация
-function selectAvatar(emoji) {
+function selectAvatar(emoji, el) {
     selectedAvatar = emoji;
-    document.querySelectorAll('.avatar-item').forEach(el => el.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    document.querySelectorAll('.avatar-item').forEach(e => e.classList.remove('active'));
+    if (el) el.classList.add('active');
 }
 
 async function saveProfile() {
@@ -129,15 +127,20 @@ async function saveProfile() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 telegram_id: tg?.initDataUnsafe?.user?.id || 123456789,
-                name, birth_date: date, birth_time: time, birth_city: city,
+                username: tg?.initDataUnsafe?.user?.username || 'user',
+                name: name,
+                birth_date: date,
+                birth_time: time,
+                birth_city: city,
                 avatar: selectedAvatar
             })
         });
         
         const data = await res.json();
-        currentUser = { ...currentUser, ...data, has_profile: true };
+        console.log('Profile saved:', data);
+        currentUser = data;
     } catch (e) {
-        console.error(e);
+        console.error('Save error:', e);
     }
     
     showScreen('screen-main');
@@ -146,28 +149,39 @@ async function saveProfile() {
 
 function updateMainProfile() {
     if (!currentUser) return;
-    const zodiac = calculateZodiac(currentUser.birth_date);
-    document.getElementById('user-greeting').textContent = `Привет, ${currentUser.name} ✦`;
-    document.getElementById('user-zodiac').textContent = zodiac ? `${zodiac.emoji} ${zodiac.name}` : '—';
+    
+    let zodiacText = '—';
+    if (currentUser.zodiac && typeof currentUser.zodiac === 'object') {
+        zodiacText = `${currentUser.zodiac.emoji} ${currentUser.zodiac.name}`;
+    }
+    
+    document.getElementById('user-greeting').textContent = `Привет, ${currentUser.name || 'Странник'} ✦`;
+    document.getElementById('user-zodiac').textContent = zodiacText;
     document.getElementById('main-avatar').textContent = currentUser.avatar || '🔮';
 }
 
 function updateProfileScreen() {
     if (!currentUser) return;
-    const zodiac = calculateZodiac(currentUser.birth_date);
+    
+    let zodiacText = '—';
+    if (currentUser.zodiac && typeof currentUser.zodiac === 'object') {
+        zodiacText = `${currentUser.zodiac.emoji} ${currentUser.zodiac.name}`;
+    }
+    
     document.getElementById('profile-avatar').textContent = currentUser.avatar || '🔮';
     document.getElementById('profile-name').textContent = currentUser.name || '—';
-    document.getElementById('profile-zodiac').textContent = zodiac ? `${zodiac.emoji} ${zodiac.name}` : '—';
-    document.getElementById('profile-id').textContent = currentUser.telegram_id || '—';
+    document.getElementById('profile-zodiac').textContent = zodiacText;
+    document.getElementById('profile-id').textContent = currentUser.telegram_id || currentUser.user_id || '—';
     document.getElementById('profile-birth-date').textContent = currentUser.birth_date || '—';
     document.getElementById('profile-birth-time').textContent = currentUser.birth_time || '—';
     document.getElementById('profile-birth-city').textContent = currentUser.birth_city || '—';
-    document.getElementById('profile-premium').textContent = currentUser.is_premium ? 'Активен' : 'Нет';
-    document.getElementById('profile-premium').classList.toggle('active', currentUser.is_premium);
+    
+    const premiumEl = document.getElementById('profile-premium');
+    premiumEl.textContent = currentUser.is_premium ? 'Активен' : 'Нет';
+    premiumEl.classList.toggle('active', currentUser.is_premium);
 }
 
-// Знаки зодиака с иконками
-function initZodiacScroll(containerId, onSelect) {
+function initZodiacScroll(containerId) {
     const container = document.getElementById(containerId);
     if (!container || container.children.length > 0) return;
     
@@ -175,13 +189,8 @@ function initZodiacScroll(containerId, onSelect) {
         const el = document.createElement('div');
         el.className = 'zodiac-item';
         el.dataset.sign = sign.id;
-        
-        const iconHtml = sign.icon 
-            ? `<img src="/webapp/icons/zodiac/${sign.icon}" class="zodiac-icon-img" alt="${sign.name}">` 
-            : `<span style="font-size: 24px; color: #FFD700;">${sign.emoji}</span>`;
-            
         el.innerHTML = `
-            ${iconHtml}
+            <span style="font-size: 24px; color: #FFD700;">${sign.emoji}</span>
             <span class="zodiac-name">${sign.name}</span>
         `;
         
@@ -191,13 +200,11 @@ function initZodiacScroll(containerId, onSelect) {
             if (containerId === 'horoscope-signs') selectedSign = sign;
             if (containerId === 'compat-s1') compatS1 = sign;
             if (containerId === 'compat-s2') compatS2 = sign;
-            if (onSelect) onSelect(sign);
         });
         container.appendChild(el);
     });
 }
 
-// Гороскоп
 document.querySelectorAll('.period-tab').forEach(tab => {
     tab.addEventListener('click', () => {
         document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
@@ -234,27 +241,16 @@ async function loadHoroscope() {
             body: JSON.stringify({
                 sign: selectedSign.id,
                 period: selectedPeriod,
-                category: selectedCategory,
-                user_data: currentUser
+                category: selectedCategory
             })
         });
-        
-        if (!res.ok) throw new Error('API error');
-        
         const data = await res.json();
         textEl.textContent = data.text || 'Звёзды хранят молчание...';
     } catch (e) {
-        // ДЕМО-ОТВЕТ если API не работает
-        const demoTexts = {
-            day: `${selectedSign.name} сегодня под покровительством звёзд. Энергия дня благоприятна для новых начинаний. Доверься интуиции — она ведёт верно.`,
-            month: `Этот месяц принесёт ${selectedSign.name} важные перемены. В первой декаде — возможности, во второй — испытания, в третьей — награду за терпение.`,
-            year: `Год ${selectedSign.name} отмечен сильным влиянием Юпитера. Ожидай роста в карьере и неожиданных встреч, которые изменят всё.`
-        };
-        textEl.textContent = demoTexts[selectedPeriod] || 'Звёзды скоро заговорят...';
+        textEl.textContent = 'Связь с космосом потеряна';
     }
 }
 
-// Совместимость
 async function checkCompatibility() {
     if (!compatS1 || !compatS2) { alert('Выбери оба знака!'); return; }
     
@@ -272,25 +268,17 @@ async function checkCompatibility() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ sign1: compatS1.id, sign2: compatS2.id })
         });
-        
-        if (!res.ok) throw new Error('API error');
-        
         const data = await res.json();
         scoreEl.textContent = `${data.score || 0}%`;
         textEl.textContent = data.text || 'Анализ завершён';
     } catch (e) {
-        // ДЕМО
-        const scores = [72, 78, 83, 87, 91, 68, 75, 89];
-        const score = scores[Math.floor(Math.random() * scores.length)];
-        scoreEl.textContent = `${score}%`;
-        textEl.textContent = `${compatS1.name} и ${compatS2.name} — союз, проверенный звёздами. Между вами сильная энергетическая связь, способная преодолеть любые преграды.`;
+        textEl.textContent = 'Ошибка расчёта';
     }
 }
 
-// Натальная карта
 async function loadNatalChart() {
     const container = document.getElementById('natal-container');
-    container.innerHTML = '<div class="loader"> Рассчитываем положение планет...</div>';
+    container.innerHTML = '<div class="loader">🔮 Рассчитываем положение планет...</div>';
     
     if (!currentUser?.birth_date || !currentUser?.birth_time) {
         container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">Заполни данные в профиле для расчёта карты</p>';
@@ -320,7 +308,6 @@ async function loadNatalChart() {
     }
 }
 
-// Хорар
 async function askHorary() {
     const question = document.getElementById('horary-question').value.trim();
     if (!question) { alert('Задай вопрос!'); return; }
@@ -337,7 +324,7 @@ async function askHorary() {
         const res = await fetch(`${API_URL}/api/horary`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ question, user_data: currentUser })
+            body: JSON.stringify({ question })
         });
         const data = await res.json();
         answerEl.textContent = data.answer || 'Ответ не получен';
@@ -348,33 +335,3 @@ async function askHorary() {
 }
 
 function editProfile() { showScreen('screen-register'); }
-
-function calculateZodiac(dateStr) {
-    if (!dateStr) return null;
-    const d = new Date(dateStr);
-    const month = d.getMonth() + 1;
-    const day = d.getDate();
-    
-    const signs = [
-        { name: 'Козерог', emoji: '', start: [1,1], end: [1,19] },
-        { name: 'Водолей', emoji: '♒', start: [1,20], end: [2,18] },
-        { name: 'Рыбы', emoji: '♓', start: [2,19], end: [3,20] },
-        { name: 'Овен', emoji: '♈', start: [3,21], end: [4,19] },
-        { name: 'Телец', emoji: '♉', start: [4,20], end: [5,20] },
-        { name: 'Близнецы', emoji: '♊', start: [5,21], end: [6,20] },
-        { name: 'Рак', emoji: '♋', start: [6,21], end: [7,22] },
-        { name: 'Лев', emoji: '', start: [7,23], end: [8,22] },
-        { name: 'Дева', emoji: '♍', start: [8,23], end: [9,22] },
-        { name: 'Весы', emoji: '♎', start: [9,23], end: [10,22] },
-        { name: 'Скорпион', emoji: '♏', start: [10,23], end: [11,21] },
-        { name: 'Стрелец', emoji: '♐', start: [11,22], end: [12,21] },
-        { name: 'Козерог', emoji: '♑', start: [12,22], end: [12,31] }
-    ];
-    
-    for (const s of signs) {
-        const afterStart = month > s.start[0] || (month === s.start[0] && day >= s.start[1]);
-        const beforeEnd = month < s.end[0] || (month === s.end[0] && day <= s.end[1]);
-        if (afterStart && beforeEnd) return s;
-    }
-    return signs[0];
-}

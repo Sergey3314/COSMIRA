@@ -4,15 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>COSMIRA</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Cinzel:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/webapp/style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
     <div class="bg"></div>
     
-    <!-- Загрузка -->
+    <!-- ЗАГРУЗКА -->
     <section id="screen-loading" class="screen">
         <div class="loader-center">
             <div class="spinner"></div>
@@ -20,7 +19,7 @@
         </div>
     </section>
 
-    <!-- Регистрация -->
+    <!-- РЕГИСТРАЦИЯ -->
     <section id="screen-register" class="screen hidden">
         <div class="page-header">
             <div class="header-top"><span class="header-decor">✦ ASTROLOGY ✦</span></div>
@@ -28,82 +27,109 @@
         </div>
         <div class="card glass">
             <p class="section-subtitle">Для точных астрологических расчётов</p>
-            <div class="form-group"><label>Имя</label><input type="text" id="reg-name" placeholder="Как к тебе обращаться?"></div>
-            <div class="form-group"><label>Дата рождения *</label><input type="date" id="reg-date"></div>
-            <div class="form-group"><label>Время рождения *</label><input type="time" id="reg-time"><small>Чем точнее — тем вернее карта</small></div>
-            <div class="form-group"><label>Город рождения</label><input type="text" id="reg-city" placeholder="Например: Москва"></div>
+            <div class="form-group">
+                <label>Имя</label>
+                <input type="text" id="reg-name" placeholder="Как к тебе обращаться?">
+            </div>
+            <div class="form-group">
+                <label>Дата рождения *</label>
+                <input type="date" id="reg-date">
+            </div>
+            <div class="form-group">
+                <label>Время рождения *</label>
+                <input type="time" id="reg-time">
+                <small>Чем точнее — тем вернее карта</small>
+            </div>
+            <div class="form-group">
+                <label>Город рождения</label>
+                <input type="text" id="reg-city" placeholder="Например: Москва">
+            </div>
             
             <label class="label-title">Выбери свой символ:</label>
             <div class="avatar-grid" id="avatar-selector">
-                <div class="avatar-item active" onclick="selectAvatar('🔮')">🔮</div>
-                <div class="avatar-item" onclick="selectAvatar('🌌')">🌌</div>
-                <div class="avatar-item" onclick="selectAvatar('🌙')">🌙</div>
-                <div class="avatar-item" onclick="selectAvatar('☀️')">☀️</div>
-                <div class="avatar-item" onclick="selectAvatar('⭐')">⭐</div>
-                <div class="avatar-item" onclick="selectAvatar('🪐')">🪐</div>
+                <div class="avatar-item active" onclick="selectAvatar('🔮', this)">🔮</div>
+                <div class="avatar-item" onclick="selectAvatar('🌌', this)">🌌</div>
+                <div class="avatar-item" onclick="selectAvatar('🌙', this)"></div>
+                <div class="avatar-item" onclick="selectAvatar('☀️', this)">☀️</div>
+                <div class="avatar-item" onclick="selectAvatar('⭐', this)">⭐</div>
+                <div class="avatar-item" onclick="selectAvatar('🪐', this)">🪐</div>
             </div>
             
             <button onclick="saveProfile()" class="btn-primary btn-glow">
                 <span class="btn-star">✦</span>
                 Сохранить и продолжить
+                <span class="btn-star">✦</span>
             </button>
         </div>
     </section>
 
-    <!-- Главная -->
+    <!-- ГЛАВНАЯ -->
     <section id="screen-main" class="screen hidden">
         <div class="page-header">
             <div class="header-top"><span class="header-decor">✦ COSMIRA ✦</span></div>
             <h2 class="header-title">Главная</h2>
             <button class="profile-btn-header" onclick="openProfile()">
-                <img src="/webapp/icons/nav-profile.png" class="header-icon" alt="Профиль">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </button>
         </div>
         
         <div class="card glass profile-preview">
             <div class="profile-avatar-sm" id="main-avatar">🔮</div>
             <div>
-                <p class="greeting" id="user-greeting">Загрузка...</p>
+                <p class="greeting" id="user-greeting">Привет, Странник ✦</p>
                 <p class="greeting-sub" id="user-zodiac">—</p>
             </div>
         </div>
         
         <div class="grid">
             <div class="card glass" onclick="openHoroscope()">
-                <div class="icon-wrap"><img src="/webapp/icons/horoscope.png" class="icon-main" alt=""></div>
+                <div class="icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 18v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m18 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                </div>
                 <h3>Гороскоп</h3>
                 <p>Прогноз на день, месяц, год</p>
             </div>
             <div class="card glass" onclick="openNatal()">
-                <div class="icon-wrap"><img src="/webapp/icons/natal.png" class="icon-main" alt=""></div>
+                <div class="icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+                </div>
                 <h3>Натальная карта</h3>
                 <p>Твои планеты и дома</p>
             </div>
             <div class="card glass" onclick="openCompatibility()">
-                <div class="icon-wrap"><img src="/webapp/icons/compat.png" class="icon-main" alt=""></div>
+                <div class="icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="12" r="5"/><circle cx="16" cy="12" r="5"/></svg>
+                </div>
                 <h3>Совместимость</h3>
                 <p>Синастрия с партнёром</p>
             </div>
             <div class="card glass" onclick="openHorary()">
-                <div class="icon-wrap"><img src="/webapp/icons/horary.png" class="icon-main" alt=""></div>
+                <div class="icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/><path d="M15 15l3 3" stroke-width="2"/><circle cx="17" cy="17" r="1" fill="#FFD700"/></svg>
+                </div>
                 <h3>Хорар</h3>
                 <p>Ответ на один вопрос</p>
             </div>
         </div>
         
-        <div class="promo-banner glass" onclick="openPremium()">
-            <div class="icon-wrap-sm"><img src="/webapp/icons/nav-sun.png" class="icon-gold" alt=""></div>
-            <div><strong>Premium доступ</strong><p>Полные прогнозы и разборы</p></div>
+        <!-- Premium баннер теперь квадратный как все -->
+        <div class="card glass" onclick="openPremium()" style="cursor:pointer; display:flex; align-items:center; gap:14px;">
+            <div class="icon-wrap-sm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div style="flex:1; text-align:left;">
+                <strong style="color:var(--gold); font-family:'Cinzel',serif; font-size:15px; display:block;">Premium доступ</strong>
+                <p style="font-size:12px; color:var(--text-secondary); margin:0;">Полные прогнозы и разборы</p>
+            </div>
         </div>
-        
-        <!-- ФУТЕР -->
+
         <div class="app-footer">
             <p>✦ Астрология, созданная для тебя ✦</p>
             <span class="version">v1.31.2</span>
         </div>
     </section>
 
-    <!-- Гороскоп -->
+    <!-- ГОРОСКОП -->
     <section id="screen-horoscope" class="screen hidden">
         <div class="page-header">
             <button class="back-btn" onclick="goHome()">←</button>
@@ -116,8 +142,8 @@
             
             <div class="period-tabs">
                 <button class="period-tab active" data-period="day">День</button>
-                <button class="period-tab" data-period="month">Месяц ✦</button>
-                <button class="period-tab" data-period="year">Год ✦</button>
+                <button class="period-tab" data-period="month">Месяц</button>
+                <button class="period-tab" data-period="year">Год</button>
             </div>
             
             <div class="category-tabs">
@@ -129,6 +155,7 @@
             <button onclick="loadHoroscope()" class="btn-primary btn-glow">
                 <span class="btn-star">✦</span>
                 Получить прогноз
+                <span class="btn-star">✦</span>
             </button>
             
             <div id="horoscope-result" class="result-box hidden">
@@ -136,14 +163,10 @@
                 <p id="result-text"></p>
             </div>
         </div>
-        
-        <div class="app-footer">
-            <p>✦ Астрология, созданная для тебя ✦</p>
-            <span class="version">v1.31.2</span>
-        </div>
+        <div class="app-footer"><p>✦ Астрология, созданная для тебя ✦</p><span class="version">v1.31.2</span></div>
     </section>
 
-    <!-- Совместимость -->
+    <!-- СОВМЕСТИМОСТЬ -->
     <section id="screen-compat" class="screen hidden">
         <div class="page-header">
             <button class="back-btn" onclick="goHome()">←</button>
@@ -156,7 +179,7 @@
                 <span class="compat-label">Ты</span>
                 <div class="zodiac-scroll" id="compat-s1"></div>
             </div>
-            <div class="energy-divider"><span class="pulse-icon"></span></div>
+            <div class="energy-divider"><span class="pulse-icon">✦</span></div>
             <div class="compat-block">
                 <span class="compat-label">Партнёр</span>
                 <div class="zodiac-scroll" id="compat-s2"></div>
@@ -164,39 +187,32 @@
             <button onclick="checkCompatibility()" class="btn-primary btn-glow">
                 <span class="btn-star">✦</span>
                 Рассчитать союз
+                <span class="btn-star">✦</span>
             </button>
             <div id="compat-result" class="result-box hidden">
                 <div class="compat-score" id="compat-score">0%</div>
                 <p id="compat-text"></p>
             </div>
         </div>
-        
-        <div class="app-footer">
-            <p>✦ Астрология, созданная для тебя ✦</p>
-            <span class="version">v1.31.2</span>
-        </div>
+        <div class="app-footer"><p>✦ Астрология, созданная для тебя ✦</p><span class="version">v1.31.2</span></div>
     </section>
 
-    <!-- Натальная карта -->
+    <!-- НАТАЛЬНАЯ КАРТА -->
     <section id="screen-natal" class="screen hidden">
         <div class="page-header">
             <button class="back-btn" onclick="goHome()">←</button>
             <div class="header-top"><span class="header-decor">✦ ASTROLOGY ✦</span></div>
             <h2 class="header-title">Натальная карта</h2>
         </div>
-        <div id="natal-container" class="card glass"><div class="loader">🔮 Рассчитываем положение планет...</div></div>
-        
-        <div class="app-footer">
-            <p>✦ Астрология, созданная для тебя ✦</p>
-            <span class="version">v1.31.2</span>
-        </div>
+        <div id="natal-container" class="card glass"><div class="loader">Рассчитываем положение планет...</div></div>
+        <div class="app-footer"><p> Астрология, созданная для тебя ✦</p><span class="version">v1.31.2</span></div>
     </section>
 
-    <!-- Хорар -->
+    <!-- ХОРАР -->
     <section id="screen-horary" class="screen hidden">
         <div class="page-header">
             <button class="back-btn" onclick="goHome()">←</button>
-            <div class="header-top"><span class="header-decor">✦ ASTROLOGY ✦</span></div>
+            <div class="header-top"><span class="header-decor">✦ ASTROLOGY </span></div>
             <h2 class="header-title">Хорар</h2>
         </div>
         <div class="card glass">
@@ -205,6 +221,7 @@
             <button onclick="askHorary()" class="btn-primary btn-glow">
                 <span class="btn-star">✦</span>
                 Получить ответ
+                <span class="btn-star"></span>
             </button>
             <div id="horary-result" class="result-box hidden">
                 <div class="result-header"><span>Ответ звёзд</span></div>
@@ -212,14 +229,10 @@
                 <small class="timestamp" id="horary-time"></small>
             </div>
         </div>
-        
-        <div class="app-footer">
-            <p>✦ Астрология, созданная для тебя ✦</p>
-            <span class="version">v1.31.2</span>
-        </div>
+        <div class="app-footer"><p>✦ Астрология, созданная для тебя ✦</p><span class="version">v1.31.2</span></div>
     </section>
 
-    <!-- Профиль -->
+    <!-- ПРОФИЛЬ -->
     <section id="screen-profile" class="screen hidden">
         <div class="page-header">
             <button class="back-btn" onclick="goHome()">←</button>
@@ -227,26 +240,22 @@
             <h2 class="header-title">Профиль</h2>
         </div>
         <div class="card glass profile-card">
-            <div class="profile-avatar" id="profile-avatar"></div>
+            <div class="profile-avatar" id="profile-avatar">🔮</div>
             <h3 id="profile-name">Загрузка...</h3>
             <p id="profile-zodiac" class="zodiac-badge">—</p>
             <div class="profile-data">
                 <div class="data-row"><span>ID</span><span id="profile-id" class="mono">—</span></div>
-                <div class="data-row"><span>📅 Дата</span><span id="profile-birth-date">—</span></div>
-                <div class="data-row"><span>⏰ Время</span><span id="profile-birth-time">—</span></div>
-                <div class="data-row"><span> Город</span><span id="profile-birth-city">—</span></div>
-                <div class="data-row"><span>💎 Premium</span><span id="profile-premium" class="premium-badge">Нет</span></div>
+                <div class="data-row"><span>Дата</span><span id="profile-birth-date">—</span></div>
+                <div class="data-row"><span>Время</span><span id="profile-birth-time">—</span></div>
+                <div class="data-row"><span>Город</span><span id="profile-birth-city">—</span></div>
+                <div class="data-row"><span>Premium</span><span id="profile-premium" class="premium-badge">Нет</span></div>
             </div>
             <button onclick="editProfile()" class="btn-outline">Редактировать данные</button>
         </div>
-        
-        <div class="app-footer">
-            <p>✦ Астрология, созданная для тебя ✦</p>
-            <span class="version">v1.31.2</span>
-        </div>
+        <div class="app-footer"><p>✦ Астрология, созданная для тебя ✦</p><span class="version">v1.31.2</span></div>
     </section>
 
-    <!-- Premium -->
+    <!-- PREMIUM -->
     <section id="screen-premium" class="screen hidden">
         <div class="page-header">
             <button class="back-btn" onclick="goHome()">←</button>
@@ -254,7 +263,9 @@
             <h2 class="header-title">Premium</h2>
         </div>
         <div class="card glass premium-hero">
-            <div class="icon-wrap-lg"><img src="/webapp/icons/nav-sun.png" class="icon-gold" alt=""></div>
+            <div class="icon-wrap-lg">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
             <h3>COSMIRA PREMIUM</h3>
             <p>Раскрой весь потенциал астрологии</p>
         </div>
@@ -263,7 +274,7 @@
             <ul class="features-list">
                 <li>✦ Гороскопы на месяц и год</li>
                 <li>✦ Детальная натальная карта</li>
-                <li> Неограниченные хорарные вопросы</li>
+                <li>✦ Неограниченные хорарные вопросы</li>
                 <li>✦ Персональные рекомендации</li>
             </ul>
         </div>
@@ -274,36 +285,42 @@
                 <div class="price-item"><span>Подписка на месяц</span><strong>299 ₽</strong></div>
                 <div class="price-item featured"><span>Подписка на год</span><strong>1 990 ₽</strong><small>Экономия 40%</small></div>
             </div>
-            <button class="btn-primary" disabled>Оплата скоро</button>
-            <p class="note">🔜 Платёжная система в разработке</p>
+            <button class="btn-primary" disabled style="opacity:0.6; cursor:not-allowed;">Оплата скоро</button>
+            <p class="note">Платёжная система в разработке</p>
         </div>
-        
-        <div class="app-footer">
-            <p>✦ Астрология, созданная для тебя ✦</p>
-            <span class="version">v1.31.2</span>
-        </div>
+        <div class="app-footer"><p>✦ Астрология, созданная для тебя </p><span class="version">v1.31.2</span></div>
     </section>
 
-    <!-- Нижняя навигация -->
+    <!-- НИЖНЯЯ НАВИГАЦИЯ -->
     <nav class="bottom-nav" id="bottom-nav">
         <button class="nav-item active" data-screen="screen-main">
-            <div class="nav-icon-wrap"><img src="/webapp/icons/nav-home.png" class="nav-icon" alt=""></div>
+            <div class="nav-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
             <span class="nav-label">Главная</span>
         </button>
         <button class="nav-item" data-screen="screen-horoscope">
-            <div class="nav-icon-wrap"><img src="/webapp/icons/nav-sun.png" class="nav-icon" alt=""></div>
+            <div class="nav-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </div>
             <span class="nav-label">Гороскоп</span>
         </button>
         <button class="nav-item" data-screen="screen-natal">
-            <div class="nav-icon-wrap"><img src="/webapp/icons/nav-book.png" class="nav-icon" alt=""></div>
+            <div class="nav-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
             <span class="nav-label">Натал</span>
         </button>
         <button class="nav-item" data-screen="screen-compat">
-            <div class="nav-icon-wrap"><img src="/webapp/icons/nav-heart.png" class="nav-icon" alt=""></div>
+            <div class="nav-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
             <span class="nav-label">Совместимость</span>
         </button>
         <button class="nav-item" data-screen="screen-profile">
-            <div class="nav-icon-wrap"><img src="/webapp/icons/nav-profile.png" class="nav-icon" alt=""></div>
+            <div class="nav-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
             <span class="nav-label">Профиль</span>
         </button>
     </nav>
