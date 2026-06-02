@@ -35,8 +35,6 @@ async function initApp() {
         const tg = window.Telegram?.WebApp;
         const user = tg?.initDataUnsafe?.user;
         
-        console.log('Telegram user:', user);
-        
         const res = await fetch(`${API_URL}/api/user`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -48,8 +46,6 @@ async function initApp() {
         });
         
         const data = await res.json();
-        console.log('User data:', data);
-        
         currentUser = data;
         
         if (data.has_profile) {
@@ -57,12 +53,10 @@ async function initApp() {
             updateMainProfile();
         } else {
             showScreen('screen-register');
-            document.getElementById('bottom-nav').style.display = 'none';
         }
     } catch (e) {
-        console.error('Init error:', e);
+        console.error(e);
         showScreen('screen-register');
-        document.getElementById('bottom-nav').style.display = 'none';
     }
 }
 
@@ -70,6 +64,7 @@ function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
     
+    // Показываем/скрываем навигацию
     const nav = document.getElementById('bottom-nav');
     if (id === 'screen-register') {
         nav.style.display = 'none';

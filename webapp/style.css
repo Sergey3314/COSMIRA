@@ -902,3 +902,70 @@ small {
     .grid .card p { display: none; }
     .header-title { font-size: 30px; }
 }
+
+/* ===== ФИКСЫ ===== */
+
+/* Кнопка профиль — фиксированная позиция */
+.profile-btn-header {
+    position: absolute !important;
+    right: 18px !important;
+    top: 60px !important;
+    transform: none !important;
+    z-index: 100;
+}
+
+/* Кнопка назад — всегда на одном месте */
+.back-btn {
+    position: absolute !important;
+    left: 18px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 100;
+}
+
+/* Нижняя панель — показывать везде кроме регистрации */
+.bottom-nav {
+    display: flex !important;
+}
+
+#screen-register ~ .bottom-nav,
+body:has(#screen-register:not(.hidden)) .bottom-nav {
+    display: none !important;
+}
+
+/* Приветствие — крупный текст */
+.greeting {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    font-family: 'Cinzel', serif !important;
+    color: var(--gold) !important;
+    margin: 0 !important;
+    text-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+.greeting-sub {
+    font-size: 14px !important;
+    color: var(--gold-light) !important;
+    margin-top: 4px !important;
+    font-family: 'Cinzel', serif !important;
+    letter-spacing: 1px;
+}
+
+/* Профиль превью — побольше */
+.profile-preview {
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px !important;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(112, 0, 255, 0.05));
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.profile-avatar-sm {
+    width: 56px;
+    height: 56px;
+    font-size: 28px;
+    border: 2px solid var(--gold);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
