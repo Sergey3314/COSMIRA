@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 DATABASE_URL = os.getenv("DATABASE_URL")
 WEBAPP_URL = os.getenv("WEBAPP_URL", "https://cosmira-bot.onrender.com/")
-PORT = int(os.getenv("PORT", 8080))
+PORT = int(os.getenv("PORT", 10000))
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -148,15 +148,6 @@ async def handle_horary(request):
 # ==========================================
 # ЗАПУСК (Web Server + Bot Polling)
 # ==========================================
-async def start_background_tasks(app):
-    app['bot'] = bot
-    app['dp'] = dp
-    asyncio.create_task(dp.start_polling(bot))
-    logging.info("🤖 Bot polling started in background")
-
-async def cleanup_background_tasks(app):
-    await bot.session.close()
-
 async def main():
     # 1. Инициализируем БД
     await init_db()
@@ -181,13 +172,16 @@ async def main():
     web_app.router.add_get('/api/natal', handle_natal)
     web_app.router.add_post('/api/horary', handle_horary)
     
-    # Фоновые задачи
-    web_app.on_startup.append(start_background_tasks)
-    web_app.on_cleanup.append(cleanup_background_tasks)
+    # 3. Асинхронный запуск веб-сервера (без конфликта циклов событий!)
+    runner = web.AppRunner(web_app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', PORT)
+    await site.start()
+    logging.info(f"🚀 Web-сервер запущен на порту {PORT}")
     
-    # Запуск сервера
-    logging.info(f"🚀 Запуск сервера на порту {PORT}")
-    web.run_app(web_app, host="0.0.0.0", port=PORT)
+    # 4. Запуск бота (работает в том же цикле событий, сервер продолжает работать в фоне)
+    logging.info("🤖 Запуск бота...")
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
     asyncio.run(main())
