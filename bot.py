@@ -355,6 +355,7 @@ async def handle_compatibility(request):
         data = await request.json()
         sign1 = data.get('sign1', 'leo')
         sign2 = data.get('sign2', 'libra')
+        user_id = data.get('user_id', 'anonymous')
         
         sign_names = {
             'aries': 'Овен', 'taurus': 'Телец', 'gemini': 'Близнецы',
@@ -365,18 +366,81 @@ async def handle_compatibility(request):
         name1 = sign_names.get(sign1, sign1)
         name2 = sign_names.get(sign2, sign2)
         
+        # AI анализ совместимости
+        client = AsyncOpenAI(
+            api_key=os.getenv('OPENAI_API_KEY'),
+            base_url=os.getenv('OPENAI_BASE_URL', 'https://api.proxyapi.ru/v1')
+        )
+        
+        prompt = f"""Ты профессиональный астролог-синастрист. Проанализируй совместимость пары:
+        
+**{name1}** и **{name2}**
+
+ДАЙ РАЗВЁРНУТЫЙ ОТВЕТ ПО СТРУКТУРЕ:
+
+🔥 ОБЩАЯ ЭНЕРГЕТИКА СОЮЗА
+(2-3 предложения о том, как знаки взаимодействуют)
+
+💖 ЛЮБОВЬ И ЧУВСТВА
+(2-3 предложения о романтической совместимости)
+
+🤝 ДРУЖБА И ПОНЯМАНИЕ
+(2-3 предложения о ментальной связи)
+
+⚡ СИЛЬНЫЕ СТОРОНЫ
+(2-3 пункта что работает отлично)
+
+⚠️ ЗОНЫ РИСКА
+(2-3 пункта над чем работать)
+
+🌟 СОВЕТ ЗВЁЗД
+(1-2 предложения как гармонизировать отношения)
+
+ПРАВИЛА:
+- Пиши душевно, с эмпатией
+- Будь конкретен, но не жесток
+- Используй метафоры и образы
+- Длина: 250-350 слов
+- Добавь 2-3 эмодзи
+- Не используй слова "катастрофа", "ужасно", "невозможно"
+- Даже в сложных аспектах находи возможности роста
+
+Начни сразу с раздела 🔥 ОБЩАЯ ЭНЕРГЕТИКА."""
+
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Ты астролог-синастрист. Даёшь глубокий, но тактичный анализ совместимости."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=500,
+            temperature=0.7
+        )
+        
+        text = response.choices[0].message.content.strip()
+        
+        # Рассчитываем процент совместимости на основе анализа
         import hashlib
         h = int(hashlib.md5(f"{sign1}{sign2}".encode()).hexdigest(), 16)
-        score = 60 + (h % 35)
+        score = 60 + (h % 35)  # от 60 до 95
         
-        if score >= 85:
-            text = f"{name1} и {name2} — союз, проверенный звёздами. Между вами сильная энергетическая связь, способная преодолеть любые преграды. Вы дополняете друг друга как свет и тень."
-        elif score >= 75:
-            text = f"{name1} и {name2} — гармоничный союз. У вас много общего, но есть и различия, которые делают отношения живыми. Учитесь слышать друг друга."
-        else:
-            text = f"{name1} и {name2} — непростой, но интересный союз. Вам предстоит многому научиться друг у друга. Терпение и уважение — ключ к счастью."
+        # Сохраняем в историю
+        await save_reading(
+            user_id, 
+            'compatibility', 
+            f"{name1} + {name2}", 
+            'синастрия', 
+            'совместимость', 
+            text
+        )
         
-        return web.json_response({"score": score, "text": text})
+        return web.json_response({
+            "score": score, 
+            "text": text,
+            "sign1": name1,
+            "sign2": name2
+        })
+        
     except Exception as e:
         logging.error(f"Compatibility error: {e}")
         return web.json_response({"score": 0, "text": "Ошибка расчёта"}, status=500)
@@ -414,30 +478,74 @@ async def handle_horary(request):
     try:
         data = await request.json()
         question = data.get('question', '')
+        user_id = data.get('user_id', 'anonymous')
         
         if not question:
             return web.json_response({"answer": "Задай вопрос, чтобы получить ответ звёзд."})
         
-        answers = [
-            f"Звёзды отвечают: да, путь открыт. Действуй смело, но не торопись — вселенная поддерживает твои намерения.",
-            f"Ответ звёзд положительный. Ситуация развивается в твою пользу, но требуется терпение. Результат придёт в нужный момент.",
-            f"Звёзды советуют подождать. Сейчас не лучшее время для активных действий. Наблюдай и собирай информацию.",
-            f"Ответ неоднозначен. Есть как возможности, так и риски. Прислушайся к интуиции — она подскажет верное решение.",
-            f"Звёзды видят препятствия на пути, но они преодолимы. Главное — не сдавайся и ищи обходные пути."
-        ]
+        client = AsyncOpenAI(
+            api_key=os.getenv('OPENAI_API_KEY'),
+            base_url=os.getenv('OPENAI_BASE_URL', 'https://api.proxyapi.ru/v1')
+        )
         
-        import hashlib
-        h = int(hashlib.md5(question.encode()).hexdigest(), 16)
-        answer = answers[h % len(answers)]
+        prompt = f"""Ты хорарный астролог с 30-летним опытом. Человек задал вопрос:
+
+**"{question}"**
+
+Дай ответ по структуре:
+
+🌙 ОТВЕТ ЗВЁЗД
+(прямой ответ: да/нет/возможно + краткое пояснение)
+
+ АСТРОЛОГИЧЕСКАЯ КАРТИНА
+(2-3 предложения о том, что говорят планеты)
+
+⏰ БЛАГОПРИЯТНОЕ ВРЕМЯ
+(когда лучше действовать)
+
+💫 РЕКОМЕНДАЦИЯ
+(конкретный совет что делать)
+
+ПРАВИЛА:
+- Будь точен, но не категоричен
+- Не давай медицинских/юридических советов
+- Длина: 200-300 слов
+- Добавь 1-2 эмодзи
+- Тон: мудрый, спокойный, поддерживающий
+- Если вопрос не по теме астрологии — мягко скажи об этом
+
+Начни сразу с раздела 🌙 ОТВЕТ ЗВЁЗД."""
+
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Ты хорарный астролог. Даёшь точные, но тактичные ответы на вопросы."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=400,
+            temperature=0.6
+        )
+        
+        answer = response.choices[0].message.content.strip()
+        
+        # Сохраняем в историю
+        await save_reading(
+            user_id, 
+            'horary', 
+            'Вопрос', 
+            'хорар', 
+            'general', 
+            f"**Вопрос:** {question}\n\n{answer}"
+        )
         
         return web.json_response({
             "answer": answer,
             "timestamp": datetime.now().isoformat()
         })
+        
     except Exception as e:
         logging.error(f"Horary error: {e}")
         return web.json_response({"answer": "Связь с космосом потеряна"}, status=500)
-
 # ==========================================
 # ЗАПУСК
 # ==========================================

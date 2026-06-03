@@ -255,7 +255,10 @@ async function loadHoroscope() {
 }
 
 async function checkCompatibility() {
-    if (!compatS1 || !compatS2) { alert('Выбери оба знака!'); return; }
+    if (!compatS1 || !compatS2) { 
+        alert('Выбери оба знака!'); 
+        return; 
+    }
     
     const resultBox = document.getElementById('compat-result');
     const scoreEl = document.getElementById('compat-score');
@@ -263,17 +266,44 @@ async function checkCompatibility() {
     
     resultBox.classList.remove('hidden');
     scoreEl.textContent = '0%';
-    textEl.textContent = 'Звёзды считают...';
+    textEl.textContent = '🔮 Звёзды анализируют ваш союз...';
+    
+    // Анимация счёта
+    let currentScore = 0;
+    const interval = setInterval(() => {
+        currentScore += 2;
+        scoreEl.textContent = `${currentScore}%`;
+        if (currentScore >= 100) clearInterval(interval);
+    }, 30);
     
     try {
+        const tg = window.Telegram?.WebApp;
+        const userId = tg?.initDataUnsafe?.user?.id || 123456789;
+        
         const res = await fetch(`${API_URL}/api/compatibility`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sign1: compatS1.id, sign2: compatS2.id })
+            body: JSON.stringify({ 
+                sign1: compatS1.id, 
+                sign2: compatS2.id,
+                user_id: userId
+            })
         });
         const data = await res.json();
+        
         scoreEl.textContent = `${data.score || 0}%`;
+        
+        // Добавляем цвет в зависимости от процента
+        if (data.score >= 85) {
+            scoreEl.style.background = 'linear-gradient(135deg, #00d4aa, #00ff88)';
+        } else if (data.score >= 70) {
+            scoreEl.style.background = 'linear-gradient(135deg, #FFD700, #ffb700)';
+        } else {
+            scoreEl.style.background = 'linear-gradient(135deg, #ff6b6b, #ff8e8e)';
+        }
+        
         textEl.textContent = data.text || 'Анализ завершён';
+        textEl.style.whiteSpace = 'pre-line';
     } catch (e) {
         textEl.textContent = 'Ошибка расчёта';
     }
@@ -313,24 +343,35 @@ async function loadNatalChart() {
 
 async function askHorary() {
     const question = document.getElementById('horary-question').value.trim();
-    if (!question) { alert('Задай вопрос!'); return; }
+    if (!question) { 
+        alert('Задай вопрос!'); 
+        return; 
+    }
     
     const resultBox = document.getElementById('horary-result');
     const answerEl = document.getElementById('horary-answer');
     const timeEl = document.getElementById('horary-time');
     
     resultBox.classList.remove('hidden');
-    answerEl.textContent = 'Звёзды думают...';
+    answerEl.textContent = ' Звёзды думают над твоим вопросом...';
     timeEl.textContent = '';
     
     try {
+        const tg = window.Telegram?.WebApp;
+        const userId = tg?.initDataUnsafe?.user?.id || 123456789;
+        
         const res = await fetch(`${API_URL}/api/horary`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ question })
+            body: JSON.stringify({ 
+                question,
+                user_id: userId
+            })
         });
         const data = await res.json();
+        
         answerEl.textContent = data.answer || 'Ответ не получен';
+        answerEl.style.whiteSpace = 'pre-line';
         timeEl.textContent = new Date().toLocaleTimeString('ru-RU');
     } catch (e) {
         answerEl.textContent = 'Связь с космосом потеряна';
