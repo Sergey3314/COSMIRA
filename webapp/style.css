@@ -955,3 +955,38 @@ small {
 .bottom-nav {
     display: flex !important;
 }
+
+/* ===== ТОЧЕЧНЫЕ ФИКСЫ ===== */
+
+/* Кнопка назад — сдвигаем вниз, чтобы не лезла на заголовок */
+.back-btn {
+    top: 30px !important;
+    transform: none !important;
+    width: 44px;
+    height: 44px;
+    z-index: 50;
+}
+
+/* Отступ для заголовка, чтобы не накладывался на кнопку назад */
+.page-header {
+    padding-left: 60px !important;
+    padding-right: 60px !important;
+    min-height: 110px;
+}
+
+/* Профиль кнопка — тоже фиксируем */
+.profile-btn-header {
+    top: 30px !important;
+    transform: none !important;
+    z-index: 50;
+}
+
+/* Нижняя панель — ВСЕГДА видна (кроме регистрации через JS) */
+.bottom-nav {
+    display: flex !important;
+}
+
+/* УБИРАЕМ старое правило что прятало меню */
+#screen-register:not(.hidden) ~ .bottom-nav {
+    display: flex !important;
+}

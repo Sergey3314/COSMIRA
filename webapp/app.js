@@ -64,7 +64,7 @@ function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
     
-    // Показываем/скрываем навигацию
+    // Скрываем меню ТОЛЬКО на регистрации
     const nav = document.getElementById('bottom-nav');
     if (id === 'screen-register') {
         nav.style.display = 'none';
@@ -72,6 +72,7 @@ function showScreen(id) {
         nav.style.display = 'flex';
     }
     
+    // Подсветка активной кнопки
     document.querySelectorAll('.nav-item').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.screen === id);
     });
