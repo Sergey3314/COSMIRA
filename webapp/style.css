@@ -900,3 +900,45 @@ small {
     .grid .card p { display: none; }
     .header-title { font-size: 30px; }
 }
+/* ===== ФИКС МОБИЛКИ ===== */
+@media (max-width: 480px) {
+    /* Заголовок — звезды не переносим */
+    .header-top {
+        gap: 6px !important;
+        flex-wrap: nowrap !important;
+        white-space: nowrap !important;
+    }
+    
+    /* Декор текст — меньше разрыв */
+    .header-decor {
+        letter-spacing: 3px !important;
+        padding: 0 8px !important;
+        font-size: 11px !important;
+    }
+    
+    /* Линии по бокам — короче */
+    .header-top::before, .header-top::after {
+        max-width: 40px !important;
+    }
+    
+    /* Заголовок — чуть меньше */
+    .header-title {
+        font-size: 30px !important;
+        letter-spacing: 2px !important;
+    }
+    
+    /* Кнопка назад — не мешает */
+    .back-btn {
+        top: 20px !important;
+        width: 38px !important;
+        height: 38px !important;
+        font-size: 18px !important;
+    }
+    
+    /* Кнопка профиля — не мешает */
+    .profile-btn-header {
+        top: 20px !important;
+        width: 40px !important;
+        height: 40px !important;
+    }
+}

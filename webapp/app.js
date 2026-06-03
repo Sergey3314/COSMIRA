@@ -339,6 +339,7 @@ async function askHorary() {
 
 function editProfile() { showScreen('screen-register'); }
 
+// ===== ИСТОРИЯ ЧТЕНИЙ =====
 function openHistory() {
     showScreen('screen-history');
     loadHistory();
@@ -356,7 +357,7 @@ async function loadHistory() {
         const history = await res.json();
         
         if (history.length === 0) {
-            container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">Пока нет сохранённых чтений</p>';
+            container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:20px;">Пока нет сохранённых чтений</p>';
             return;
         }
         
@@ -370,6 +371,7 @@ async function loadHistory() {
             </div>
         `).join('');
     } catch (e) {
-        container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">Ошибка загрузки</p>';
+        console.error('History load error:', e);
+        container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:20px;">Ошибка загрузки</p>';
     }
 }
