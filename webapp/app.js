@@ -354,7 +354,17 @@ async function loadHistory() {
         const userId = tg?.initDataUnsafe?.user?.id || 123456789;
         
         const res = await fetch(`${API_URL}/api/history?uid=${userId}`);
+        
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
         const history = await res.json();
+        
+        // Проверяем что это массив
+        if (!Array.isArray(history)) {
+            throw new Error('History is not an array');
+        }
         
         if (history.length === 0) {
             container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:20px;">Пока нет сохранённых чтений</p>';
@@ -368,10 +378,21 @@ async function loadHistory() {
                     <small style="color:var(--text-secondary);">${new Date(item.created_at).toLocaleDateString('ru-RU')}</small>
                 </div>
                 <div style="font-size:14px;line-height:1.6;color:var(--text);white-space:pre-line;">${item.result_text}</div>
+                <button onclick='downloadPDF(${JSON.stringify(item)})' style="margin-top:10px;padding:8px 16px;background:linear-gradient(135deg,rgba(112,0,255,0.3),rgba(255,215,0,0.2));border:1px solid var(--gold);color:var(--gold);border-radius:12px;cursor:pointer;font-family:'Cinzel',serif;">
+                    📥 Скачать PDF
+                </button>
             </div>
         `).join('');
     } catch (e) {
         console.error('History load error:', e);
-        container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:20px;">Ошибка загрузки</p>';
+        container.innerHTML = `
+            <div style="text-align:center;color:var(--text-secondary);padding:20px;">
+                <p>Ошибка загрузки</p>
+                <small style="display:block;margin-top:10px;opacity:0.7;">${e.message}</small>
+                <button onclick="loadHistory()" style="margin-top:15px;padding:10px 20px;background:var(--glass);border:1px solid var(--gold-border);color:var(--gold);border-radius:12px;cursor:pointer;">
+                    🔄 Повторить
+                </button>
+            </div>
+        `;
     }
 }

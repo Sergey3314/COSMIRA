@@ -130,7 +130,16 @@ async def get_history(user_id, limit=20):
             ORDER BY created_at DESC 
             LIMIT $2
         """, str(user_id), limit)
-        return [dict(row) for row in rows]
+        
+        # Конвертируем datetime в строки
+        result = []
+        for row in rows:
+            item = dict(row)
+            if item.get('created_at'):
+                item['created_at'] = item['created_at'].isoformat()
+            result.append(item)
+        
+        return result
     finally:
         await conn.close()
 
