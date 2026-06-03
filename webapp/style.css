@@ -986,7 +986,7 @@ small {
     display: flex !important;
 }
 
-/* УБИРАЕМ старое правило что прятало меню */
-#screen-register:not(.hidden) ~ .bottom-nav {
-    display: flex !important;
-}
+
+
+/* Фикс меню - удалена конфликтующая строка */
+/* Дата: [сегодняшняя дата] */
