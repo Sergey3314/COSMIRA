@@ -388,7 +388,7 @@ async function loadHistory() {
         // Иконки и названия для типов
         const typeConfig = {
             'horoscope': { icon: '🔮', name: 'Гороскопы', color: '#FFD700' },
-            'natal': { icon: '', name: 'Натальные карты', color: '#9d4edd' },
+            'natal': { icon: '🌌', name: 'Натальные карты', color: '#9d4edd' },
             'compatibility': { icon: '💫', name: 'Совместимость', color: '#00d4aa' },
             'horary': { icon: '🔮', name: 'Хорарные вопросы', color: '#ff6b6b' }
         };
@@ -397,14 +397,27 @@ async function loadHistory() {
         
         for (const [type, items] of Object.entries(grouped)) {
             const config = typeConfig[type] || { icon: '📜', name: type, color: '#FFD700' };
+            const groupOpenId = `group-${type}`;
             
             html += `
                 <div style="margin-bottom:24px;">
-                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:12px;background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(112,0,255,0.1));border:1px solid var(--glass-border);border-radius:14px;">
+                    <!-- ЗАГОЛОВОК ГРУППЫ (раскрывающийся) -->
+                    <div onclick="toggleGroup('${groupOpenId}', '${groupOpenId}-arrow')" 
+                         style="display:flex;align-items:center;gap:10px;padding:14px 16px;
+                         background:linear-gradient(135deg,rgba(255,215,0,0.12),rgba(112,0,255,0.12));
+                         border:1px solid var(--glass-border);border-radius:14px;
+                         cursor:pointer;transition:0.3s;margin-bottom:12px;">
                         <span style="font-size:24px;">${config.icon}</span>
-                        <h3 style="color:${config.color};font-family:'Cinzel',serif;font-size:16px;margin:0;">${config.name}</h3>
-                        <span style="margin-left:auto;background:rgba(255,215,0,0.2);color:var(--gold);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;">${items.length}</span>
+                        <h3 style="color:${config.color};font-family:'Cinzel',serif;font-size:16px;margin:0;flex:1;">${config.name}</h3>
+                        <span style="background:rgba(255,215,0,0.2);color:var(--gold);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;">${items.length}</span>
+                        <svg id="${groupOpenId}-arrow" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" 
+                             style="width:20px;height:20px;transition:transform 0.3s;transform:rotate(0deg);">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
                     </div>
+                    
+                    <!-- КОНТЕНТ ГРУППЫ (скрыт по умолчанию) -->
+                    <div id="${groupOpenId}" style="display:none;">
             `;
             
             // Группировка по датам
@@ -418,33 +431,50 @@ async function loadHistory() {
             });
             
             for (const [date, dateItems] of Object.entries(byDate)) {
-                html += `<div style="margin-left:20px;margin-bottom:12px;">`;
+                html += `<div style="margin-left:16px;margin-bottom:8px;">`;
                 
                 dateItems.forEach((item, index) => {
                     const blockId = `block-${type}-${index}`;
+                    const periodLabel = item.period === 'day' ? 'день' : item.period === 'month' ? 'месяц' : item.period === 'year' ? 'год' : item.period;
+                    const categoryLabel = item.category === 'general' ? 'общий' : item.category === 'love' ? 'любовь' : item.category === 'career' ? 'карьера' : item.category;
+                    
                     html += `
-                        <div style="background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;margin-bottom:8px;overflow:hidden;">
-                            <div onclick="toggleHistoryBlock('${blockId}')" style="padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:0.3s;" onmouseover="this.style.background='rgba(255,215,0,0.05)'" onmouseout="this.style.background='var(--glass)'">
-                                <span style="font-size:18px;">📋</span>
+                        <div style="background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;margin-bottom:8px;overflow:hidden;">
+                            <!-- ЗАГОЛОВОК БЛОКА (раскрывающийся) -->
+                            <div onclick="toggleHistoryBlock('${blockId}', '${blockId}-arrow')" 
+                                 style="padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:0.3s;"
+                                 onmouseover="this.style.background='rgba(255,215,0,0.05)'" 
+                                 onmouseout="this.style.background='transparent'">
+                                <span style="font-size:16px;">📋</span>
                                 <div style="flex:1;">
                                     <div style="color:var(--gold);font-family:'Cinzel',serif;font-size:14px;font-weight:600;">
-                                        ${item.sign} • ${item.period === 'day' ? 'день' : item.period === 'month' ? 'месяц' : item.period === 'year' ? 'год' : item.period}
+                                        ${item.sign} • ${periodLabel}
                                     </div>
                                     <div style="color:var(--text-secondary);font-size:12px;margin-top:2px;">
-                                        ${item.category === 'general' ? 'общий' : item.category === 'love' ? 'любовь' : item.category === 'career' ? 'карьера' : item.category}
+                                        ${categoryLabel}
                                     </div>
                                 </div>
                                 <span style="color:var(--text-secondary);font-size:11px;">${date}</span>
-                                <svg id="arrow-${blockId}" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" style="width:20px;height:20px;transition:0.3s;"><polyline points="6 9 12 15 18 9"/></svg>
+                                <svg id="${blockId}-arrow" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" 
+                                     style="width:18px;height:18px;transition:transform 0.3s;transform:rotate(0deg);">
+                                    <polyline points="6 9 12 15 18 9"/>
+                                </svg>
                             </div>
-                            <div id="${blockId}" style="display:none;padding:16px;border-top:1px solid var(--glass-border);background:rgba(0,0,0,0.2);">
-                                <div style="font-size:14px;line-height:1.8;color:var(--text);white-space:pre-line;margin-bottom:16px;">${item.result_text}</div>
+                            
+                            <!-- КОНТЕНТ БЛОКА (скрыт по умолчанию) -->
+                            <div id="${blockId}" style="display:none;padding:14px;border-top:1px solid var(--glass-border);background:rgba(0,0,0,0.15);">
+                                <div style="font-size:14px;line-height:1.8;color:var(--text);white-space:pre-line;margin-bottom:14px;">${item.result_text}</div>
                                 <div style="display:flex;gap:10px;">
-                                    <button onclick='downloadPDF(${JSON.stringify(item).replace(/'/g, "&apos;")})' style="flex:1;padding:10px;background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(112,0,255,0.2));border:1px solid var(--gold);color:var(--gold);border-radius:12px;cursor:pointer;font-family:'Cinzel',serif;font-size:13px;">
+                                    <button onclick='downloadPDF(${JSON.stringify(item).replace(/'/g, "&apos;")})' 
+                                            style="flex:1;padding:10px;background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(112,0,255,0.2));
+                                            border:1px solid var(--gold);color:var(--gold);border-radius:12px;cursor:pointer;
+                                            font-family:'Cinzel',serif;font-size:13px;">
                                         📥 Скачать PDF
                                     </button>
-                                    <button onclick="toggleHistoryBlock('${blockId}')" style="padding:10px 20px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:12px;cursor:pointer;font-size:13px;">
-                                        ✕ Закрыть
+                                    <button onclick="toggleHistoryBlock('${blockId}', '${blockId}-arrow')" 
+                                            style="padding:10px 16px;background:var(--glass);border:1px solid var(--glass-border);
+                                            color:var(--text-secondary);border-radius:12px;cursor:pointer;font-size:13px;">
+                                        ✕
                                     </button>
                                 </div>
                             </div>
@@ -455,7 +485,7 @@ async function loadHistory() {
                 html += `</div>`;
             }
             
-            html += `</div>`;
+            html += `</div></div>`;
         }
         
         container.innerHTML = html;
@@ -470,6 +500,32 @@ async function loadHistory() {
                 </button>
             </div>
         `;
+    }
+}
+
+// Раскрыть/свернуть группу
+function toggleGroup(blockId, arrowId) {
+    const block = document.getElementById(blockId);
+    const arrow = document.getElementById(arrowId);
+    if (block.style.display === 'none') {
+        block.style.display = 'block';
+        arrow.style.transform = 'rotate(180deg)';
+    } else {
+        block.style.display = 'none';
+        arrow.style.transform = 'rotate(0deg)';
+    }
+}
+
+// Раскрыть/свернуть блок внутри группы
+function toggleHistoryBlock(blockId, arrowId) {
+    const block = document.getElementById(blockId);
+    const arrow = document.getElementById(arrowId);
+    if (block.style.display === 'none') {
+        block.style.display = 'block';
+        arrow.style.transform = 'rotate(180deg)';
+    } else {
+        block.style.display = 'none';
+        arrow.style.transform = 'rotate(0deg)';
     }
 }
 
@@ -501,6 +557,7 @@ async function downloadPDF(item) {
                     background:linear-gradient(135deg,#1a237e 0%,#4a148c 100%); 
                     padding:40px; 
                     margin:0;
+                    min-height:100vh;
                 }
                 .container { 
                     max-width:600px; 
@@ -516,13 +573,13 @@ async function downloadPDF(item) {
                     font-family:'Cinzel',serif;
                     font-size:36px;
                     margin:0 0 30px 0;
-                    text-shadow:2px 2px 4px rgba(0,0,0,0.1);
                 }
                 h2 { 
                     color:#4a148c; 
                     border-bottom:2px solid #FFD700; 
                     padding-bottom:10px;
                     font-family:'Cinzel',serif;
+                    text-align:center;
                 }
                 .meta {
                     text-align:center;
@@ -545,28 +602,62 @@ async function downloadPDF(item) {
                     padding-top:20px;
                     border-top:1px solid #eee;
                 }
+                .print-btn {
+                    display:block;
+                    margin:30px auto;
+                    padding:12px 30px;
+                    background:linear-gradient(135deg,#FFD700,#b8860b);
+                    border:none;
+                    border-radius:12px;
+                    color:#1a237e;
+                    font-family:'Cinzel',serif;
+                    font-weight:600;
+                    font-size:16px;
+                    cursor:pointer;
+                    box-shadow:0 4px 15px rgba(255,215,0,0.3);
+                }
+                .print-btn:hover {
+                    transform:translateY(-2px);
+                    box-shadow:0 6px 20px rgba(255,215,0,0.4);
+                }
+                @media print {
+                    body { background:white; }
+                    .container { box-shadow:none; }
+                    .print-btn { display:none; }
+                }
             </style>
         </head>
         <body>
             <div class="container">
                 <h1>✦ COSMIRA ✦</h1>
-                <h2 style="text-align:center;">${item.sign}</h2>
+                <h2>${item.sign}</h2>
                 <div class="meta">
                     <strong>${item.period === 'day' ? 'Дневной' : item.period === 'month' ? 'Месяц' : 'Год'} прогноз</strong><br>
                     ${item.category === 'general' ? 'Общий' : item.category === 'love' ? 'Любовь' : 'Карьера'} • ${new Date(item.created_at).toLocaleDateString('ru-RU')}
                 </div>
                 <div class="content">${item.result_text}</div>
                 <div class="footer">С любовью, COSMIRA ✦<br>Астрология, созданная для тебя</div>
+                <button class="print-btn" onclick="window.print()">🖨️ Сохранить как PDF</button>
             </div>
+            <script>
+                // Автоматически открываем диалог печати
+                window.onload = function() {
+                    setTimeout(() => {
+                        window.print();
+                    }, 500);
+                };
+            </script>
         </body>
         </html>
     `;
     
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `COSMIRA-${item.sign}-${Date.now()}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
+    // Открываем в новом окне (Telegram разрешает)
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+        newWindow.document.write(html);
+        newWindow.document.close();
+    } else {
+        // Если не открылось — показываем alert
+        alert('📥 Чтобы сохранить гороскоп:\n\n1. Скопируй текст вручную\n2. Или разреши pop-up окна для Telegram');
+    }
 }
