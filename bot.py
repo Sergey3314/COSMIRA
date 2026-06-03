@@ -664,100 +664,40 @@ async def handle_horary(request):
         user_id = data.get('user_id', 'anonymous')
         
         if not question:
-            return web.json_response({"answer": "Задай вопрос, чтобы получить ответ звёзд."})
+            return web.json_response({"answer": "Задай вопрос!"})
         
         from datetime import datetime
         now = datetime.now()
         
-        lat, lon = 55.75, 37.61
-        if currentUser_data := await get_user(user_id):
-            if currentUser_data.get('birth_place'):
-                city = currentUser_data['birth_place'].lower()
-                for city_name, coords in CITIES.items():
-                    if city_name in city:
-                        lat, lon = coords
-                        break
-        
-        jd = swe.julday(now.year, now.month, now.day, now.hour + now.minute/60.0)
-        cusps, ascmc = swe.houses(jd, lat, lon, b'P')
-        asc_longitude = ascmc[0]
-        mc_longitude = ascmc[1]
-        asc_sign_idx = int(asc_longitude / 30)
-        
-        sign_names = ['Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 
-                      'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы']
-        sign_emojis = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓']
-        
-        # Все планеты
-        planet_ids = [swe.SUN, swe.MOON, swe.MERCURY, swe.VENUS, swe.MARS, 
-                      swe.JUPITER, swe.SATURN, swe.URANUS, swe.NEPTUNE, swe.PLUTO]
-        planet_names_ru = ['Солнце', 'Луна', 'Меркурий', 'Венера', 'Марс', 
-                           'Юпитер', 'Сатурн', 'Уран', 'Нептун', 'Плутон']
-        planet_symbols = ['☉', '☽', '☿', '♀', '', '♃', '♄', '', '♆', '♇']
-        
-        planets_data = []
-        for p_id, p_name, p_sym in zip(planet_ids, planet_names_ru, planet_symbols):
-            res = swe.calc_ut(jd, p_id, swe.FLG_SWIEPH)
-            longitude = res[0][0]
-            sign_idx = int(longitude / 30)
-            degree_in_sign = longitude % 30
+        # Луна
+        try:
+            jd = swe.julday(now.year, now.month, now.day, now.hour + now.minute/60.0)
+            moon_res = swe.calc_ut(jd, swe.MOON, swe.FLG_SWIEPH)
+            moon_lon = moon_res[0][0]
+            moon_sign_idx = int(moon_lon / 30)
+            moon_degree = round(moon_lon % 30, 2)
             
-            # Скорость (ретроградность)
-            res2 = swe.calc_ut(jd - 0.001, p_id, swe.FLG_SWIEPH)
-            speed = longitude - res2[0][0]
-            retrograde = speed < 0
+            sign_names = ['Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 
+                          'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы']
+            sign_emojis = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓']
             
-            planets_data.append({
-                "name": p_name,
-                "symbol": p_sym,
-                "sign": sign_names[sign_idx],
-                "sign_idx": sign_idx,
-                "degree": round(degree_in_sign, 2),
-                "longitude": round(longitude, 2),
-                "retrograde": retrograde
-            })
+            moon_sign = f"{sign_emojis[moon_sign_idx]} {sign_names[moon_sign_idx]}"
+            sun_res = swe.calc_ut(jd, swe.SUN, swe.FLG_SWIEPH)
+            moon_phase = (moon_lon - sun_res[0][0]) % 360
+            moon_phase_name = "растущая" if moon_phase < 180 else "убывающая"
+        except:
+            moon_sign = "—"
+            moon_phase_name = "неизвестно"
         
-        # Луна отдельно
-        moon_data = planets_data[1]
-        moon_phase = (moon_data['longitude'] - planets_data[0]['longitude']) % 360
-        moon_phase_name = "растущая" if moon_phase < 180 else "убывающая"
-        
-        # Дома
-        houses_data = []
-        house_meanings = [
-            "Личность, вопрошающий", "Деньги, ресурсы", "Общение, документы",
-            "Дом, семья", "Любовь, дети", "Работа, здоровье",
-            "Партнёр, брак", "Кризисы, трансформация", "Путешествия, философия",
-            "Карьера, статус", "Друзья, мечты", "Тайны, подсознание"
-        ]
-        
-        for i in range(12):
-            house_cusp = cusps[i]
-            sign_idx = int(house_cusp / 30)
-            houses_data.append({
-                "number": i + 1,
-                "sign": sign_names[sign_idx],
-                "emoji": sign_emojis[sign_idx],
-                "degree": round(house_cusp % 30, 2),
-                "longitude": round(house_cusp, 2),
-                "meaning": house_meanings[i]
-            })
-        
-        # Определяем дом вопроса
+        # Определяем дом
         question_lower = question.lower()
         house_keywords = {
-            1: ['я', 'мне', 'меня', 'моё', 'себе', 'внешность'],
-            2: ['деньги', 'зарплата', 'доход', 'покупка', 'продажа', 'цена', 'финансы'],
-            3: ['поездка', 'дорога', 'соседи', 'братья', 'документы', 'учёба'],
-            4: ['дом', 'квартира', 'семья', 'родители', 'недвижимость', 'переезд'],
-            5: ['ребёнок', 'дети', 'беременность', 'любовь', 'роман', 'творчество'],
-            6: ['работа', 'начальник', 'коллеги', 'здоровье', 'животное'],
-            7: ['партнёр', 'муж', 'жена', 'брак', 'развод', 'отношения', 'враг'],
-            8: ['наследство', 'кредит', 'долг', 'страх', 'риск', 'трансформация'],
-            9: ['путешествие', 'иностранец', 'университет', 'религия', 'закон', 'суд'],
-            10: ['карьера', 'начальство', 'власть', 'статус', 'профессия', 'цель'],
-            11: ['друзья', 'коллектив', 'мечта', 'план', 'соцсети'],
-            12: ['тайна', 'скрытое', 'изоляция', 'больница', 'духовность']
+            1: ['я', 'мне', 'меня', 'моё'], 2: ['деньги', 'зарплата', 'доход'],
+            3: ['поездка', 'дорога', 'документы'], 4: ['дом', 'квартира', 'семья'],
+            5: ['ребёнок', 'дети', 'любовь', 'роман'], 6: ['работа', 'здоровье'],
+            7: ['партнёр', 'муж', 'жена', 'брак', 'отношения'], 8: ['кредит', 'долг'],
+            9: ['путешествие', 'университет', 'закон'], 10: ['карьера', 'статус'],
+            11: ['друзья', 'коллектив'], 12: ['тайна', 'духовность']
         }
         
         question_house = 7
@@ -766,102 +706,55 @@ async def handle_horary(request):
                 question_house = house_num
                 break
         
-        # Управители знаков
-        rulers = {
-            0: 'Марс', 1: 'Венера', 2: 'Меркурий', 3: 'Луна',
-            4: 'Солнце', 5: 'Меркурий', 6: 'Венера', 7: 'Марс',
-            8: 'Юпитер', 9: 'Сатурн', 10: 'Сатурн', 11: 'Юпитер'
-        }
+        # AI
+        client = AsyncOpenAI(api_key=os.getenv('OPENAI_API_KEY'), base_url=os.getenv('OPENAI_BASE_URL', 'https://api.proxyapi.ru/v1'))
         
-        # AI интерпретация
-        client = AsyncOpenAI(
-            api_key=os.getenv('OPENAI_API_KEY'),
-            base_url=os.getenv('OPENAI_BASE_URL', 'https://api.proxyapi.ru/v1')
-        )
-        
-        chart_desc = f"""
-ХОРАРНАЯ КАРТА на {now.strftime('%d.%m.%Y в %H:%M')}:
-АСЦЕНДЕНТ: {sign_emojis[asc_sign_idx]} {sign_names[asc_sign_idx]} ({round(asc_longitude % 30, 2)}°)
-ЛУНА: {moon_data['symbol']} {moon_data['sign']} ({moon_data['degree']}°) - {moon_phase_name}
-{'️ Луна ретроградная' if moon_data['retrograde'] else '✨ Луна директная'}
-ДОМ ВОПРОСА: {question_house}-й ({houses_data[question_house-1]['sign']})
-Управитель дома: {rulers[houses_data[question_house-1]['sign_idx']]}
-"""
-        
-        prompt = f"""Ты хорарный астролог. Интерпретируй реальную карту:
+        prompt = f"""Ты хорарный астролог. Карта на {now.strftime('%d.%m.%Y %H:%M')}:
 
-{chart_desc}
+ЛУНА: {moon_sign} ({moon_phase_name})
+ДОМ ВОПРОСА: {question_house}-й
 ВОПРОС: "{question}"
 
-ПРАВИЛА ХОРАРА:
-- Луна = развитие ситуации
-- Асцендент = вопрошающий
-- Управитель дома вопроса = суть дела
-- Ретроградная Луна = задержка, возврат к прошлому
-
-ОТВЕТЬ ПО СТРУКТУРЕ:
+Ответь:
 
 🌙 ОТВЕТ ЗВЁЗД
-(Да/Нет/Возможно + почему, опираясь на фазу Луны)
+(Да/Нет/Возможно + почему)
 
-📊 КАРТИНА СИТУАЦИИ
-(2-3 предложения: что показывает Луна и управители)
+📊 ЧТО ПОКАЗЫВАЕТ
+(2-3 предложения)
 
  КОГДА
-(Сроки: быстро/недели/месяцы — по фазе и скорости Луны)
+(Сроки)
 
 💫 СОВЕТ
-(Что делать исходя из карты)
+(Что делать)
 
 ПРАВИЛА:
-- НЕ выдумывай ретроградные планеты
-- Если Луна ретроградная — скажи явно
-- Длина: 250-350 слов
-- Тон: уверенный, конкретный
+- Не выдумывай ретроградные планеты
+- 200-300 слов
 - Обращайся на "Вы"
 
-Начни сразу с 🌙 ОТВЕТ ЗВЁЗД."""
+Начни с 🌙 ОТВЕТ ЗВЁЗД."""
 
         response = await client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "Ты хорарный астролог. Интерпретируешь только реальные данные."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=1000,
-            temperature=0.6
+            messages=[{"role": "system", "content": "Ты хорарный астролог."}, {"role": "user", "content": prompt}],
+            max_tokens=800, temperature=0.6
         )
         
         answer = response.choices[0].message.content.strip()
         
-        await save_reading(
-            user_id, 'horary', f"Вопрос: {question[:30]}...", 'хорар', f"дом {question_house}",
-            f"**Вопрос:** {question}\n**Карта на:** {now.strftime('%d.%m.%Y %H:%M')}\n**Луна:** {moon_data['symbol']} {moon_data['sign']} ({moon_phase_name})\n\n{answer}"
-        )
+        await save_reading(user_id, 'horary', f"Вопрос: {question[:30]}...", 'хорар', f"дом {question_house}", f"**Вопрос:** {question}\n**Карта на:** {now.strftime('%d.%m.%Y %H:%M')}\n\n{answer}")
         
         return web.json_response({
-            "answer": answer,
-            "chart_time": now.strftime('%d.%m.%Y %H:%M'),
-            "planets": planets_data,
-            "houses": houses_data,
-            "ascendant": {
-                "sign": sign_names[asc_sign_idx],
-                "emoji": sign_emojis[asc_sign_idx],
-                "longitude": round(asc_longitude, 2)
-            },
-            "mc": {
-                "longitude": round(mc_longitude, 2)
-            },
-            "moon_sign": f"{moon_data['symbol']} {moon_data['sign']}",
-            "moon_phase": moon_phase_name,
-            "moon_retrograde": moon_data['retrograde'],
-            "question_house": question_house,
-            "timestamp": now.isoformat()
+            "answer": answer, "chart_time": now.strftime('%d.%m.%Y %H:%M'),
+            "moon_sign": moon_sign, "moon_phase": moon_phase_name,
+            "moon_retrograde": False, "question_house": question_house, "timestamp": now.isoformat()
         })
         
     except Exception as e:
         logging.error(f"Horary error: {e}")
-        return web.json_response({"answer": "Связь с космосом потеряна"}, status=500)
+        return web.json_response({"answer": f"Ошибка: {str(e)}"}, status=500)
 # ==========================================
 # ЗАПУСК
 # ==========================================
