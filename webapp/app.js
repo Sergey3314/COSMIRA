@@ -356,34 +356,158 @@ function animateValue(element, start, end, duration) {
 
 async function loadNatalChart() {
     const container = document.getElementById('natal-container');
-    container.innerHTML = '<div class="loader">🔮 Рассчитываем положение планет...</div>';
+    container.innerHTML = `
+        <div class="loader" style="flex-direction:column; gap:15px;">
+            <div class="spinner"></div>
+            <p>Слушаем звёзды в момент твоего рождения...</p>
+        </div>
+    `;
     
     if (!currentUser?.birth_date || !currentUser?.birth_time) {
-        container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">Заполни данные в профиле для расчёта карты</p>';
+        container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:20px;">Заполни дату и время рождения в профиле, чтобы построить карту</p>';
         return;
     }
     
     try {
+        const tg = window.Telegram?.WebApp;
+        const userId = tg?.initDataUnsafe?.user?.id || 123456789;
+        
         const res = await fetch(`${API_URL}/api/natal`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 birth_date: currentUser.birth_date,
                 birth_time: currentUser.birth_time,
-                birth_city: currentUser.birth_city
+                birth_city: currentUser.birth_city,
+                user_id: userId
             })
         });
         const data = await res.json();
-        container.innerHTML = `
-            <h3 style="text-align:center;color:var(--gold);margin-bottom:16px;">Твоя натальная карта</h3>
-            <div style="font-size:14px;line-height:1.8;">
-                ${data.planets?.map(p => `<p>☀️ ${p.name}: ${p.sign} ${p.degree}° • Дом ${p.house}</p>`).join('') || 'Данные недоступны'}
+        
+        if (data.error) {
+            container.innerHTML = `<p style="color:var(--text-secondary);text-align:center;">${data.error}</p>`;
+            return;
+        }
+        
+        // Рисуем колесо
+        const svgWheel = generateNatalWheel(data.planets, data.ascendant);
+        
+        // Собираем список планет
+        const planetsList = data.planets.map(p => `
+            <div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--glass-border);">
+                <span style="color:var(--gold);font-family:'Cinzel',serif;">${p.emoji} ${p.name}</span>
+                <span style="color:var(--text-secondary);">${p.sign} ${p.degree}°</span>
             </div>
-            ${data.interpretation ? `<div class="result-box" style="margin-top:16px;"><p>${data.interpretation}</p></div>` : ''}
+        `).join('');
+        
+        container.innerHTML = `
+            <!-- ЖИВОЕ КОЛЕСО -->
+            <div style="position:relative;max-width:350px;margin:0 auto 30px;animation:fadeIn 1s ease;">
+                ${svgWheel}
+                <div style="text-align:center;margin-top:15px;font-family:'Cinzel',serif;color:var(--gold);font-size:18px;letter-spacing:2px;">
+                    ${data.ascendant.emoji} Асцендент в ${data.ascendant.sign}
+                </div>
+            </div>
+            
+            <!-- РАЗБОР ОТ AI -->
+            <div style="background:var(--glass);border:1px solid var(--gold-border);border-radius:16px;padding:20px;margin-bottom:20px;animation:slideUp 1.2s ease;">
+                <h3 style="color:var(--gold);font-family:'Cinzel',serif;text-align:center;margin-bottom:15px;">🔮 Послание Звёзд</h3>
+                <div style="font-size:14px;line-height:1.8;color:var(--text);white-space:pre-line;">${data.interpretation}</div>
+            </div>
+            
+            <!-- СПИСОК ПЛАНЕТ -->
+            <div style="background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;padding:15px;animation:slideUp 1.5s ease;">
+                <h4 style="color:var(--gold);font-family:'Cinzel',serif;text-align:center;margin-bottom:10px;">Положение Планет</h4>
+                ${planetsList}
+            </div>
+            
+            <button onclick='downloadPDF(${JSON.stringify({
+                sign: 'Натальная Карта', 
+                period: 'natal', 
+                category: 'general', 
+                result_text: data.interpretation,
+                created_at: new Date().toISOString()
+            })})' style="width:100%;margin-top:20px;padding:14px;background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(112,0,255,0.2));border:1px solid var(--gold);color:var(--gold);border-radius:14px;cursor:pointer;font-family:'Cinzel',serif;font-size:15px;font-weight:600;">
+                📥 Сохранить разбор в PDF
+            </button>
         `;
+        
     } catch (e) {
-        container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">Ошибка расчёта</p>';
+        container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">Ошибка расчёта карты</p>';
     }
+}
+
+// Функция генерации SVG колеса
+function generateNatalWheel(planets, ascendant) {
+    const size = 350;
+    const center = size / 2;
+    const outerR = 160;
+    const innerR = 110;
+    const planetR = 80;
+    
+    const signEmojis = ['♈', '', '♊', '♋', '', '♍', '♎', '', '♐', '♑', '', '♓'];
+    const signNames = ['Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы'];
+    
+    let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;filter:drop-shadow(0 0 20px rgba(255,215,0,0.3));">
+        <defs>
+            <radialGradient id="wheel-bg" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="rgba(112,0,255,0.1)"/>
+                <stop offset="100%" stop-color="rgba(26,26,46,0.8)"/>
+            </radialGradient>
+        </defs>
+        
+        <!-- Фон колеса -->
+        <circle cx="${center}" cy="${center}" r="${outerR}" fill="url(#wheel-bg)" stroke="#FFD700" stroke-width="2" style="animation:spinWheel 60s linear infinite;transform-origin:center;"/>
+        
+        <!-- Сектора знаков -->`;
+    
+    // Рисуем 12 знаков
+    for (let i = 0; i < 12; i++) {
+        const angle1 = (i * 30 - 90) * Math.PI / 180;
+        const angle2 = ((i + 1) * 30 - 90) * Math.PI / 180;
+        const midAngle = (i * 30 + 15 - 90) * Math.PI / 180;
+        
+        const x1 = center + outerR * Math.cos(angle1);
+        const y1 = center + outerR * Math.sin(angle1);
+        const x2 = center + outerR * Math.cos(angle2);
+        const y2 = center + outerR * Math.sin(angle2);
+        
+        const textX = center + (outerR - 25) * Math.cos(midAngle);
+        const textY = center + (outerR - 25) * Math.sin(midAngle);
+        
+        svg += `
+            <line x1="${center + innerR * Math.cos(angle1)}" y1="${center + innerR * Math.sin(angle1)}" x2="${x1}" y2="${y1}" stroke="#FFD700" stroke-width="1" opacity="0.6"/>
+            <text x="${textX}" y="${textY}" fill="#FFD700" font-size="16" text-anchor="middle" dominant-baseline="middle" style="font-family:'Montserrat',sans-serif;">${signEmojis[i]}</text>
+        `;
+    }
+    
+    // Внутренний круг
+    svg += `<circle cx="${center}" cy="${center}" r="${innerR}" fill="none" stroke="#FFD700" stroke-width="1" opacity="0.4"/>
+            <circle cx="${center}" cy="${center}" r="${planetR + 30}" fill="none" stroke="#FFD700" stroke-width="1" opacity="0.2"/>`;
+    
+    // Рисуем планеты
+    planets.forEach((p, idx) => {
+        const angle = (p.longitude - 90) * Math.PI / 180;
+        // Смещаем планеты чтобы не накладывались
+        const r = planetR - (idx % 3) * 15;
+        const x = center + r * Math.cos(angle);
+        const y = center + r * Math.sin(angle);
+        
+        svg += `
+            <g style="animation:planetPop 0.5s ease ${idx * 0.1}s both;">
+                <circle cx="${x}" cy="${y}" r="12" fill="rgba(112,0,255,0.6)" stroke="#FFD700" stroke-width="1.5"/>
+                <text x="${x}" y="${y}" fill="#fff" font-size="12" text-anchor="middle" dominant-baseline="central">${p.emoji}</text>
+            </g>
+        `;
+    });
+    
+    svg += `
+        <!-- Центр -->
+        <circle cx="${center}" cy="${center}" r="20" fill="#1a1a2e" stroke="#FFD700" stroke-width="2"/>
+        <text x="${center}" y="${center}" fill="#FFD700" font-size="14" text-anchor="middle" dominant-baseline="central" style="font-family:'Cinzel',serif;">✦</text>
+    </svg>`;
+    
+    return svg;
 }
 
 async function askHorary() {

@@ -445,34 +445,147 @@ async def handle_compatibility(request):
         logging.error(f"Compatibility error: {e}")
         return web.json_response({"score": 0, "text": "Ошибка расчёта"}, status=500)
 
+import swisseph as swe
+
+# Простая база городов (координаты)
+CITIES = {
+    'москва': (55.7558, 37.6173), 'спб': (59.9311, 30.3609), 'санкт-петербург': (59.9311, 30.3609),
+    'киев': (50.4501, 30.5234), 'минск': (53.9045, 27.5615), 'алматы': (43.2220, 76.8512),
+    'ташкент': (41.2995, 69.2401), 'баку': (40.4093, 49.8671), 'екатеринбург': (56.8389, 60.6057),
+    'новосибирск': (55.0084, 82.9357), 'казань': (55.7887, 49.1221), 'челябинск': (55.1644, 61.4368),
+    'самара': (53.2001, 50.1500), 'ростов': (47.2357, 39.7015), 'уфа': (54.7388, 55.9721),
+    'красноярск': (56.0184, 92.8672), 'воронеж': (51.6720, 39.1843), 'пермь': (58.0105, 56.2502)
+}
+
 async def handle_natal(request):
     try:
         data = await request.json()
+        user_id = data.get('user_id', 'anonymous')
+        
+        # Берем данные юзера из БД если они есть
         birth_date = data.get('birth_date')
         birth_time = data.get('birth_time')
+        birth_city = data.get('birth_city', '').lower()
         
         if not birth_date or not birth_time:
-            return web.json_response({
-                "planets": [],
-                "interpretation": "Для расчёта натальной карты нужны дата и время рождения."
+            return web.json_response({"error": "Нужна дата и время рождения"}, status=400)
+        
+        # Координаты города
+        lat, lon = 55.75, 37.61 # Москва по умолчанию
+        for city_name, coords in CITIES.items():
+            if city_name in birth_city:
+                lat, lon = coords
+                break
+        
+        # Парсим дату
+        from datetime import datetime
+        dt = datetime.strptime(f"{birth_date} {birth_time}", "%Y-%m-%d %H:%M")
+        
+        # Расчет Юлианского дня
+        jd = swe.julday(dt.year, dt.month, dt.day, dt.hour + dt.minute/60.0)
+        
+        # Список планет
+        planet_ids = [swe.SUN, swe.MOON, swe.MERCURY, swe.VENUS, swe.MARS, 
+                      swe.JUPITER, swe.SATURN, swe.URANUS, swe.NEPTUNE, swe.PLUTO]
+        planet_names_ru = ['Солнце', 'Луна', 'Меркурий', 'Венера', 'Марс', 
+                           'Юпитер', 'Сатурн', 'Уран', 'Нептун', 'Плутон']
+        
+        planets_data = []
+        sun_sign = moon_sign = ""
+        
+        for p_id, p_name in zip(planet_ids, planet_names_ru):
+            res = swe.calc_ut(jd, p_id, swe.FLG_SWIEPH)
+            longitude = res[0][0] # Долгота 0-360
+            
+            # Определяем знак
+            sign_idx = int(longitude / 30)
+            sign_names = ['Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 
+                          'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы']
+            sign_emojis = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓']
+            
+            degree_in_sign = longitude % 30
+            
+            if p_name == 'Солнце': sun_sign = f"{sign_emojis[sign_idx]} {sign_names[sign_idx]}"
+            if p_name == 'Луна': moon_sign = f"{sign_emojis[sign_idx]} {sign_names[sign_idx]}"
+            
+            planets_data.append({
+                "name": p_name,
+                "sign": sign_names[sign_idx],
+                "emoji": sign_emojis[sign_idx],
+                "degree": round(degree_in_sign, 2),
+                "longitude": round(longitude, 2)
             })
         
-        planets = [
-            {"name": "Солнце", "sign": "Лев", "degree": 15, "house": 5},
-            {"name": "Луна", "sign": "Рак", "degree": 22, "house": 4},
-            {"name": "Меркурий", "sign": "Дева", "degree": 8, "house": 6},
-            {"name": "Венера", "sign": "Весы", "degree": 12, "house": 7},
-            {"name": "Марс", "sign": "Овен", "degree": 28, "house": 1},
-            {"name": "Юпитер", "sign": "Стрелец", "degree": 5, "house": 9},
-            {"name": "Сатурн", "sign": "Козерог", "degree": 18, "house": 10}
-        ]
+        # Расчет Асцендента и MC (вершины домов)
+        # swe.houses(jd, lat, lon, b'P') -> Placidus system
+        cusps, ascmc = swe.houses(jd, lat, lon, b'P')
+        asc_longitude = ascmc[0]
+        asc_sign_idx = int(asc_longitude / 30)
+        asc_sign_name = sign_names[asc_sign_idx]
+        asc_sign_emoji = sign_emojis[asc_sign_idx]
         
-        interpretation = "Твоя натальная карта показывает сильную личность с лидерскими качествами. Солнце в Льве даёт харизму, Луна в Раке — глубокую интуицию и привязанность к дому."
+        # AI Интерпретация
+        client = AsyncOpenAI(
+            api_key=os.getenv('OPENAI_API_KEY'),
+            base_url=os.getenv('OPENAI_BASE_URL', 'https://api.proxyapi.ru/v1')
+        )
         
-        return web.json_response({"planets": planets, "interpretation": interpretation})
+        prompt = f"""Ты великий астролог с даром ясновидения. Расшифруй натальную карту:
+- Солнце (суть личности): {sun_sign} ({planets_data[0]['degree']}°)
+- Луна (эмоции, душа): {moon_sign} ({planets_data[1]['degree']}°)
+- Асцендент (внешняя маска, как видят люди): {asc_sign_emoji} {asc_sign_name}
+
+Напиши ПОЛНЫЙ РАЗБОР по структуре:
+🌟 ТВОЯ СУТЬ (Солнце)
+(3-4 предложения о характере, эго, жизненной силе)
+
+🌙 ТВОЯ ДУША (Луна)
+(3-4 предложения об эмоциях, подсознании, что дает комфорт)
+
+🎭 ТВОЯ МАСКА (Асцендент)
+(3-4 предложения о том, как тебя видят другие, первое впечатление)
+
+ ГЛАВНЫЙ ВЫЗОВ КАРТЫ
+(1-2 предложения: над чем тебе стоит работать в этой жизни)
+
+ПРАВИЛА:
+- Пиши МАГИЧЕСКИ, глубоко, как будто смотришь прямо в душу.
+- Обращайся на "Ты".
+- Используй метафоры стихий (огонь, вода, воздух, земля).
+- Длина: 300-400 слов.
+- Никаких "проблем" и "негатива", только точки роста.
+
+Начни сразу с 🌟 ТВОЯ СУТЬ."""
+
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Ты мистический астролог. Твои тексты — это откровения."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=500,
+            temperature=0.8
+        )
+        
+        interpretation = response.choices[0].message.content.strip()
+        
+        # Сохраняем в историю
+        await save_reading(
+            user_id, 'natal', f"Натальная карта", 'natal', 'general',
+            f"️ {sun_sign} | 🌙 {moon_sign} | 🌅 {asc_sign_emoji}{asc_sign_name}\n\n{interpretation}"
+        )
+        
+        return web.json_response({
+            "planets": planets_data,
+            "ascendant": {"sign": asc_sign_name, "emoji": asc_sign_emoji, "degree": round(asc_longitude % 30, 2)},
+            "interpretation": interpretation,
+            "sun_sign": sun_sign,
+            "moon_sign": moon_sign
+        })
+        
     except Exception as e:
         logging.error(f"Natal error: {e}")
-        return web.json_response({"planets": [], "interpretation": "Ошибка расчёта"}, status=500)
+        return web.json_response({"error": str(e)}, status=500)
 
 async def handle_horary(request):
     try:
