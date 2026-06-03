@@ -2,6 +2,7 @@ import os
 import asyncio
 import logging
 import pathlib
+from openai import AsyncOpenAI
 from datetime import datetime
 
 from aiogram import Bot, Dispatcher, types
@@ -222,38 +223,64 @@ async def handle_horoscope(request):
         period = data.get('period', 'day')
         category = data.get('category', 'general')
         
-        # Демо-тексты (потом подключим AI)
+        # Инициализация OpenAI через proxy
+        client = AsyncOpenAI(
+            api_key=os.getenv('OPENAI_API_KEY'),
+            base_url=os.getenv('OPENAI_BASE_URL', 'https://api.proxyapi.ru/v1')
+        )
+        
+        # Промпт для AI
         sign_names = {
             'aries': 'Овен', 'taurus': 'Телец', 'gemini': 'Близнецы',
             'cancer': 'Рак', 'leo': 'Лев', 'virgo': 'Дева',
             'libra': 'Весы', 'scorpio': 'Скорпион', 'sagittarius': 'Стрелец',
             'capricorn': 'Козерог', 'aquarius': 'Водолей', 'pisces': 'Рыбы'
         }
-        name = sign_names.get(sign, sign)
+        sign_name = sign_names.get(sign, sign)
         
-        texts = {
-            'day': {
-                'general': f"{name}, сегодня звёзды благоволят новым начинаниям. Доверься интуиции — она ведёт верно. День подходит для важных разговоров и решений.",
-                'love': f"{name}, в любви сегодня возможна неожиданная встреча или приятный сюрприз. Будь открыт к чувствам — они принесут радость.",
-                'career': f"{name}, карьерные звёзды на твоей стороне. Смело предлагай идеи — их услышат. Возможна прибыль или повышение."
-            },
-            'month': {
-                'general': f"{name}, этот месяц принесёт важные перемены. Первая декада — возможности, вторая — испытания, третья — награда за терпение.",
-                'love': f"{name}, месяц благоприятен для укрепления отношений. Одиноким — встреча, парам — новое понимание друг друга.",
-                'career': f"{name}, в карьере месяц роста. Не бойся брать ответственность — это путь к успеху. Возможна смена проекта."
-            },
-            'year': {
-                'general': f"{name}, год отмечен сильным влиянием Юпитера. Ожидай роста во всех сферах и неожиданных встреч, которые изменят всё.",
-                'love': f"{name}, год принесёт глубокую трансформацию в отношениях. Возможны судьбоносные знакомства или переход на новый уровень.",
-                'career': f"{name}, год профессионального роста. Звёзды обещают признание, новые проекты и финансовую стабильность."
-            }
-        }
+        period_names = {'day': 'день', 'month': 'месяц', 'year': 'год'}
+        category_names = {'general': 'общий', 'love': 'любовь', 'career': 'карьера'}
         
-        text = texts.get(period, texts['day']).get(category, texts['day']['general'])
-        return web.json_response({"text": text, "sign": name, "period": period})
+        prompt = f"""Ты профессиональный астролог с 20-летним опытом. 
+Напиши {period_names.get(period, 'дневной')} {category_names.get(category, 'общий')} гороскоп для знака {sign_name}.
+
+Требования к тексту:
+- Пиши душевно, тепло, с эмпатией
+- Используй метафоры и образы
+- Давай практические советы
+- Длина: 150-200 слов
+- Добавь 1-2 эмодзи ✨
+- Избегай шаблонных фраз
+- Будь конкретным, но не сухим
+
+Гороскоп:"""
+
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Ты профессиональный астролог. Пишешь красивые, душевные гороскопы."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=300,
+            temperature=0.7
+        )
+        
+        text = response.choices[0].message.content.strip()
+        
+        return web.json_response({
+            "text": text, 
+            "sign": sign_name, 
+            "period": period
+        })
+        
     except Exception as e:
-        logging.error(f"Horoscope error: {e}")
-        return web.json_response({"text": "Звёзды молчат... Попробуй позже."}, status=200)
+        logging.error(f"Horoscope AI error: {e}")
+        # Фолбэк на демо-текст если AI не ответил
+        return web.json_response({
+            "text": "Звёзды сейчас отдыхают... Попробуй через минуту ✨",
+            "sign": "—",
+            "period": "day"
+        })
 
 # Совместимость
 async def handle_compatibility(request):
