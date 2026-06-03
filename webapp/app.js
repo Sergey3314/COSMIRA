@@ -266,30 +266,24 @@ async function checkCompatibility() {
     
     resultBox.classList.remove('hidden');
     
-    // Круговой индикатор
+    // Круговой индикатор с правильным позиционированием
     scoreEl.innerHTML = `
-        <div style="position:relative;width:180px;height:180px;margin:0 auto 20px;">
-            <svg viewBox="0 0 100 100" style="transform:rotate(-90deg);width:100%;height:100%;">
-                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,215,0,0.1)" stroke-width="8"/>
+        <div style="position:relative;width:200px;height:200px;margin:0 auto 20px;">
+            <svg viewBox="0 0 100 100" style="transform:rotate(-90deg);width:100%;height:100%;position:absolute;top:0;left:0;">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,215,0,0.15)" stroke-width="6"/>
                 <circle id="progress-ring" cx="50" cy="50" r="45" fill="none" 
-                        stroke="url(#goldGradient)" stroke-width="8" 
+                        stroke="#FFD700" stroke-width="6" 
                         stroke-dasharray="283" stroke-dashoffset="283"
                         stroke-linecap="round"
-                        style="transition:stroke-dashoffset 2.5s cubic-bezier(0.4, 0, 0.2, 1);filter:drop-shadow(0 0 8px rgba(255,215,0,0.6));"/>
-                <defs>
-                    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1"/>
-                        <stop offset="100%" style="stop-color:#FFA500;stop-opacity:1"/>
-                    </linearGradient>
-                </defs>
+                        style="transition:stroke-dashoffset 2.5s ease-out;filter:drop-shadow(0 0 12px rgba(255,215,0,0.8));"/>
             </svg>
-            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
-                <div class="count-up" data-target="0" style="font-size:42px;font-family:'Cinzel',serif;color:var(--gold);font-weight:700;text-shadow:0 0 20px rgba(255,215,0,0.6);">0</div>
-                <div style="font-size:20px;color:var(--gold);opacity:0.7;margin-top:-5px;">%</div>
+            <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;">
+                <div id="score-number" style="font-size:48px;font-family:'Cinzel',serif;color:#FFD700;font-weight:700;text-shadow:0 0 20px rgba(255,215,0,0.8);line-height:1;">0</div>
+                <div style="font-size:20px;color:#FFD700;opacity:0.8;margin-top:-5px;">%</div>
             </div>
         </div>
-        <div style="text-align:center;font-size:14px;color:var(--text-secondary);letter-spacing:3px;text-transform:uppercase;margin-top:10px;">
-            Энергия союза
+        <div style="text-align:center;font-size:13px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin-top:5px;font-family:'Cinzel',serif;">
+            ✦ Энергия союза ✦
         </div>
     `;
     
@@ -309,7 +303,7 @@ async function checkCompatibility() {
         const data = await res.json();
         
         const finalScore = data.score || 0;
-        const circumference = 2 * Math.PI * 45; // 283
+        const circumference = 2 * Math.PI * 45;
         
         // Анимация круга
         setTimeout(() => {
@@ -318,7 +312,7 @@ async function checkCompatibility() {
         }, 100);
         
         // Анимация чисел
-        animateValue(scoreEl.querySelector('.count-up'), 0, finalScore, 2500);
+        animateValue(document.getElementById('score-number'), 0, finalScore, 2500);
         
         textEl.textContent = data.text || 'Анализ завершён';
         textEl.style.whiteSpace = 'pre-line';
@@ -326,6 +320,22 @@ async function checkCompatibility() {
         scoreEl.innerHTML = '<div style="color:var(--text-secondary);font-size:18px;text-align:center;">Ошибка расчёта</div>';
         textEl.textContent = 'Попробуй ещё раз';
     }
+}
+
+// Функция плавного счёта цифр
+function animateValue(element, start, end, duration) {
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        const value = Math.floor(easeProgress * (end - start) + start);
+        element.textContent = value;
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        }
+    };
+    window.requestAnimationFrame(step);
 }
 
 // Функция плавного счёта цифр (ОБЯЗАТЕЛЬНА!)
