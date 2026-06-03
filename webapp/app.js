@@ -265,16 +265,33 @@ async function checkCompatibility() {
     const textEl = document.getElementById('compat-text');
     
     resultBox.classList.remove('hidden');
-    scoreEl.textContent = '0%';
-    textEl.textContent = '🔮 Звёзды анализируют ваш союз...';
     
-    // Анимация счёта
-    let currentScore = 0;
-    const interval = setInterval(() => {
-        currentScore += 2;
-        scoreEl.textContent = `${currentScore}%`;
-        if (currentScore >= 100) clearInterval(interval);
-    }, 30);
+    // Круговой индикатор
+    scoreEl.innerHTML = `
+        <div style="position:relative;width:180px;height:180px;margin:0 auto 20px;">
+            <svg viewBox="0 0 100 100" style="transform:rotate(-90deg);width:100%;height:100%;">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,215,0,0.1)" stroke-width="8"/>
+                <circle id="progress-ring" cx="50" cy="50" r="45" fill="none" 
+                        stroke="url(#goldGradient)" stroke-width="8" 
+                        stroke-dasharray="283" stroke-dashoffset="283"
+                        stroke-linecap="round"
+                        style="transition:stroke-dashoffset 2.5s cubic-bezier(0.4, 0, 0.2, 1);filter:drop-shadow(0 0 8px rgba(255,215,0,0.6));"/>
+                <defs>
+                    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1"/>
+                        <stop offset="100%" style="stop-color:#FFA500;stop-opacity:1"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+                <div class="count-up" data-target="0" style="font-size:42px;font-family:'Cinzel',serif;color:var(--gold);font-weight:700;text-shadow:0 0 20px rgba(255,215,0,0.6);">0</div>
+                <div style="font-size:20px;color:var(--gold);opacity:0.7;margin-top:-5px;">%</div>
+            </div>
+        </div>
+        <div style="text-align:center;font-size:14px;color:var(--text-secondary);letter-spacing:3px;text-transform:uppercase;margin-top:10px;">
+            Энергия союза
+        </div>
+    `;
     
     try {
         const tg = window.Telegram?.WebApp;
@@ -291,22 +308,41 @@ async function checkCompatibility() {
         });
         const data = await res.json();
         
-        scoreEl.textContent = `${data.score || 0}%`;
+        const finalScore = data.score || 0;
+        const circumference = 2 * Math.PI * 45; // 283
         
-        // Добавляем цвет в зависимости от процента
-        if (data.score >= 85) {
-            scoreEl.style.background = 'linear-gradient(135deg, #00d4aa, #00ff88)';
-        } else if (data.score >= 70) {
-            scoreEl.style.background = 'linear-gradient(135deg, #FFD700, #ffb700)';
-        } else {
-            scoreEl.style.background = 'linear-gradient(135deg, #ff6b6b, #ff8e8e)';
-        }
+        // Анимация круга
+        setTimeout(() => {
+            const offset = circumference - (finalScore / 100) * circumference;
+            document.getElementById('progress-ring').style.strokeDashoffset = offset;
+        }, 100);
+        
+        // Анимация чисел
+        animateValue(scoreEl.querySelector('.count-up'), 0, finalScore, 2500);
         
         textEl.textContent = data.text || 'Анализ завершён';
         textEl.style.whiteSpace = 'pre-line';
     } catch (e) {
-        textEl.textContent = 'Ошибка расчёта';
+        scoreEl.innerHTML = '<div style="color:var(--text-secondary);font-size:18px;text-align:center;">Ошибка расчёта</div>';
+        textEl.textContent = 'Попробуй ещё раз';
     }
+}
+
+// Функция плавного счёта цифр (ОБЯЗАТЕЛЬНА!)
+function animateValue(element, start, end, duration) {
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        // Плавная кривая для цифр
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        const value = Math.floor(easeProgress * (end - start) + start);
+        element.textContent = value;
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        }
+    };
+    window.requestAnimationFrame(step);
 }
 
 async function loadNatalChart() {

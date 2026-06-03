@@ -942,3 +942,18 @@ small {
         height: 40px !important;
     }
 }
+
+/* Анимация появления */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.compat-score {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+/* Свечение для золотого текста */
+.glow-gold {
+    text-shadow: 0 0 10px rgba(255,215,0,0.5), 0 0 20px rgba(255,215,0,0.3);
+}
