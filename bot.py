@@ -51,7 +51,6 @@ async def init_db():
             )
         """)
         
-        # Таблица для истории чтений
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS readings (
                 id SERIAL PRIMARY KEY,
