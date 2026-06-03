@@ -345,6 +345,12 @@ function openHistory() {
     loadHistory();
 }
 
+// ===== ИСТОРИЯ ЧТЕНИЙ =====
+function openHistory() {
+    showScreen('screen-history');
+    loadHistory();
+}
+
 async function loadHistory() {
     const container = document.getElementById('history-list');
     container.innerHTML = '<div class="loader">Загрузка истории...</div>';
@@ -361,38 +367,206 @@ async function loadHistory() {
         
         const history = await res.json();
         
-        // Проверяем что это массив
         if (!Array.isArray(history)) {
             throw new Error('History is not an array');
         }
         
         if (history.length === 0) {
-            container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:20px;">Пока нет сохранённых чтений</p>';
+            container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:20px;">📭 Пока нет сохранённых чтений</p>';
             return;
         }
         
-        container.innerHTML = history.map(item => `
-            <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--glass-border);">
-                <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-                    <strong style="color:var(--gold);font-family:'Cinzel',serif;">${item.sign} • ${item.period}</strong>
-                    <small style="color:var(--text-secondary);">${new Date(item.created_at).toLocaleDateString('ru-RU')}</small>
-                </div>
-                <div style="font-size:14px;line-height:1.6;color:var(--text);white-space:pre-line;">${item.result_text}</div>
-                <button onclick='downloadPDF(${JSON.stringify(item)})' style="margin-top:10px;padding:8px 16px;background:linear-gradient(135deg,rgba(112,0,255,0.3),rgba(255,215,0,0.2));border:1px solid var(--gold);color:var(--gold);border-radius:12px;cursor:pointer;font-family:'Cinzel',serif;">
-                    📥 Скачать PDF
-                </button>
-            </div>
-        `).join('');
+        // Группировка по типам
+        const grouped = {};
+        history.forEach(item => {
+            if (!grouped[item.type]) {
+                grouped[item.type] = [];
+            }
+            grouped[item.type].push(item);
+        });
+        
+        // Иконки и названия для типов
+        const typeConfig = {
+            'horoscope': { icon: '🔮', name: 'Гороскопы', color: '#FFD700' },
+            'natal': { icon: '', name: 'Натальные карты', color: '#9d4edd' },
+            'compatibility': { icon: '💫', name: 'Совместимость', color: '#00d4aa' },
+            'horary': { icon: '🔮', name: 'Хорарные вопросы', color: '#ff6b6b' }
+        };
+        
+        let html = '';
+        
+        for (const [type, items] of Object.entries(grouped)) {
+            const config = typeConfig[type] || { icon: '📜', name: type, color: '#FFD700' };
+            
+            html += `
+                <div style="margin-bottom:24px;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:12px;background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(112,0,255,0.1));border:1px solid var(--glass-border);border-radius:14px;">
+                        <span style="font-size:24px;">${config.icon}</span>
+                        <h3 style="color:${config.color};font-family:'Cinzel',serif;font-size:16px;margin:0;">${config.name}</h3>
+                        <span style="margin-left:auto;background:rgba(255,215,0,0.2);color:var(--gold);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;">${items.length}</span>
+                    </div>
+            `;
+            
+            // Группировка по датам
+            const byDate = {};
+            items.forEach(item => {
+                const date = new Date(item.created_at).toLocaleDateString('ru-RU');
+                if (!byDate[date]) {
+                    byDate[date] = [];
+                }
+                byDate[date].push(item);
+            });
+            
+            for (const [date, dateItems] of Object.entries(byDate)) {
+                html += `<div style="margin-left:20px;margin-bottom:12px;">`;
+                
+                dateItems.forEach((item, index) => {
+                    const blockId = `block-${type}-${index}`;
+                    html += `
+                        <div style="background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;margin-bottom:8px;overflow:hidden;">
+                            <div onclick="toggleHistoryBlock('${blockId}')" style="padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:0.3s;" onmouseover="this.style.background='rgba(255,215,0,0.05)'" onmouseout="this.style.background='var(--glass)'">
+                                <span style="font-size:18px;">📋</span>
+                                <div style="flex:1;">
+                                    <div style="color:var(--gold);font-family:'Cinzel',serif;font-size:14px;font-weight:600;">
+                                        ${item.sign} • ${item.period === 'day' ? 'день' : item.period === 'month' ? 'месяц' : item.period === 'year' ? 'год' : item.period}
+                                    </div>
+                                    <div style="color:var(--text-secondary);font-size:12px;margin-top:2px;">
+                                        ${item.category === 'general' ? 'общий' : item.category === 'love' ? 'любовь' : item.category === 'career' ? 'карьера' : item.category}
+                                    </div>
+                                </div>
+                                <span style="color:var(--text-secondary);font-size:11px;">${date}</span>
+                                <svg id="arrow-${blockId}" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" style="width:20px;height:20px;transition:0.3s;"><polyline points="6 9 12 15 18 9"/></svg>
+                            </div>
+                            <div id="${blockId}" style="display:none;padding:16px;border-top:1px solid var(--glass-border);background:rgba(0,0,0,0.2);">
+                                <div style="font-size:14px;line-height:1.8;color:var(--text);white-space:pre-line;margin-bottom:16px;">${item.result_text}</div>
+                                <div style="display:flex;gap:10px;">
+                                    <button onclick='downloadPDF(${JSON.stringify(item).replace(/'/g, "&apos;")})' style="flex:1;padding:10px;background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(112,0,255,0.2));border:1px solid var(--gold);color:var(--gold);border-radius:12px;cursor:pointer;font-family:'Cinzel',serif;font-size:13px;">
+                                        📥 Скачать PDF
+                                    </button>
+                                    <button onclick="toggleHistoryBlock('${blockId}')" style="padding:10px 20px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:12px;cursor:pointer;font-size:13px;">
+                                        ✕ Закрыть
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            }
+            
+            html += `</div>`;
+        }
+        
+        container.innerHTML = html;
     } catch (e) {
         console.error('History load error:', e);
         container.innerHTML = `
             <div style="text-align:center;color:var(--text-secondary);padding:20px;">
                 <p>Ошибка загрузки</p>
                 <small style="display:block;margin-top:10px;opacity:0.7;">${e.message}</small>
-                <button onclick="loadHistory()" style="margin-top:15px;padding:10px 20px;background:var(--glass);border:1px solid var(--gold-border);color:var(--gold);border-radius:12px;cursor:pointer;">
+                <button onclick="loadHistory()" style="margin-top:15px;padding:10px 20px;background:var(--glass);border:1px solid var(--gold);color:var(--gold);border-radius:12px;cursor:pointer;">
                     🔄 Повторить
                 </button>
             </div>
         `;
     }
+}
+
+function toggleHistoryBlock(blockId) {
+    const block = document.getElementById(blockId);
+    const arrow = document.getElementById(`arrow-${blockId}`);
+    
+    if (block.style.display === 'none') {
+        block.style.display = 'block';
+        arrow.style.transform = 'rotate(180deg)';
+    } else {
+        block.style.display = 'none';
+        arrow.style.transform = 'rotate(0deg)';
+    }
+}
+
+// ===== PDF ВЫГРУЗКА =====
+async function downloadPDF(item) {
+    const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>COSMIRA - ${item.sign}</title>
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500&display=swap');
+                body { 
+                    font-family:'Montserrat',sans-serif; 
+                    background:linear-gradient(135deg,#1a237e 0%,#4a148c 100%); 
+                    padding:40px; 
+                    margin:0;
+                }
+                .container { 
+                    max-width:600px; 
+                    margin:0 auto; 
+                    background:white; 
+                    padding:40px; 
+                    border-radius:20px; 
+                    box-shadow:0 10px 40px rgba(0,0,0,0.5); 
+                }
+                h1 { 
+                    color:#FFD700; 
+                    text-align:center; 
+                    font-family:'Cinzel',serif;
+                    font-size:36px;
+                    margin:0 0 30px 0;
+                    text-shadow:2px 2px 4px rgba(0,0,0,0.1);
+                }
+                h2 { 
+                    color:#4a148c; 
+                    border-bottom:2px solid #FFD700; 
+                    padding-bottom:10px;
+                    font-family:'Cinzel',serif;
+                }
+                .meta {
+                    text-align:center;
+                    color:#666;
+                    margin-bottom:30px;
+                    font-size:14px;
+                }
+                .content { 
+                    line-height:1.8; 
+                    color:#333; 
+                    margin:20px 0; 
+                    white-space:pre-line;
+                    font-size:15px;
+                }
+                .footer { 
+                    text-align:center; 
+                    color:#999; 
+                    font-size:12px; 
+                    margin-top:40px;
+                    padding-top:20px;
+                    border-top:1px solid #eee;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>✦ COSMIRA ✦</h1>
+                <h2 style="text-align:center;">${item.sign}</h2>
+                <div class="meta">
+                    <strong>${item.period === 'day' ? 'Дневной' : item.period === 'month' ? 'Месяц' : 'Год'} прогноз</strong><br>
+                    ${item.category === 'general' ? 'Общий' : item.category === 'love' ? 'Любовь' : 'Карьера'} • ${new Date(item.created_at).toLocaleDateString('ru-RU')}
+                </div>
+                <div class="content">${item.result_text}</div>
+                <div class="footer">С любовью, COSMIRA ✦<br>Астрология, созданная для тебя</div>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `COSMIRA-${item.sign}-${Date.now()}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
 }
