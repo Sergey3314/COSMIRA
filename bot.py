@@ -50,6 +50,20 @@ async def init_db():
                 avatar TEXT DEFAULT '🔮'
             )
         """)
+        
+        # Таблица для истории чтений
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS readings (
+                id SERIAL PRIMARY KEY,
+                user_id TEXT,
+                type TEXT,
+                sign TEXT,
+                period TEXT,
+                category TEXT,
+                result_text TEXT,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
         logging.info("✅ База данных инициализирована")
     finally:
         await conn.close()
@@ -85,7 +99,6 @@ async def get_user(user_id):
             user['is_premium'] = user.get('premium', False)
             user['telegram_id'] = user['user_id']
             
-            # Безопасно парсим zodiac
             if user.get('zodiac'):
                 try:
                     z = user['zodiac']
@@ -96,6 +109,29 @@ async def get_user(user_id):
                     user['zodiac'] = None
             return user
         return None
+    finally:
+        await conn.close()
+
+async def save_reading(user_id, type, sign, period, category, result_text):
+    conn = await get_conn()
+    try:
+        await conn.execute("""
+            INSERT INTO readings (user_id, type, sign, period, category, result_text)
+            VALUES ($1, $2, $3, $4, $5, $6)
+        """, str(user_id), type, sign, period, category, result_text)
+    finally:
+        await conn.close()
+
+async def get_history(user_id, limit=20):
+    conn = await get_conn()
+    try:
+        rows = await conn.fetch("""
+            SELECT * FROM readings 
+            WHERE user_id = $1 
+            ORDER BY created_at DESC 
+            LIMIT $2
+        """, str(user_id), limit)
+        return [dict(row) for row in rows]
     finally:
         await conn.close()
 
@@ -134,7 +170,6 @@ async def handle_webapp_data(message: types.Message):
 # API ДЛЯ WEB APP
 # ==========================================
 
-# Регистрация/обновление пользователя из Telegram
 async def handle_init_user(request):
     try:
         data = await request.json()
@@ -145,12 +180,10 @@ async def handle_init_user(request):
         if not telegram_id:
             return web.json_response({"error": "No telegram_id"}, status=400)
         
-        # Проверяем есть ли юзер
         existing = await get_user(telegram_id)
         if existing:
             return web.json_response(existing)
         
-        # Создаём нового
         await save_user(
             user_id=telegram_id,
             username=username,
@@ -163,7 +196,6 @@ async def handle_init_user(request):
         logging.error(f"Init user error: {e}")
         return web.json_response({"error": str(e)}, status=500)
 
-# Сохранение профиля (регистрация)
 async def handle_save_profile(request):
     try:
         data = await request.json()
@@ -172,7 +204,6 @@ async def handle_save_profile(request):
         if not telegram_id:
             return web.json_response({"error": "No telegram_id"}, status=400)
         
-        # Расчёт знака зодиака
         birth_date = data.get('birth_date')
         zodiac = None
         if birth_date:
@@ -215,21 +246,21 @@ async def handle_save_profile(request):
         logging.error(f"Save profile error: {e}")
         return web.json_response({"error": str(e)}, status=500)
 
-# Гороскоп
 async def handle_horoscope(request):
     try:
         data = await request.json()
         sign = data.get('sign', 'aries')
         period = data.get('period', 'day')
         category = data.get('category', 'general')
+        user_id = data.get('user_id', 'anonymous')
         
-        # Инициализация OpenAI через proxy
+        current_year = datetime.now().year
+        
         client = AsyncOpenAI(
             api_key=os.getenv('OPENAI_API_KEY'),
             base_url=os.getenv('OPENAI_BASE_URL', 'https://api.proxyapi.ru/v1')
         )
         
-        # Промпт для AI
         sign_names = {
             'aries': 'Овен', 'taurus': 'Телец', 'gemini': 'Близнецы',
             'cancer': 'Рак', 'leo': 'Лев', 'virgo': 'Дева',
@@ -238,34 +269,52 @@ async def handle_horoscope(request):
         }
         sign_name = sign_names.get(sign, sign)
         
-        period_names = {'day': 'день', 'month': 'месяц', 'year': 'год'}
-        category_names = {'general': 'общий', 'love': 'любовь', 'career': 'карьера'}
+        period_names = {'day': 'дневной', 'month': 'прогноз на месяц', 'year': f'прогноз на {current_year} год'}
+        category_names = {'general': 'общий', 'love': 'прогноз о любви', 'career': 'прогноз о карьере'}
         
         prompt = f"""Ты профессиональный астролог с 20-летним опытом. 
-Напиши {period_names.get(period, 'дневной')} {category_names.get(category, 'общий')} гороскоп для знака {sign_name}.
+Напиши {period_names.get(period, 'дневной')} {category_names.get(category, 'общий')} для знака {sign_name}.
 
-Требования к тексту:
+ОТВЕЧАЙ СТРОГО ПО ЭТОЙ СТРУКТУРЕ (без вступлений, сразу начинай с первого раздела):
+
+🌟 ЭНЕРГИЯ ДНЯ
+(2-3 предложения о общей энергии и настроении)
+
+💫 ЛЮБОВЬ И ОТНОШЕНИЯ
+(2-3 предложения о любви, отношениях, чувствах)
+
+💰 РАБОТА И ФИНАНСЫ
+(2-3 предложения о карьере, деньгах, делах)
+
+🔮 СОВЕТ ЗВЁЗД
+(1-2 предложения с мудрым советом)
+
+ПРАВИЛА:
 - Пиши душевно, тепло, с эмпатией
 - Используй метафоры и образы
-- Давай практические советы
-- Длина: 150-200 слов
-- Добавь 1-2 эмодзи ✨
-- Избегай шаблонных фраз
-- Будь конкретным, но не сухим
+- Каждый раздел с новой строки
+- Используй эмодзи как в структуре выше
+- Длина: 200-250 слов
+- Не используй слова "проблемы", "кризис", "негатив"
+- Будь конкретным и вдохновляющим
+- Упоминай текущий {current_year} год если это уместно
 
-Гороскоп:"""
+Начни сразу с раздела 🌟 ЭНЕРГИЯ ДНЯ, без приветствий."""
 
         response = await client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Ты профессиональный астролог. Пишешь красивые, душевные гороскопы."},
+                {"role": "system", "content": "Ты профессиональный астролог. Пишешь красивые, душевные гороскопы структурированно."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=300,
+            max_tokens=400,
             temperature=0.7
         )
         
         text = response.choices[0].message.content.strip()
+        
+        # Сохраняем в историю
+        await save_reading(user_id, 'horoscope', sign_name, period, category, text)
         
         return web.json_response({
             "text": text, 
@@ -275,14 +324,24 @@ async def handle_horoscope(request):
         
     except Exception as e:
         logging.error(f"Horoscope AI error: {e}")
-        # Фолбэк на демо-текст если AI не ответил
         return web.json_response({
             "text": "Звёзды сейчас отдыхают... Попробуй через минуту ✨",
             "sign": "—",
             "period": "day"
         })
 
-# Совместимость
+async def handle_history(request):
+    try:
+        uid = request.query.get('uid')
+        if not uid:
+            return web.json_response({"error": "No uid"}, status=400)
+        
+        history = await get_history(uid, limit=20)
+        return web.json_response(history)
+    except Exception as e:
+        logging.error(f"History error: {e}")
+        return web.json_response({"error": str(e)}, status=500)
+
 async def handle_compatibility(request):
     try:
         data = await request.json()
@@ -298,10 +357,9 @@ async def handle_compatibility(request):
         name1 = sign_names.get(sign1, sign1)
         name2 = sign_names.get(sign2, sign2)
         
-        # Простой алгоритм совместимости
         import hashlib
         h = int(hashlib.md5(f"{sign1}{sign2}".encode()).hexdigest(), 16)
-        score = 60 + (h % 35)  # от 60 до 95
+        score = 60 + (h % 35)
         
         if score >= 85:
             text = f"{name1} и {name2} — союз, проверенный звёздами. Между вами сильная энергетическая связь, способная преодолеть любые преграды. Вы дополняете друг друга как свет и тень."
@@ -315,7 +373,6 @@ async def handle_compatibility(request):
         logging.error(f"Compatibility error: {e}")
         return web.json_response({"score": 0, "text": "Ошибка расчёта"}, status=500)
 
-# Натальная карта
 async def handle_natal(request):
     try:
         data = await request.json()
@@ -328,7 +385,6 @@ async def handle_natal(request):
                 "interpretation": "Для расчёта натальной карты нужны дата и время рождения."
             })
         
-        # Демо-планеты (потом реальный расчёт)
         planets = [
             {"name": "Солнце", "sign": "Лев", "degree": 15, "house": 5},
             {"name": "Луна", "sign": "Рак", "degree": 22, "house": 4},
@@ -346,7 +402,6 @@ async def handle_natal(request):
         logging.error(f"Natal error: {e}")
         return web.json_response({"planets": [], "interpretation": "Ошибка расчёта"}, status=500)
 
-# Хорар
 async def handle_horary(request):
     try:
         data = await request.json()
@@ -355,7 +410,6 @@ async def handle_horary(request):
         if not question:
             return web.json_response({"answer": "Задай вопрос, чтобы получить ответ звёзд."})
         
-        # Демо-ответы
         answers = [
             f"Звёзды отвечают: да, путь открыт. Действуй смело, но не торопись — вселенная поддерживает твои намерения.",
             f"Ответ звёзд положительный. Ситуация развивается в твою пользу, но требуется терпение. Результат придёт в нужный момент.",
@@ -384,7 +438,6 @@ async def main():
     
     web_app = web.Application()
     
-    # Статика
     webapp_dir = pathlib.Path(__file__).parent / 'webapp'
     if webapp_dir.exists():
         web_app.router.add_static('/webapp/', path=str(webapp_dir))
@@ -394,15 +447,14 @@ async def main():
     
     web_app.router.add_get('/', handle_index)
     
-    # API
     web_app.router.add_post('/api/user', handle_init_user)
     web_app.router.add_post('/api/profile', handle_save_profile)
     web_app.router.add_post('/api/horoscope', handle_horoscope)
     web_app.router.add_post('/api/compatibility', handle_compatibility)
     web_app.router.add_post('/api/natal', handle_natal)
     web_app.router.add_post('/api/horary', handle_horary)
+    web_app.router.add_get('/api/history', handle_history)
     
-    # Фоновый поллинг бота
     async def start_polling(app):
         asyncio.create_task(dp.start_polling(bot))
     

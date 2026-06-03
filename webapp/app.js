@@ -233,17 +233,22 @@ async function loadHoroscope() {
     periodEl.textContent = `на ${selectedPeriod === 'day' ? 'сегодня' : selectedPeriod === 'month' ? 'месяц' : 'год'}`;
     
     try {
+        const tg = window.Telegram?.WebApp;
+        const userId = tg?.initDataUnsafe?.user?.id || 123456789;
+        
         const res = await fetch(`${API_URL}/api/horoscope`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 sign: selectedSign.id,
                 period: selectedPeriod,
-                category: selectedCategory
+                category: selectedCategory,
+                user_id: userId
             })
         });
         const data = await res.json();
         textEl.textContent = data.text || 'Звёзды хранят молчание...';
+        textEl.style.whiteSpace = 'pre-line';
     } catch (e) {
         textEl.textContent = 'Связь с космосом потеряна';
     }
@@ -333,3 +338,38 @@ async function askHorary() {
 }
 
 function editProfile() { showScreen('screen-register'); }
+
+function openHistory() {
+    showScreen('screen-history');
+    loadHistory();
+}
+
+async function loadHistory() {
+    const container = document.getElementById('history-list');
+    container.innerHTML = '<div class="loader">Загрузка истории...</div>';
+    
+    try {
+        const tg = window.Telegram?.WebApp;
+        const userId = tg?.initDataUnsafe?.user?.id || 123456789;
+        
+        const res = await fetch(`${API_URL}/api/history?uid=${userId}`);
+        const history = await res.json();
+        
+        if (history.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">Пока нет сохранённых чтений</p>';
+            return;
+        }
+        
+        container.innerHTML = history.map(item => `
+            <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--glass-border);">
+                <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+                    <strong style="color:var(--gold);font-family:'Cinzel',serif;">${item.sign} • ${item.period}</strong>
+                    <small style="color:var(--text-secondary);">${new Date(item.created_at).toLocaleDateString('ru-RU')}</small>
+                </div>
+                <div style="font-size:14px;line-height:1.6;color:var(--text);white-space:pre-line;">${item.result_text}</div>
+            </div>
+        `).join('');
+    } catch (e) {
+        container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">Ошибка загрузки</p>';
+    }
+}

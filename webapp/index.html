@@ -112,6 +112,16 @@
             </div>
         </div>
         
+        <div class="card glass" onclick="openHistory()" style="cursor:pointer; display:flex; align-items:center; gap:14px;">
+            <div class="icon-wrap-sm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+            </div>
+            <div style="flex:1; text-align:left;">
+                <strong style="color:var(--gold); font-family:'Cinzel',serif; font-size:15px; display:block;">Мои чтения</strong>
+                <p style="font-size:12px; color:var(--text-secondary); margin:0;">История гороскопов и прогнозов</p>
+            </div>
+        </div>
+        
         <div class="card glass" onclick="openPremium()" style="cursor:pointer; display:flex; align-items:center; gap:14px;">
             <div class="icon-wrap-sm">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -227,6 +237,19 @@
                 <p id="horary-answer"></p>
                 <small class="timestamp" id="horary-time"></small>
             </div>
+        </div>
+        <div class="app-footer"><p>✦ Астрология, созданная для тебя ✦</p><span class="version">v1.31.2</span></div>
+    </section>
+
+    <!-- ИСТОРИЯ -->
+    <section id="screen-history" class="screen hidden">
+        <div class="page-header">
+            <button class="back-btn" onclick="goHome()">←</button>
+            <div class="header-top"><span class="header-decor">✦ ASTROLOGY ✦</span></div>
+            <h2 class="header-title">Мои чтения</h2>
+        </div>
+        <div id="history-list" class="card glass">
+            <div class="loader">Загрузка истории...</div>
         </div>
         <div class="app-footer"><p>✦ Астрология, созданная для тебя ✦</p><span class="version">v1.31.2</span></div>
     </section>
