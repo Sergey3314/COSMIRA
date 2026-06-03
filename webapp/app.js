@@ -544,6 +544,10 @@ function toggleHistoryBlock(blockId) {
 
 // ===== PDF ВЫГРУЗКА =====
 async function downloadPDF(item) {
+    const periodLabel = item.period === 'day' ? 'Дневной прогноз' : item.period === 'month' ? 'Прогноз на месяц' : 'Прогноз на год';
+    const categoryLabel = item.category === 'general' ? 'Общий' : item.category === 'love' ? 'Любовь' : 'Карьера';
+    const dateStr = new Date(item.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+    
     const html = `
         <!DOCTYPE html>
         <html>
@@ -551,113 +555,273 @@ async function downloadPDF(item) {
             <meta charset="utf-8">
             <title>COSMIRA - ${item.sign}</title>
             <style>
-                @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500&display=swap');
+                @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap');
+                
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                
                 body { 
-                    font-family:'Montserrat',sans-serif; 
-                    background:linear-gradient(135deg,#1a237e 0%,#4a148c 100%); 
-                    padding:40px; 
-                    margin:0;
-                    min-height:100vh;
+                    font-family: 'Montserrat', sans-serif; 
+                    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+                    min-height: 100vh;
+                    padding: 0;
+                    position: relative;
+                    overflow-x: hidden;
                 }
+                
+                /* Звёзды на фоне */
+                body::before {
+                    content: '';
+                    position: fixed;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background-image: 
+                        radial-gradient(2px 2px at 20% 30%, #FFD700, transparent),
+                        radial-gradient(2px 2px at 60% 70%, #FFD700, transparent),
+                        radial-gradient(1px 1px at 50% 50%, #fff, transparent),
+                        radial-gradient(1px 1px at 80% 10%, #FFD700, transparent),
+                        radial-gradient(2px 2px at 90% 60%, #fff, transparent),
+                        radial-gradient(1px 1px at 10% 80%, #FFD700, transparent),
+                        radial-gradient(2px 2px at 30% 20%, #fff, transparent);
+                    background-size: 550% 550%;
+                    opacity: 0.3;
+                    animation: stars 15s ease infinite;
+                    z-index: 0;
+                }
+                
+                @keyframes stars {
+                    0%, 100% { background-position: 0% 0%; }
+                    50% { background-position: 100% 100%; }
+                }
+                
                 .container { 
-                    max-width:600px; 
-                    margin:0 auto; 
-                    background:white; 
-                    padding:40px; 
-                    border-radius:20px; 
-                    box-shadow:0 10px 40px rgba(0,0,0,0.5); 
+                    position: relative;
+                    z-index: 1;
+                    max-width: 600px; 
+                    margin: 0 auto; 
+                    background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.98) 100%); 
+                    padding: 50px 40px; 
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+                    border: 2px solid rgba(255,215,0,0.3);
+                    border-radius: 0;
                 }
+                
+                .header {
+                    text-align: center;
+                    padding-bottom: 30px;
+                    border-bottom: 3px solid #FFD700;
+                    margin-bottom: 30px;
+                    position: relative;
+                }
+                
+                .header::after {
+                    content: '✦';
+                    position: absolute;
+                    bottom: -10px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    color: #FFD700;
+                    font-size: 20px;
+                    background: white;
+                    padding: 0 10px;
+                }
+                
                 h1 { 
-                    color:#FFD700; 
-                    text-align:center; 
-                    font-family:'Cinzel',serif;
-                    font-size:36px;
-                    margin:0 0 30px 0;
+                    color: #1a1a2e; 
+                    font-family: 'Cinzel', serif;
+                    font-size: 42px;
+                    font-weight: 700;
+                    letter-spacing: 3px;
+                    margin: 0 0 10px 0;
+                    text-transform: uppercase;
                 }
-                h2 { 
-                    color:#4a148c; 
-                    border-bottom:2px solid #FFD700; 
-                    padding-bottom:10px;
-                    font-family:'Cinzel',serif;
-                    text-align:center;
+                
+                .subtitle {
+                    color: #666;
+                    font-size: 14px;
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
                 }
+                
+                .sign-block {
+                    text-align: center;
+                    margin: 30px 0;
+                    padding: 25px;
+                    background: linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(112,0,255,0.1) 100%);
+                    border: 2px solid #FFD700;
+                    border-radius: 15px;
+                }
+                
+                .sign-name {
+                    font-family: 'Cinzel', serif;
+                    font-size: 36px;
+                    color: #1a1a2e;
+                    font-weight: 700;
+                    margin-bottom: 10px;
+                }
+                
                 .meta {
-                    text-align:center;
-                    color:#666;
-                    margin-bottom:30px;
-                    font-size:14px;
+                    display: flex;
+                    justify-content: center;
+                    gap: 20px;
+                    flex-wrap: wrap;
+                    margin-top: 15px;
                 }
+                
+                .meta-item {
+                    background: rgba(255,215,0,0.15);
+                    padding: 8px 16px;
+                    border-radius: 20px;
+                    font-size: 13px;
+                    color: #1a1a2e;
+                    font-weight: 600;
+                    border: 1px solid rgba(255,215,0,0.3);
+                }
+                
                 .content { 
-                    line-height:1.8; 
-                    color:#333; 
-                    margin:20px 0; 
-                    white-space:pre-line;
-                    font-size:15px;
+                    line-height: 1.9; 
+                    color: #333; 
+                    margin: 30px 0; 
+                    white-space: pre-line;
+                    font-size: 15px;
+                    font-weight: 400;
                 }
+                
+                .content-section {
+                    margin-bottom: 25px;
+                    padding: 20px;
+                    background: rgba(255,215,0,0.05);
+                    border-left: 4px solid #FFD700;
+                    border-radius: 8px;
+                }
+                
+                .content-section strong {
+                    color: #1a1a2e;
+                    font-family: 'Cinzel', serif;
+                    font-size: 16px;
+                    display: block;
+                    margin-bottom: 10px;
+                }
+                
                 .footer { 
-                    text-align:center; 
-                    color:#999; 
-                    font-size:12px; 
-                    margin-top:40px;
-                    padding-top:20px;
-                    border-top:1px solid #eee;
+                    text-align: center; 
+                    color: #999; 
+                    font-size: 12px; 
+                    margin-top: 40px;
+                    padding-top: 25px;
+                    border-top: 2px solid rgba(255,215,0,0.3);
+                    font-style: italic;
                 }
-                .print-btn {
-                    display:block;
-                    margin:30px auto;
-                    padding:12px 30px;
-                    background:linear-gradient(135deg,#FFD700,#b8860b);
-                    border:none;
-                    border-radius:12px;
-                    color:#1a237e;
-                    font-family:'Cinzel',serif;
-                    font-weight:600;
-                    font-size:16px;
-                    cursor:pointer;
-                    box-shadow:0 4px 15px rgba(255,215,0,0.3);
+                
+                .footer strong {
+                    color: #FFD700;
+                    display: block;
+                    margin-bottom: 5px;
+                    font-family: 'Cinzel', serif;
                 }
-                .print-btn:hover {
-                    transform:translateY(-2px);
-                    box-shadow:0 6px 20px rgba(255,215,0,0.4);
+                
+                .download-btn {
+                    display: block;
+                    width: 100%;
+                    max-width: 300px;
+                    margin: 40px auto 0;
+                    padding: 16px 30px;
+                    background: linear-gradient(135deg, #FFD700 0%, #b8860b 100%);
+                    border: none;
+                    border-radius: 12px;
+                    color: #1a1a2e;
+                    font-family: 'Cinzel', serif;
+                    font-weight: 700;
+                    font-size: 16px;
+                    cursor: pointer;
+                    box-shadow: 0 8px 25px rgba(255,215,0,0.4);
+                    transition: all 0.3s;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
                 }
+                
+                .download-btn:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 12px 35px rgba(255,215,0,0.5);
+                }
+                
+                .download-btn:active {
+                    transform: translateY(-1px);
+                }
+                
                 @media print {
-                    body { background:white; }
-                    .container { box-shadow:none; }
-                    .print-btn { display:none; }
+                    body { background: white; }
+                    body::before { display: none; }
+                    .container { 
+                        box-shadow: none; 
+                        border: none;
+                        max-width: 100%;
+                    }
+                    .download-btn { display: none; }
+                }
+                
+                @media (max-width: 600px) {
+                    .container { padding: 30px 20px; }
+                    h1 { font-size: 32px; }
+                    .sign-name { font-size: 28px; }
                 }
             </style>
         </head>
         <body>
             <div class="container">
-                <h1>✦ COSMIRA ✦</h1>
-                <h2>${item.sign}</h2>
-                <div class="meta">
-                    <strong>${item.period === 'day' ? 'Дневной' : item.period === 'month' ? 'Месяц' : 'Год'} прогноз</strong><br>
-                    ${item.category === 'general' ? 'Общий' : item.category === 'love' ? 'Любовь' : 'Карьера'} • ${new Date(item.created_at).toLocaleDateString('ru-RU')}
+                <div class="header">
+                    <h1>✦ COSMIRA ✦</h1>
+                    <div class="subtitle">Астрология, созданная для тебя</div>
                 </div>
+                
+                <div class="sign-block">
+                    <div class="sign-name">${item.sign}</div>
+                    <div class="meta">
+                        <span class="meta-item">📅 ${dateStr}</span>
+                        <span class="meta-item">🔮 ${periodLabel}</span>
+                        <span class="meta-item">💫 ${categoryLabel}</span>
+                    </div>
+                </div>
+                
                 <div class="content">${item.result_text}</div>
-                <div class="footer">С любовью, COSMIRA ✦<br>Астрология, созданная для тебя</div>
-                <button class="print-btn" onclick="window.print()">🖨️ Сохранить как PDF</button>
+                
+                <div class="footer">
+                    <strong>С любовью, COSMIRA ✦</strong>
+                    Твой персональный проводник в мир звёзд<br>
+                    cosmosmira.com
+                </div>
+                
+                <button class="download-btn" onclick="saveAsPDF()">
+                    💫 Сохранить гороскоп
+                </button>
             </div>
+            
             <script>
-                // Автоматически открываем диалог печати
+                function saveAsPDF() {
+                    // Для мобильных - просто открываем диалог печати
+                    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                        window.print();
+                    } else {
+                        // Для десктопа
+                        window.print();
+                    }
+                }
+                
+                // Автоматически предлагаем сохранить при открытии
                 window.onload = function() {
                     setTimeout(() => {
-                        window.print();
-                    }, 500);
+                        // Не вызываем print автоматически, даём пользователю выбрать
+                    }, 300);
                 };
-            </script>
+            <\/script>
         </body>
         </html>
     `;
     
-    // Открываем в новом окне (Telegram разрешает)
-    const newWindow = window.open('', '_blank');
+    // Открываем в новом окне
+    const newWindow = window.open('', '_blank', 'width=800,height=900');
     if (newWindow) {
         newWindow.document.write(html);
         newWindow.document.close();
     } else {
-        // Если не открылось — показываем alert
-        alert('📥 Чтобы сохранить гороскоп:\n\n1. Скопируй текст вручную\n2. Или разреши pop-up окна для Telegram');
+        alert('📥 Разрешите pop-up окна для скачивания гороскопа!');
     }
 }
