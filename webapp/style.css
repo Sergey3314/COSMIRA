@@ -72,6 +72,9 @@ h4, h5 {
     margin-bottom: 28px;
     position: relative;
     padding-top: 14px;
+    padding-left: 60px;
+    padding-right: 60px;
+    min-height: 110px;
 }
 .header-top {
     display: flex;
@@ -106,8 +109,7 @@ h4, h5 {
 .profile-btn-header {
     position: absolute;
     right: 18px;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 30px;
     background: var(--glass);
     border: 1px solid var(--glass-border);
     border-radius: 50%;
@@ -119,6 +121,7 @@ h4, h5 {
     justify-content: center;
     transition: 0.3s;
     backdrop-filter: blur(10px);
+    z-index: 50;
 }
 .profile-btn-header:hover {
     border-color: var(--gold);
@@ -134,8 +137,7 @@ h4, h5 {
 .back-btn {
     position: absolute;
     left: 18px;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 30px;
     background: var(--glass);
     border: 1px solid var(--glass-border);
     border-radius: 50%;
@@ -148,7 +150,7 @@ h4, h5 {
     align-items: center;
     justify-content: center;
     transition: 0.3s;
-    z-index: 10;
+    z-index: 50;
     backdrop-filter: blur(10px);
     font-family: 'Cinzel', serif;
 }
@@ -160,12 +162,6 @@ h4, h5 {
 /* ===== ЭКРАНЫ ===== */
 .screen { padding: 20px; padding-bottom: 100px; }
 .screen.hidden { display: none; }
-
-/* Скрываем навигацию на экране регистрации */
-#screen-register ~ .bottom-nav,
-body.registering .bottom-nav {
-    display: none !important;
-}
 
 /* ===== КАРТОЧКИ ===== */
 .card.glass {
@@ -221,7 +217,7 @@ body.registering .bottom-nav {
     margin: 0;
 }
 
-/* ===== МЕДАЛЬОНЫ ДЛЯ ИКОНОК (РЕШЕНИЕ БЕЛЫХ КВАДРАТОВ) ===== */
+/* ===== МЕДАЛЬОНЫ ДЛЯ ИКОНОК ===== */
 .icon-wrap {
     width: 72px;
     height: 72px;
@@ -273,7 +269,6 @@ body.registering .bottom-nav {
     width: 48px;
     height: 48px;
     object-fit: contain;
-    /* Убираем multiply - он не работает на тёмном фоне */
     filter: none;
 }
 .icon-gold {
@@ -293,30 +288,33 @@ body.registering .bottom-nav {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 16px 20px !important;
+    padding: 18px 20px !important;
+    min-height: 85px;
 }
 .profile-avatar-sm {
-    width: 50px; height: 50px;
+    width: 56px; height: 56px;
     border-radius: 50%;
     background: linear-gradient(135deg, #2a1a4a, #1a3a4a);
     display: flex; align-items: center; justify-content: center;
-    font-size: 24px;
+    font-size: 28px;
     border: 2px solid var(--gold);
     flex-shrink: 0;
     box-shadow: 0 0 16px rgba(255, 215, 0, 0.3);
 }
 .greeting { 
-    font-size: 15px; 
-    font-weight: 500; 
-    margin: 0; 
-    color: var(--text);
-    font-family: 'Cinzel', serif;
+    font-size: 18px !important; 
+    font-weight: 600 !important; 
+    margin: 0 !important; 
+    color: var(--gold) !important;
+    font-family: 'Cinzel', serif !important;
+    letter-spacing: 0.5px;
 }
 .greeting-sub { 
-    font-size: 13px; 
-    color: var(--gold); 
-    margin: 3px 0 0 0;
-    font-family: 'Cinzel', serif;
+    font-size: 14px !important; 
+    color: var(--gold-light) !important; 
+    margin-top: 4px !important;
+    font-family: 'Cinzel', serif !important;
+    letter-spacing: 1px;
 }
 
 /* ===== ФОРМЫ ===== */
@@ -469,7 +467,7 @@ small {
 }
 .zodiac-item.active .zodiac-name { color: var(--gold); }
 
-/* ===== ВКЛАДКИ (СТЕКЛЯННЫЙ ГРАДИЕНТ ФИОЛЕТОВЫЙ+ЗОЛОТО) ===== */
+/* ===== ВКЛАДКИ ===== */
 .period-tabs, .category-tabs {
     display: flex;
     gap: 10px;
@@ -770,7 +768,7 @@ small {
     font-style: italic;
 }
 
-/* Промо - КВАДРАТНЫЙ КАК ОСТАЛЬНЫЕ КАРТОЧКИ */
+/* Промо */
 .promo-banner {
     display: flex;
     align-items: center;
@@ -809,7 +807,7 @@ small {
 @keyframes spin { to { transform: rotate(360deg); } }
 .loader { text-align: center; padding: 22px; color: var(--text-secondary); font-size: 15px; font-family: 'Cinzel', serif; letter-spacing: 1px; }
 
-/* ===== НИЖНЯЯ НАВИГАЦИЯ (ДУШЕВНАЯ, НЕ ЧЕРНАЯ) ===== */
+/* ===== НИЖНЯЯ НАВИГАЦИЯ ===== */
 .bottom-nav {
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -902,91 +900,3 @@ small {
     .grid .card p { display: none; }
     .header-title { font-size: 30px; }
 }
-
-/* ===== ФИКСЫ ПОСЛЕДИЕ ===== */
-
-/* Кнопка профиля — отступ сверху */
-.profile-btn-header {
-    position: absolute !important;
-    right: 18px !important;
-    top: 55px !important;
-    transform: none !important;
-}
-
-/* Кнопка назад — фиксированная позиция */
-.back-btn {
-    position: absolute !important;
-    left: 18px !important;
-    top: 60px !important;
-    transform: none !important;
-}
-
-/* Приветствие — крупнее и красивее */
-.greeting {
-    font-size: 18px !important;
-    font-weight: 600 !important;
-    font-family: 'Cinzel', serif !important;
-    color: var(--gold) !important;
-    margin: 0 !important;
-    letter-spacing: 0.5px;
-}
-
-.greeting-sub {
-    font-size: 14px !important;
-    color: var(--gold-light) !important;
-    margin-top: 4px !important;
-    font-family: 'Cinzel', serif !important;
-    letter-spacing: 1px;
-}
-
-/* Профиль превью — крупнее */
-.profile-preview {
-    min-height: 85px;
-    padding: 18px 20px !important;
-}
-
-.profile-avatar-sm {
-    width: 56px;
-    height: 56px;
-    font-size: 28px;
-}
-
-/* Нижняя панель показывается по умолчанию */
-.bottom-nav {
-    display: flex !important;
-}
-
-/* ===== ТОЧЕЧНЫЕ ФИКСЫ ===== */
-
-/* Кнопка назад — сдвигаем вниз, чтобы не лезла на заголовок */
-.back-btn {
-    top: 30px !important;
-    transform: none !important;
-    width: 44px;
-    height: 44px;
-    z-index: 50;
-}
-
-/* Отступ для заголовка, чтобы не накладывался на кнопку назад */
-.page-header {
-    padding-left: 60px !important;
-    padding-right: 60px !important;
-    min-height: 110px;
-}
-
-/* Профиль кнопка — тоже фиксируем */
-.profile-btn-header {
-    top: 30px !important;
-    transform: none !important;
-    z-index: 50;
-}
-
-/* Нижняя панель — ВСЕГДА видна (кроме регистрации через JS) */
-.bottom-nav {
-    display: flex !important;
-}
-
-
-
-/* Фикс меню - удалена конфликтующая строка */
-/* Дата: [сегодняшняя дата] */
