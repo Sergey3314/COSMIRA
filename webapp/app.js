@@ -433,6 +433,24 @@ async function loadNatalChart() {
                 ${aspectsList}
             </div>
             
+            <!-- ДОМА -->
+<div style="background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;padding:15px;margin-top:15px;animation:slideUp 2.1s ease;">
+    <h4 style="color:var(--gold);font-family:'Cinzel',serif;text-align:center;margin-bottom:12px;font-size:16px;">🏰 12 Домов</h4>
+    <div style="max-height:300px;overflow-y:auto;padding-right:5px;">
+        ${data.houses.map((h, i) => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--glass-border);">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="background:rgba(255,215,0,0.2);color:var(--gold);width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:bold;font-family:'Cinzel',serif;">${h.number}</span>
+                    <div>
+                        <div style="color:var(--gold);font-family:'Cinzel',serif;font-size:13px;font-weight:600;">${h.emoji} ${h.sign}</div>
+                        <div style="color:var(--text-secondary);font-size:11px;margin-top:2px;">${h.meaning}</div>
+                    </div>
+                </div>
+                <span style="color:var(--text-secondary);font-size:12px;">${h.degree}°</span>
+            </div>
+        `).join('')}
+    </div>
+</div>
             <button onclick='downloadPDF(${JSON.stringify({
                 sign: 'Натальная Карта', 
                 period: 'natal', 
@@ -487,126 +505,128 @@ function generateNatalWheel(planets, ascendant) {
     const center = size / 2;
     const outerR = 185;
     const middleR = 155;
-    const innerR = 125;
-    const planetR = 95;
+    const innerR = 120;
+    const planetR = 85;
     
     const signEmojis = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
-    const signNames = ['Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы'];
-    const signColors = ['#ff4444', '#ff8844', '#ffcc44', '#44ff44', '#44ffff', '#4488ff', 
-                        '#ff44ff', '#8844ff', '#cc44ff', '#444444', '#4444ff', '#448888'];
     
-    // Находим аспекты между планетами
-    const aspects = findAspects(planets);
+    // Группируем планеты по знакам чтобы развести по радиусу
+    const planetsBySign = {};
+    planets.forEach((p, idx) => {
+        if (!planetsBySign[p.sign]) planetsBySign[p.sign] = [];
+        planetsBySign[p.sign].push({...p, idx});
+    });
     
-    let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;filter:drop-shadow(0 0 30px rgba(255,215,0,0.4));">
+    // Определяем радиус для каждой планеты (чтобы не накладывались)
+    const planetRadii = {};
+    Object.values(planetsBySign).forEach(group => {
+        group.forEach((p, i) => {
+            // Смещаем по радиусу: Солнце и Луна ближе к центру, остальные дальше
+            let baseR = planetR;
+            if (p.name === 'Солнце') baseR = planetR - 25;
+            else if (p.name === 'Луна') baseR = planetR - 15;
+            else if (p.name === 'Меркурий' || p.name === 'Венера') baseR = planetR - 5;
+            else baseR = planetR + (i * 8);
+            planetRadii[p.idx] = baseR;
+        });
+    });
+    
+    let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;filter:drop-shadow(0 0 25px rgba(255,215,0,0.3));">
         <defs>
             <radialGradient id="wheel-bg" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="rgba(26,26,46,0.9)"/>
-                <stop offset="100%" stop-color="rgba(10,10,20,0.95)"/>
+                <stop offset="0%" stop-color="rgba(20,20,40,0.95)"/>
+                <stop offset="100%" stop-color="rgba(10,10,25,0.98)"/>
             </radialGradient>
-            <linearGradient id="gold-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#FFD700"/>
                 <stop offset="100%" stop-color="#FFA500"/>
             </linearGradient>
             <filter id="glow">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                <feMerge>
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
-                </feMerge>
+                <feGaussianBlur stdDeviation="2" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter>
         </defs>
         
-        <!-- ВНЕШНИЙ КРУГ -->
-        <circle cx="${center}" cy="${center}" r="${outerR}" fill="url(#wheel-bg)" stroke="url(#gold-gradient)" stroke-width="3" filter="url(#glow)"/>
+        <!-- ФОН -->
+        <circle cx="${center}" cy="${center}" r="${outerR}" fill="url(#wheel-bg)" stroke="url(#gold-grad)" stroke-width="2.5"/>
         
-        <!-- СРЕДНИЙ КРУГ -->
-        <circle cx="${center}" cy="${center}" r="${middleR}" fill="none" stroke="#FFD700" stroke-width="1" opacity="0.5"/>
-        
-        <!-- ВНУТРЕННИЙ КРУГ -->
-        <circle cx="${center}" cy="${center}" r="${innerR}" fill="none" stroke="#FFD700" stroke-width="1" opacity="0.3"/>`;
+        <!-- СЕКТОРА ЗНАКОВ -->`;
     
-    // Рисуем 12 секторов зодиака
     for (let i = 0; i < 12; i++) {
-        const startAngle = (i * 30 - 90) * Math.PI / 180;
-        const endAngle = ((i + 1) * 30 - 90) * Math.PI / 180;
+        const angle1 = (i * 30 - 90) * Math.PI / 180;
+        const angle2 = ((i + 1) * 30 - 90) * Math.PI / 180;
         const midAngle = (i * 30 + 15 - 90) * Math.PI / 180;
         
-        const x1 = center + outerR * Math.cos(startAngle);
-        const y1 = center + outerR * Math.sin(startAngle);
-        const x2 = center + outerR * Math.cos(endAngle);
-        const y2 = center + outerR * Math.sin(endAngle);
+        const x1 = center + outerR * Math.cos(angle1);
+        const y1 = center + outerR * Math.sin(angle1);
+        const x2 = center + outerR * Math.cos(angle2);
+        const y2 = center + outerR * Math.sin(angle2);
         
-        const midX = center + (outerR - 20) * Math.cos(midAngle);
-        const midY = center + (outerR - 20) * Math.sin(midAngle);
+        const midX = center + (outerR - 18) * Math.cos(midAngle);
+        const midY = center + (outerR - 18) * Math.sin(midAngle);
         
-        // Линии секторов
         svg += `
-            <line x1="${center + innerR * Math.cos(startAngle)}" y1="${center + innerR * Math.sin(startAngle)}" 
-                  x2="${x1}" y2="${y1}" stroke="#FFD700" stroke-width="1.5" opacity="0.6"/>
-            
-            <!-- Символ знака -->
-            <text x="${midX}" y="${midY}" fill="${signColors[i]}" font-size="20" text-anchor="middle" dominant-baseline="middle" style="font-weight:bold;filter:url(#glow);">
+            <line x1="${center + innerR * Math.cos(angle1)}" y1="${center + innerR * Math.sin(angle1)}" 
+                  x2="${x1}" y2="${y1}" stroke="#FFD700" stroke-width="1" opacity="0.5"/>
+            <text x="${midX}" y="${midY}" fill="#FFD700" font-size="18" text-anchor="middle" dominant-baseline="middle">
                 ${signEmojis[i]}
             </text>
         `;
     }
     
-    // Рисуем линии аспектов
-    aspects.forEach((aspect, idx) => {
-        const angle1 = (aspect.planet1.longitude - 90) * Math.PI / 180;
-        const angle2 = (aspect.planet2.longitude - 90) * Math.PI / 180;
-        
-        const x1 = center + planetR * Math.cos(angle1);
-        const y1 = center + planetR * Math.sin(angle1);
-        const x2 = center + planetR * Math.cos(angle2);
-        const y2 = center + planetR * Math.sin(angle2);
-        
-        const aspectColor = aspect.type === 'trine' ? '#00ff88' : 
-                           aspect.type === 'opposition' ? '#ff4444' :
-                           aspect.type === 'square' ? '#ff6666' :
-                           aspect.type === 'sextile' ? '#44aaff' : '#FFD700';
-        
-        svg += `
-            <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" 
-                  stroke="${aspectColor}" stroke-width="2" opacity="0.7" 
-                  style="animation:aspectPulse ${2 + idx * 0.5}s ease-in-out infinite;transform-origin:center;">
-            </line>
-        `;
-    });
+    // Внутренние круги
+    svg += `
+        <circle cx="${center}" cy="${center}" r="${middleR}" fill="none" stroke="#FFD700" stroke-width="0.8" opacity="0.3"/>
+        <circle cx="${center}" cy="${center}" r="${innerR}" fill="none" stroke="#FFD700" stroke-width="0.8" opacity="0.2"/>`;
     
-    // Рисуем планеты
+    // ===== АСЦЕНДЕНТ (линия на 9 часах) =====
+    const ascAngle = (ascendant.longitude - 90) * Math.PI / 180;
+    const ascX1 = center + innerR * Math.cos(ascAngle);
+    const ascY1 = center + innerR * Math.sin(ascAngle);
+    const ascX2 = center + outerR * Math.cos(ascAngle);
+    const ascY2 = center + outerR * Math.sin(ascAngle);
+    
+    svg += `
+        <!-- АСЦЕНДЕНТ -->
+        <line x1="${ascX1}" y1="${ascY1}" x2="${ascX2}" y2="${ascY2}" 
+              stroke="#FFD700" stroke-width="3" filter="url(#glow)"/>
+        <text x="${ascX2 * 1.08 - center * 0.08}" y="${ascY2 * 1.08 - center * 0.08}" 
+              fill="#FFD700" font-size="12" text-anchor="middle" font-weight="bold" filter="url(#glow)">
+            AC
+        </text>`;
+    
+    // ===== MC (Середина неба, 12 часов) =====
+    // MC обычно около 90° от Асцендента, но посчитаем точнее через ascmc[1]
+    // Для простоты рисуем на 12 часах как ориентир
+    
+    // ===== ПЛАНЕТЫ =====
     planets.forEach((p, idx) => {
         const angle = (p.longitude - 90) * Math.PI / 180;
-        const x = center + planetR * Math.cos(angle);
-        const y = center + planetR * Math.sin(angle);
+        const r = planetRadii[idx] || planetR;
+        const x = center + r * Math.cos(angle);
+        const y = center + r * Math.sin(angle);
         
-        // Подсветка для Солнца и Луны
         const isImportant = p.name === 'Солнце' || p.name === 'Луна';
-        const glowEffect = isImportant ? 'filter="url(#glow)"' : '';
+        const planetColor = isImportant ? '#FFD700' : '#c4a8ff';
+        const bgColor = isImportant ? 'rgba(255,215,0,0.25)' : 'rgba(112,0,255,0.35)';
+        const radius = isImportant ? 14 : 11;
         
         svg += `
-            <g style="animation:planetPop 0.6s ease ${idx * 0.1}s both;">
-                <circle cx="${x}" cy="${y}" r="${isImportant ? '16' : '13'}" 
-                        fill="${isImportant ? 'rgba(255,215,0,0.3)' : 'rgba(112,0,255,0.4)'}" 
-                        stroke="${isImportant ? '#FFD700' : '#9d4edd'}" 
-                        stroke-width="${isImportant ? '2.5' : '1.5'}" 
-                        ${glowEffect}/>
-                <text x="${x}" y="${y}" fill="#fff" font-size="${isImportant ? '14' : '12'}" 
-                      text-anchor="middle" dominant-baseline="central" style="font-weight:bold;">
+            <g style="animation:planetPop 0.5s ease ${idx * 0.08}s both;">
+                <circle cx="${x}" cy="${y}" r="${radius}" 
+                        fill="${bgColor}" stroke="${planetColor}" stroke-width="1.5" filter="url(#glow)"/>
+                <text x="${x}" y="${y}" fill="#fff" font-size="12" 
+                      text-anchor="middle" dominant-baseline="central">
                     ${p.emoji}
                 </text>
             </g>
         `;
     });
     
-    // Центр с крестом
+    // Центр
     svg += `
-        <!-- ЦЕНТРАЛЬНЫЙ КРЕСТ -->
-        <circle cx="${center}" cy="${center}" r="25" fill="#1a1a2e" stroke="url(#gold-gradient)" stroke-width="2.5" filter="url(#glow)"/>
-        <line x1="${center-15}" y1="${center}" x2="${center+15}" y2="${center}" stroke="#FFD700" stroke-width="2"/>
-        <line x1="${center}" y1="${center-15}" x2="${center}" y2="${center+15}" stroke="#FFD700" stroke-width="2"/>
-        <circle cx="${center}" cy="${center}" r="5" fill="#FFD700"/>
+        <circle cx="${center}" cy="${center}" r="22" fill="#1a1a2e" stroke="url(#gold-grad)" stroke-width="2" filter="url(#glow)"/>
+        <text x="${center}" y="${center}" fill="#FFD700" font-size="16" text-anchor="middle" dominant-baseline="central">✦</text>
     </svg>`;
     
     return svg;
@@ -663,7 +683,7 @@ async function askHorary() {
     const timeEl = document.getElementById('horary-time');
     
     resultBox.classList.remove('hidden');
-    answerEl.textContent = ' Звёзды думают над твоим вопросом...';
+    answerEl.innerHTML = '<div class="loader" style="flex-direction:column;gap:15px;"><div class="spinner"></div><p>Строю хорарную карту...</p></div>';
     timeEl.textContent = '';
     
     try {
@@ -673,21 +693,52 @@ async function askHorary() {
         const res = await fetch(`${API_URL}/api/horary`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                question,
-                user_id: userId
-            })
+            body: JSON.stringify({ question, user_id: userId })
         });
         const data = await res.json();
         
-        answerEl.textContent = data.answer || 'Ответ не получен';
-        answerEl.style.whiteSpace = 'pre-line';
+        // Рисуем карту
+        const horaryWheel = generateHoraryWheel(
+            data.planets, 
+            data.houses, 
+            data.ascendant, 
+            data.mc, 
+            data.question_house
+        );
+        
+        // Данные карты
+        const chartInfo = `
+            <div style="background:rgba(255,215,0,0.1);border:1px solid var(--gold-border);border-radius:12px;padding:12px;margin-bottom:15px;font-size:13px;">
+                <div style="color:var(--gold);font-family:'Cinzel',serif;font-size:12px;margin-bottom:8px;letter-spacing:1px;">📊 ДАННЫЕ КАРТЫ</div>
+                <div style="color:var(--text);line-height:1.6;">
+                    ⏰ Карта на: ${data.chart_time}<br>
+                    🌙 Луна в ${data.moon_sign} (${data.moon_phase})<br>
+                    ${data.moon_retrograde ? '⚠️ Луна ретроградная — задержка' : '✨ Луна директная — развитие'}<br>
+                     Дом вопроса: ${data.question_house}-й
+                </div>
+            </div>
+        `;
+        
+        answerEl.innerHTML = `
+            <!-- КАРТА -->
+            <div style="position:relative;max-width:350px;margin:0 auto 20px;animation:fadeIn 1s ease;">
+                ${horaryWheel}
+                <div style="text-align:center;margin-top:10px;font-family:'Cinzel',serif;color:var(--gold);font-size:14px;letter-spacing:1px;">
+                    ✦ Хорарная карта ✦
+                </div>
+            </div>
+            
+            ${chartInfo}
+            
+            <!-- ОТВЕТ -->
+            <div style="font-size:14px;line-height:1.8;color:var(--text);white-space:pre-line;">${data.answer}</div>
+        `;
+        
         timeEl.textContent = new Date().toLocaleTimeString('ru-RU');
     } catch (e) {
         answerEl.textContent = 'Связь с космосом потеряна';
     }
 }
-
 function editProfile() { showScreen('screen-register'); }
 
 // ===== ИСТОРИЯ ЧТЕНИЙ =====
@@ -1205,4 +1256,154 @@ function generateAspectsList(planets) {
             </div>
         `;
     }).join('');
+}
+
+function generateHoraryWheel(planets, houses, ascendant, mc, questionHouse) {
+    const size = 400;
+    const center = size / 2;
+    const outerR = 185;
+    const middleR = 150;
+    const innerR = 115;
+    const planetR = 85;
+    
+    const signEmojis = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
+    
+    // Цвета домов (радуга зодиака)
+    const houseColors = [
+        '#ff4444', '#ff8844', '#ffcc44', '#44ff44', '#44ffff', '#4488ff',
+        '#8844ff', '#cc44ff', '#ff44aa', '#ff6644', '#aaff44', '#44aaff'
+    ];
+    
+    let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;filter:drop-shadow(0 0 30px rgba(255,215,0,0.4));">
+        <defs>
+            <radialGradient id="horary-bg" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="rgba(20,20,40,0.95)"/>
+                <stop offset="100%" stop-color="rgba(10,10,25,0.98)"/>
+            </radialGradient>
+            <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FFD700"/>
+                <stop offset="100%" stop-color="#FFA500"/>
+            </linearGradient>
+            <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="moon-glow">
+                <feGaussianBlur stdDeviation="5" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+        </defs>
+        
+        <!-- ФОН -->
+        <circle cx="${center}" cy="${center}" r="${outerR}" fill="url(#horary-bg)" stroke="url(#gold-grad)" stroke-width="2.5"/>
+        
+        <!-- ЦВЕТНЫЕ СЕКТОРА ДОМОВ -->`;
+    
+    // Рисуем 12 домов цветными секторами
+    for (let i = 0; i < 12; i++) {
+        const house = houses[i];
+        const startAngle = (house.longitude - 90) * Math.PI / 180;
+        const nextHouse = houses[(i + 1) % 12];
+        const endAngle = (nextHouse.longitude - 90) * Math.PI / 180;
+        const midAngle = ((house.longitude + nextHouse.longitude) / 2 - 90) * Math.PI / 180;
+        
+        const x1 = center + outerR * Math.cos(startAngle);
+        const y1 = center + outerR * Math.sin(startAngle);
+        const x2 = center + outerR * Math.cos(endAngle);
+        const y2 = center + outerR * Math.sin(endAngle);
+        
+        const midX = center + (outerR - 20) * Math.cos(midAngle);
+        const midY = center + (outerR - 20) * Math.sin(midAngle);
+        
+        // Цветной сектор
+        svg += `
+            <path d="M ${center} ${center} L ${x1} ${y1} A ${outerR} ${outerR} 0 0 1 ${x2} ${y2} Z" 
+                  fill="${houseColors[i]}" opacity="0.15" 
+                  style="animation:sectorFade 0.5s ease ${i * 0.1}s both;"/>
+            
+            <!-- Линии домов -->
+            <line x1="${center + innerR * Math.cos(startAngle)}" y1="${center + innerR * Math.sin(startAngle)}" 
+                  x2="${x1}" y2="${y1}" stroke="#FFD700" stroke-width="1" opacity="0.5"/>
+            
+            <!-- Номер дома -->
+            <text x="${midX}" y="${midY}" fill="#FFD700" font-size="14" text-anchor="middle" dominant-baseline="middle" font-weight="bold">
+                ${house.number}
+            </text>
+        `;
+    }
+    
+    // Внутренние круги
+    svg += `
+        <circle cx="${center}" cy="${center}" r="${middleR}" fill="none" stroke="#FFD700" stroke-width="0.8" opacity="0.3"/>
+        <circle cx="${center}" cy="${center}" r="${innerR}" fill="none" stroke="#FFD700" stroke-width="0.8" opacity="0.2"/>`;
+    
+    // ===== ОСИ AC-MC =====
+    const ascAngle = (ascendant.longitude - 90) * Math.PI / 180;
+    const mcAngle = (mc.longitude - 90) * Math.PI / 180;
+    
+    const ascX1 = center + innerR * Math.cos(ascAngle);
+    const ascY1 = center + innerR * Math.sin(ascAngle);
+    const ascX2 = center + outerR * Math.cos(ascAngle);
+    const ascY2 = center + outerR * Math.sin(ascAngle);
+    
+    const mcX1 = center + innerR * Math.cos(mcAngle);
+    const mcY1 = center + innerR * Math.sin(mcAngle);
+    const mcX2 = center + outerR * Math.cos(mcAngle);
+    const mcY2 = center + outerR * Math.sin(mcAngle);
+    
+    svg += `
+        <!-- АСЦЕНДЕНТ -->
+        <line x1="${ascX1}" y1="${ascY1}" x2="${ascX2}" y2="${ascY2}" 
+              stroke="#FFD700" stroke-width="3" filter="url(#glow)"
+              style="animation:lineDraw 1s ease 0.5s both;"/>
+        <text x="${ascX2 * 1.1 - center * 0.1}" y="${ascY2 * 1.1 - center * 0.1}" 
+              fill="#FFD700" font-size="14" text-anchor="middle" font-weight="bold" filter="url(#glow)">
+            AC
+        </text>
+        
+        <!-- MC (Середина неба) -->
+        <line x1="${mcX1}" y1="${mcY1}" x2="${mcX2}" y2="${mcY2}" 
+              stroke="#FFD700" stroke-width="3" filter="url(#glow)"
+              style="animation:lineDraw 1s ease 0.7s both;"/>
+        <text x="${mcX2 * 1.1 - center * 0.1}" y="${mcY2 * 1.1 - center * 0.1}" 
+              fill="#FFD700" font-size="14" text-anchor="middle" font-weight="bold" filter="url(#glow)">
+            MC
+        </text>`;
+    
+    // ===== ПЛАНЕТЫ =====
+    planets.forEach((p, idx) => {
+        const angle = (p.longitude - 90) * Math.PI / 180;
+        const x = center + planetR * Math.cos(angle);
+        const y = center + planetR * Math.sin(angle);
+        
+        // Луна - особая (пульсирует)
+        const isMoon = p.name === 'Луна';
+        const isImportant = p.name === 'Солнце' || p.name === 'Луна';
+        const planetColor = isMoon ? '#fff' : (isImportant ? '#FFD700' : '#c4a8ff');
+        const bgColor = isMoon ? 'rgba(255,255,255,0.4)' : (isImportant ? 'rgba(255,215,0,0.3)' : 'rgba(112,0,255,0.4)');
+        const radius = isMoon ? 16 : (isImportant ? 14 : 11);
+        const glowFilter = isMoon ? 'filter="url(#moon-glow)"' : '';
+        const animation = isMoon ? 'style="animation:moonPulse 2s ease-in-out infinite, planetPop 0.5s ease both;"' : 
+                          `style="animation:planetPop 0.5s ease ${idx * 0.08}s both;"`;
+        
+        svg += `
+            <g ${animation}>
+                <circle cx="${x}" cy="${y}" r="${radius}" 
+                        fill="${bgColor}" stroke="${planetColor}" stroke-width="2" ${glowFilter}/>
+                <text x="${x}" y="${y}" fill="#fff" font-size="${isMoon ? '14' : '12'}" 
+                      text-anchor="middle" dominant-baseline="central" font-weight="bold">
+                    ${p.symbol}
+                </text>
+                ${p.retrograde ? `<text x="${x + radius + 5}" y="${y - radius}" fill="#ff4444" font-size="10">R</text>` : ''}
+            </g>
+        `;
+    });
+    
+    // Центр
+    svg += `
+        <circle cx="${center}" cy="${center}" r="22" fill="#1a1a2e" stroke="url(#gold-grad)" stroke-width="2" filter="url(#glow)"/>
+        <text x="${center}" y="${center}" fill="#FFD700" font-size="16" text-anchor="middle" dominant-baseline="central"></text>
+    </svg>`;
+    
+    return svg;
 }

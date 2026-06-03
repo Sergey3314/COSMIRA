@@ -478,8 +478,6 @@ async def handle_natal(request):
         
         from datetime import datetime
         dt = datetime.strptime(f"{birth_date} {birth_time}", "%Y-%m-%d %H:%M")
-        
-        # Юлианский день
         jd = swe.julday(dt.year, dt.month, dt.day, dt.hour + dt.minute/60.0)
         
         # Планеты
@@ -487,6 +485,10 @@ async def handle_natal(request):
                       swe.JUPITER, swe.SATURN, swe.URANUS, swe.NEPTUNE, swe.PLUTO]
         planet_names_ru = ['Солнце', 'Луна', 'Меркурий', 'Венера', 'Марс', 
                            'Юпитер', 'Сатурн', 'Уран', 'Нептун', 'Плутон']
+        
+        sign_names = ['Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 
+                      'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы']
+        sign_emojis = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓']
         
         planets_data = []
         sun_sign = moon_sign = ""
@@ -496,10 +498,6 @@ async def handle_natal(request):
             longitude = res[0][0]
             
             sign_idx = int(longitude / 30)
-            sign_names = ['Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 
-                          'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы']
-            sign_emojis = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓']
-            
             degree_in_sign = longitude % 30
             
             if p_name == 'Солнце': sun_sign = f"{sign_emojis[sign_idx]} {sign_names[sign_idx]}"
@@ -514,32 +512,27 @@ async def handle_natal(request):
             })
         
         # ===== ДОМА (Placidus) =====
-        # swe.houses возвращает (cusps, ascmc)
-        # cusps - 12 куспидов домов (0-11 индексы)
-        # ascmc - [Асцендент, MC]
         cusps, ascmc = swe.houses(jd, lat, lon, b'P')
+        
+        # Асцендент
+        asc_longitude = ascmc[0]
+        asc_sign_idx = int(asc_longitude / 30)
         
         houses_data = []
         house_meanings = [
-            "Личность, характер, внешность, жизненная сила",
-            "Деньги, ресурсы, самооценка, ценности",
-            "Общение, мышление, обучение, близкое окружение",
-            "Семья, дом, корни, безопасность, мать",
-            "Любовь, творчество, хобби, романтика, дети, удовольствия",
-            "Работа, здоровье, повседневные дела, служение",
-            "Партнёрство, брак, отношения, открытые враги",
-            "Чужие ресурсы, кризисы, трансформация, секс, наследство",
-            "Философия, мировоззрение, высшее образование, путешествия",
-            "Карьера, социальный статус, отец, признание",
-            "Друзья, коллективы, мечты, надежды, соцсети",
-            "Подсознание, тайны, изоляция, духовность, кармический долг"
+            "Личность, внешность, жизненная сила",
+            "Деньги, ресурсы, самооценка",
+            "Общение, мышление, обучение",
+            "Семья, дом, корни, мать",
+            "Любовь, творчество, дети, хобби",
+            "Работа, здоровье, повседневность",
+            "Партнёрство, брак, отношения",
+            "Кризисы, трансформация, чужие ресурсы",
+            "Философия, мировоззрение, путешествия",
+            "Карьера, статус, признание, отец",
+            "Друзья, коллективы, мечты",
+            "Тайны, подсознание, духовность"
         ]
-        
-        asc_longitude = ascmc[0]
-        asc_sign_idx = int(asc_longitude / 30)
-        sign_names = ['Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 
-                      'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы']
-        sign_emojis = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓']
         
         for i in range(12):
             house_cusp = cusps[i]
@@ -555,92 +548,91 @@ async def handle_natal(request):
                 "meaning": house_meanings[i]
             })
         
-        # Определяем в каком доме какая планета
+        # ===== ПРАВИЛЬНЫЙ РАСЧЁТ ДОМОВ ДЛЯ ПЛАНЕТ =====
+        # Куспиды идут по кругу 0-360, нужно правильно определить дом
+        def get_house(longitude, cusps):
+            """Определяет дом планеты по куспидам домов"""
+            # Куспиды отсортированы по порядку домов
+            # Дом N: от cusps[N-1] до cusps[N] (по кругу)
+            for i in range(12):
+                house_start = cusps[i]
+                house_end = cusps[(i + 1) % 12]
+                
+                if house_start < house_end:
+                    # Нормальный случай
+                    if house_start <= longitude < house_end:
+                        return i + 1
+                else:
+                    # Переход через 0° (например 350° -> 20°)
+                    if longitude >= house_start or longitude < house_end:
+                        return i + 1
+            return 12  # fallback
+        
         planets_in_houses = []
         for planet in planets_data:
-            p_lon = planet['longitude']
-            house_num = 1
-            
-            for i, house in enumerate(houses_data):
-                next_house = houses_data[(i + 1) % 12]
-                
-                if i < 11:
-                    if house['longitude'] <= p_lon < next_house['longitude']:
-                        house_num = i + 1
-                        break
-                else:
-                    # 12 дом - последний
-                    if p_lon >= house['longitude'] or p_lon < houses_data[0]['longitude']:
-                        house_num = 12
-                        break
-            
+            house_num = get_house(planet['longitude'], cusps)
             planets_in_houses.append({
                 "planet": planet['name'],
+                "planet_emoji": planet['emoji'],
                 "house": house_num,
                 "sign": planet['sign']
             })
         
-        # AI Интерпретация с домами
+        # AI Интерпретация - КРАТКИЙ ПРОМПТ чтобы влезло
         client = AsyncOpenAI(
             api_key=os.getenv('OPENAI_API_KEY'),
             base_url=os.getenv('OPENAI_BASE_URL', 'https://api.proxyapi.ru/v1')
         )
         
-        houses_text = "\n".join([f"{i+1} дом: {h['sign']} ({h['degree']}°)" for i, h in enumerate(houses_data[:6])])
-        planets_houses_text = "\n".join([f"{p['planet']} в {p['house']} доме ({p['sign']})" for p in planets_in_houses[:5]])
+        # Краткая сводка для AI
+        key_planets = f"Солнце {sun_sign} {planets_data[0]['degree']}°, Луна {moon_sign} {planets_data[1]['degree']}°, Асц {sign_emojis[asc_sign_idx]}{sign_names[asc_sign_idx]}"
+        houses_summary = ", ".join([f"{h['number']} дом в {h['sign']}" for h in houses_data])
+        top_planets_houses = ", ".join([f"{p['planet']} в {p['house']} доме ({p['sign']})" for p in planets_in_houses[:6]])
         
-        prompt = f"""Ты великий астролог. Расшифруй натальную карту:
+        prompt = f"""Ты великий астролог. Натальная карта клиента:
 
-**ОСНОВНОЕ:**
-- Солнце: {sun_sign} ({planets_data[0]['degree']}°)
-- Луна: {moon_sign} ({planets_data[1]['degree']}°)
-- Асцендент: {sign_emojis[asc_sign_idx]} {sign_names[asc_sign_idx]} ({round(asc_longitude % 30, 2)}°)
+{key_planets}
+Дома: {houses_summary}
+Планеты в домах: {top_planets_houses}
 
-**ДОМА (первые 6):**
-{houses_text}
+Напиши разбор СТРОГО по структуре (каждый раздел 2-3 предложения):
 
-**ПЛАНЕТЫ В ДОМАХ:**
-{planets_houses_text}
+ СУТЬ (Солнце)
+Твой характер и эго.
 
-НАПИШИ РАЗБОР ПО СТРУКТУРЕ:
+🌙 ДУША (Луна)
+Твои эмоции и подсознание.
 
-🌟 ТВОЯ СУТЬ (Солнце в {planets_data[0]['sign']})
-(3-4 предложения о характере и эго)
+🎭 МАСКА (Асцендент)
+Как тебя видят люди.
 
-🌙 ТВОЯ ДУША (Луна в {planets_data[1]['sign']})
-(3-4 предложения об эмоциях и подсознании)
+🏠 ВАЖНЫЕ СФЕРЫ
+В каких домах у тебя скопление планет — там твоя жизнь кипит. Напиши про 2-3 самых активных дома.
 
-🎭 ТВОЯ МАСКА (Асцендент в {sign_names[asc_sign_idx]})
-(3-4 предложения о том, как тебя видят люди)
-
-🏠 ВАЖНЕЙШИЕ СФЕРЫ (по домам)
-(2-3 предложения: в каких сферах жизни тебя ждёт наибольшая активность/успех/испытания)
-
-💫 ГЛАВНЫЙ ДАР КАРТЫ
-(1-2 предложения: твоя суперсила)
+💫 ДАР КАРТЫ
+Твоя суперсила в одной фразе.
 
 ПРАВИЛА:
-- Пиши МАГИЧЕСКИ, глубоко, как откровение.
-- Обращайся на "Ты".
-- Используй метафоры стихий.
-- Длина: 350-450 слов.
-- Будь конкретен, но вдохновляющ.
+- Обращайся на "Ты"
+- Метафоры стихий
+- Всего 250-350 слов
+- Без "проблем" и "негатива"
+- ЗАКОНЧИ РАЗБОР ПОЛНОСТЬЮ, не обрывайся
 
-Начни сразу с 🌟 ТВОЯ СУТЬ."""
+Начни сразу с 🌟 СУТЬ."""
 
         response = await client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Ты мистический астролог. Твои тексты меняют жизни."},
+                {"role": "system", "content": "Ты мистический астролог. Пиши полные разборы без обрывов."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=600,
+            max_tokens=1200,
             temperature=0.8
         )
         
         interpretation = response.choices[0].message.content.strip()
         
-        # Сохраняем в историю
         await save_reading(
             user_id, 'natal', f"Натальная карта", 'natal', 'general',
             f"☀️ {sun_sign} | 🌙 {moon_sign} | 🌅 {sign_emojis[asc_sign_idx]}{sign_names[asc_sign_idx]}\n\n{interpretation}"
@@ -651,7 +643,8 @@ async def handle_natal(request):
             "ascendant": {
                 "sign": sign_names[asc_sign_idx], 
                 "emoji": sign_emojis[asc_sign_idx], 
-                "degree": round(asc_longitude % 30, 2)
+                "degree": round(asc_longitude % 30, 2),
+                "longitude": round(asc_longitude, 2)
             },
             "houses": houses_data,
             "planets_in_houses": planets_in_houses,
@@ -673,64 +666,197 @@ async def handle_horary(request):
         if not question:
             return web.json_response({"answer": "Задай вопрос, чтобы получить ответ звёзд."})
         
+        from datetime import datetime
+        now = datetime.now()
+        
+        lat, lon = 55.75, 37.61
+        if currentUser_data := await get_user(user_id):
+            if currentUser_data.get('birth_place'):
+                city = currentUser_data['birth_place'].lower()
+                for city_name, coords in CITIES.items():
+                    if city_name in city:
+                        lat, lon = coords
+                        break
+        
+        jd = swe.julday(now.year, now.month, now.day, now.hour + now.minute/60.0)
+        cusps, ascmc = swe.houses(jd, lat, lon, b'P')
+        asc_longitude = ascmc[0]
+        mc_longitude = ascmc[1]
+        asc_sign_idx = int(asc_longitude / 30)
+        
+        sign_names = ['Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 
+                      'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы']
+        sign_emojis = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓']
+        
+        # Все планеты
+        planet_ids = [swe.SUN, swe.MOON, swe.MERCURY, swe.VENUS, swe.MARS, 
+                      swe.JUPITER, swe.SATURN, swe.URANUS, swe.NEPTUNE, swe.PLUTO]
+        planet_names_ru = ['Солнце', 'Луна', 'Меркурий', 'Венера', 'Марс', 
+                           'Юпитер', 'Сатурн', 'Уран', 'Нептун', 'Плутон']
+        planet_symbols = ['☉', '☽', '☿', '♀', '', '♃', '♄', '', '♆', '♇']
+        
+        planets_data = []
+        for p_id, p_name, p_sym in zip(planet_ids, planet_names_ru, planet_symbols):
+            res = swe.calc_ut(jd, p_id, swe.FLG_SWIEPH)
+            longitude = res[0][0]
+            sign_idx = int(longitude / 30)
+            degree_in_sign = longitude % 30
+            
+            # Скорость (ретроградность)
+            res2 = swe.calc_ut(jd - 0.001, p_id, swe.FLG_SWIEPH)
+            speed = longitude - res2[0][0]
+            retrograde = speed < 0
+            
+            planets_data.append({
+                "name": p_name,
+                "symbol": p_sym,
+                "sign": sign_names[sign_idx],
+                "sign_idx": sign_idx,
+                "degree": round(degree_in_sign, 2),
+                "longitude": round(longitude, 2),
+                "retrograde": retrograde
+            })
+        
+        # Луна отдельно
+        moon_data = planets_data[1]
+        moon_phase = (moon_data['longitude'] - planets_data[0]['longitude']) % 360
+        moon_phase_name = "растущая" if moon_phase < 180 else "убывающая"
+        
+        # Дома
+        houses_data = []
+        house_meanings = [
+            "Личность, вопрошающий", "Деньги, ресурсы", "Общение, документы",
+            "Дом, семья", "Любовь, дети", "Работа, здоровье",
+            "Партнёр, брак", "Кризисы, трансформация", "Путешествия, философия",
+            "Карьера, статус", "Друзья, мечты", "Тайны, подсознание"
+        ]
+        
+        for i in range(12):
+            house_cusp = cusps[i]
+            sign_idx = int(house_cusp / 30)
+            houses_data.append({
+                "number": i + 1,
+                "sign": sign_names[sign_idx],
+                "emoji": sign_emojis[sign_idx],
+                "degree": round(house_cusp % 30, 2),
+                "longitude": round(house_cusp, 2),
+                "meaning": house_meanings[i]
+            })
+        
+        # Определяем дом вопроса
+        question_lower = question.lower()
+        house_keywords = {
+            1: ['я', 'мне', 'меня', 'моё', 'себе', 'внешность'],
+            2: ['деньги', 'зарплата', 'доход', 'покупка', 'продажа', 'цена', 'финансы'],
+            3: ['поездка', 'дорога', 'соседи', 'братья', 'документы', 'учёба'],
+            4: ['дом', 'квартира', 'семья', 'родители', 'недвижимость', 'переезд'],
+            5: ['ребёнок', 'дети', 'беременность', 'любовь', 'роман', 'творчество'],
+            6: ['работа', 'начальник', 'коллеги', 'здоровье', 'животное'],
+            7: ['партнёр', 'муж', 'жена', 'брак', 'развод', 'отношения', 'враг'],
+            8: ['наследство', 'кредит', 'долг', 'страх', 'риск', 'трансформация'],
+            9: ['путешествие', 'иностранец', 'университет', 'религия', 'закон', 'суд'],
+            10: ['карьера', 'начальство', 'власть', 'статус', 'профессия', 'цель'],
+            11: ['друзья', 'коллектив', 'мечта', 'план', 'соцсети'],
+            12: ['тайна', 'скрытое', 'изоляция', 'больница', 'духовность']
+        }
+        
+        question_house = 7
+        for house_num, keywords in house_keywords.items():
+            if any(kw in question_lower for kw in keywords):
+                question_house = house_num
+                break
+        
+        # Управители знаков
+        rulers = {
+            0: 'Марс', 1: 'Венера', 2: 'Меркурий', 3: 'Луна',
+            4: 'Солнце', 5: 'Меркурий', 6: 'Венера', 7: 'Марс',
+            8: 'Юпитер', 9: 'Сатурн', 10: 'Сатурн', 11: 'Юпитер'
+        }
+        
+        # AI интерпретация
         client = AsyncOpenAI(
             api_key=os.getenv('OPENAI_API_KEY'),
             base_url=os.getenv('OPENAI_BASE_URL', 'https://api.proxyapi.ru/v1')
         )
         
-        prompt = f"""Ты хорарный астролог с 30-летним опытом. Человек задал вопрос:
+        chart_desc = f"""
+ХОРАРНАЯ КАРТА на {now.strftime('%d.%m.%Y в %H:%M')}:
+АСЦЕНДЕНТ: {sign_emojis[asc_sign_idx]} {sign_names[asc_sign_idx]} ({round(asc_longitude % 30, 2)}°)
+ЛУНА: {moon_data['symbol']} {moon_data['sign']} ({moon_data['degree']}°) - {moon_phase_name}
+{'️ Луна ретроградная' if moon_data['retrograde'] else '✨ Луна директная'}
+ДОМ ВОПРОСА: {question_house}-й ({houses_data[question_house-1]['sign']})
+Управитель дома: {rulers[houses_data[question_house-1]['sign_idx']]}
+"""
+        
+        prompt = f"""Ты хорарный астролог. Интерпретируй реальную карту:
 
-**"{question}"**
+{chart_desc}
+ВОПРОС: "{question}"
 
-Дай ответ по структуре:
+ПРАВИЛА ХОРАРА:
+- Луна = развитие ситуации
+- Асцендент = вопрошающий
+- Управитель дома вопроса = суть дела
+- Ретроградная Луна = задержка, возврат к прошлому
+
+ОТВЕТЬ ПО СТРУКТУРЕ:
 
 🌙 ОТВЕТ ЗВЁЗД
-(прямой ответ: да/нет/возможно + краткое пояснение)
+(Да/Нет/Возможно + почему, опираясь на фазу Луны)
 
- АСТРОЛОГИЧЕСКАЯ КАРТИНА
-(2-3 предложения о том, что говорят планеты)
+📊 КАРТИНА СИТУАЦИИ
+(2-3 предложения: что показывает Луна и управители)
 
-⏰ БЛАГОПРИЯТНОЕ ВРЕМЯ
-(когда лучше действовать)
+ КОГДА
+(Сроки: быстро/недели/месяцы — по фазе и скорости Луны)
 
-💫 РЕКОМЕНДАЦИЯ
-(конкретный совет что делать)
+💫 СОВЕТ
+(Что делать исходя из карты)
 
 ПРАВИЛА:
-- Будь точен, но не категоричен
-- Не давай медицинских/юридических советов
-- Длина: 200-300 слов
-- Добавь 1-2 эмодзи
-- Тон: мудрый, спокойный, поддерживающий
-- Если вопрос не по теме астрологии — мягко скажи об этом
+- НЕ выдумывай ретроградные планеты
+- Если Луна ретроградная — скажи явно
+- Длина: 250-350 слов
+- Тон: уверенный, конкретный
+- Обращайся на "Вы"
 
-Начни сразу с раздела 🌙 ОТВЕТ ЗВЁЗД."""
+Начни сразу с 🌙 ОТВЕТ ЗВЁЗД."""
 
         response = await client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Ты хорарный астролог. Даёшь точные, но тактичные ответы на вопросы."},
+                {"role": "system", "content": "Ты хорарный астролог. Интерпретируешь только реальные данные."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=400,
+            max_tokens=1000,
             temperature=0.6
         )
         
         answer = response.choices[0].message.content.strip()
         
-        # Сохраняем в историю
         await save_reading(
-            user_id, 
-            'horary', 
-            'Вопрос', 
-            'хорар', 
-            'general', 
-            f"**Вопрос:** {question}\n\n{answer}"
+            user_id, 'horary', f"Вопрос: {question[:30]}...", 'хорар', f"дом {question_house}",
+            f"**Вопрос:** {question}\n**Карта на:** {now.strftime('%d.%m.%Y %H:%M')}\n**Луна:** {moon_data['symbol']} {moon_data['sign']} ({moon_phase_name})\n\n{answer}"
         )
         
         return web.json_response({
             "answer": answer,
-            "timestamp": datetime.now().isoformat()
+            "chart_time": now.strftime('%d.%m.%Y %H:%M'),
+            "planets": planets_data,
+            "houses": houses_data,
+            "ascendant": {
+                "sign": sign_names[asc_sign_idx],
+                "emoji": sign_emojis[asc_sign_idx],
+                "longitude": round(asc_longitude, 2)
+            },
+            "mc": {
+                "longitude": round(mc_longitude, 2)
+            },
+            "moon_sign": f"{moon_data['symbol']} {moon_data['sign']}",
+            "moon_phase": moon_phase_name,
+            "moon_retrograde": moon_data['retrograde'],
+            "question_house": question_house,
+            "timestamp": now.isoformat()
         })
         
     except Exception as e:
