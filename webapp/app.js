@@ -88,6 +88,8 @@ document.querySelectorAll('.nav-item').forEach(btn => {
             initZodiacScroll('compat-s1');
             initZodiacScroll('compat-s2');
         }
+        if (screen === 'screen-profile') updateProfileScreen();
+        if (screen === 'screen-natal') loadNatalChart();
     });
 });
 
