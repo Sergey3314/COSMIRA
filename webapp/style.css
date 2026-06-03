@@ -980,3 +980,26 @@ small {
     from { opacity: 0; transform: translateY(30px); }
     to { opacity: 1; transform: translateY(0); }
 }
+/* Анимация пульсации аспектов */
+@keyframes aspectPulse {
+    0%, 100% { opacity: 0.6; stroke-width: 2; }
+    50% { opacity: 1; stroke-width: 3; filter: drop-shadow(0 0 8px currentColor); }
+}
+
+/* Появление планет */
+@keyframes planetPop {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Медленное вращение фона */
+@keyframes spinWheel {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Свечение для важных элементов */
+.filter-glow {
+    filter: drop-shadow(0 0 10px rgba(255,215,0,0.8));
+}

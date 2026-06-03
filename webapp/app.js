@@ -359,7 +359,7 @@ async function loadNatalChart() {
     container.innerHTML = `
         <div class="loader" style="flex-direction:column; gap:15px;">
             <div class="spinner"></div>
-            <p>Слушаем звёзды в момент твоего рождения...</p>
+            <p>🔮 Рассчитываем положение планет...</p>
         </div>
     `;
     
@@ -392,33 +392,45 @@ async function loadNatalChart() {
         // Рисуем колесо
         const svgWheel = generateNatalWheel(data.planets, data.ascendant);
         
-        // Собираем список планет
+        // Генерируем список планет
         const planetsList = data.planets.map(p => `
-            <div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--glass-border);">
-                <span style="color:var(--gold);font-family:'Cinzel',serif;">${p.emoji} ${p.name}</span>
-                <span style="color:var(--text-secondary);">${p.sign} ${p.degree}°</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--glass-border);">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:20px;">${p.emoji}</span>
+                    <span style="color:var(--gold);font-family:'Cinzel',serif;font-weight:600;">${p.name}</span>
+                </div>
+                <span style="color:var(--text-secondary);font-size:13px;">${p.sign} ${p.degree}°</span>
             </div>
         `).join('');
         
+        // Генерируем список аспектов
+        const aspectsList = generateAspectsList(data.planets);
+        
         container.innerHTML = `
             <!-- ЖИВОЕ КОЛЕСО -->
-            <div style="position:relative;max-width:350px;margin:0 auto 30px;animation:fadeIn 1s ease;">
+            <div style="position:relative;max-width:380px;margin:0 auto 25px;animation:fadeIn 1s ease;">
                 ${svgWheel}
-                <div style="text-align:center;margin-top:15px;font-family:'Cinzel',serif;color:var(--gold);font-size:18px;letter-spacing:2px;">
-                    ${data.ascendant.emoji} Асцендент в ${data.ascendant.sign}
+                <div style="text-align:center;margin-top:15px;font-family:'Cinzel',serif;color:var(--gold);font-size:16px;letter-spacing:2px;">
+                    ✦ Асцендент в ${data.ascendant.emoji} ${data.ascendant.sign} ${data.ascendant.degree}° ✦
                 </div>
             </div>
             
             <!-- РАЗБОР ОТ AI -->
-            <div style="background:var(--glass);border:1px solid var(--gold-border);border-radius:16px;padding:20px;margin-bottom:20px;animation:slideUp 1.2s ease;">
-                <h3 style="color:var(--gold);font-family:'Cinzel',serif;text-align:center;margin-bottom:15px;">🔮 Послание Звёзд</h3>
-                <div style="font-size:14px;line-height:1.8;color:var(--text);white-space:pre-line;">${data.interpretation}</div>
+            <div style="background:linear-gradient(135deg,rgba(255,215,0,0.08),rgba(112,0,255,0.08));border:1px solid var(--gold-border);border-radius:16px;padding:20px;margin-bottom:20px;animation:slideUp 1.2s ease;">
+                <h3 style="color:var(--gold);font-family:'Cinzel',serif;text-align:center;margin-bottom:15px;font-size:18px;">🔮 Послание Звёзд</h3>
+                <div style="font-size:14px;line-height:1.9;color:var(--text);white-space:pre-line;">${data.interpretation}</div>
             </div>
             
             <!-- СПИСОК ПЛАНЕТ -->
-            <div style="background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;padding:15px;animation:slideUp 1.5s ease;">
-                <h4 style="color:var(--gold);font-family:'Cinzel',serif;text-align:center;margin-bottom:10px;">Положение Планет</h4>
+            <div style="background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;padding:15px;margin-bottom:15px;animation:slideUp 1.5s ease;">
+                <h4 style="color:var(--gold);font-family:'Cinzel',serif;text-align:center;margin-bottom:12px;font-size:16px;">📍 Положение Планет</h4>
                 ${planetsList}
+            </div>
+            
+            <!-- АСПЕКТЫ -->
+            <div style="background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;padding:15px;margin-top:15px;animation:slideUp 1.8s ease;">
+                <h4 style="color:var(--gold);font-family:'Cinzel',serif;text-align:center;margin-bottom:12px;font-size:16px;">🔗 Важные Аспекты</h4>
+                ${aspectsList}
             </div>
             
             <button onclick='downloadPDF(${JSON.stringify({
@@ -427,87 +439,216 @@ async function loadNatalChart() {
                 category: 'general', 
                 result_text: data.interpretation,
                 created_at: new Date().toISOString()
-            })})' style="width:100%;margin-top:20px;padding:14px;background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(112,0,255,0.2));border:1px solid var(--gold);color:var(--gold);border-radius:14px;cursor:pointer;font-family:'Cinzel',serif;font-size:15px;font-weight:600;">
+            })})' style="width:100%;margin-top:20px;padding:14px;background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(112,0,255,0.2));border:1px solid var(--gold);color:var(--gold);border-radius:14px;cursor:pointer;font-family:'Cinzel',serif;font-size:15px;font-weight:600;transition:0.3s;" onmouseover="this.style.background='linear-gradient(135deg,rgba(255,215,0,0.3),rgba(112,0,255,0.3))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(255,215,0,0.2),rgba(112,0,255,0.2))'">
                 📥 Сохранить разбор в PDF
             </button>
         `;
         
     } catch (e) {
-        container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">Ошибка расчёта карты</p>';
+        console.error('Natal error:', e);
+        container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">Ошибка расчёта карты. Попробуй ещё раз.</p>';
     }
+}
+
+// Функция генерации списка аспектов
+function generateAspectsList(planets) {
+    const aspectNames = {
+        'conjunction': { name: 'Соединение', color: '#FFD700', icon: '☌' },
+        'opposition': { name: 'Оппозиция', color: '#ff4444', icon: '☍' },
+        'trine': { name: 'Трин', color: '#00ff88', icon: '△' },
+        'square': { name: 'Квадрат', color: '#ff6666', icon: '□' },
+        'sextile': { name: 'Секстиль', color: '#44aaff', icon: '⚹' }
+    };
+    
+    const aspects = findAspects(planets);
+    
+    if (aspects.length === 0) {
+        return '<p style="color:var(--text-secondary);text-align:center;font-size:13px;padding:10px;">Нет мажорных аспектов</p>';
+    }
+    
+    return aspects.map(a => {
+        const aspect = aspectNames[a.type];
+        return `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-left:3px solid ${aspect.color};background:rgba(255,255,255,0.03);margin-bottom:8px;border-radius:8px;">
+                <span style="color:var(--gold);font-size:13px;font-family:'Cinzel',serif;">
+                    ${a.planet1.emoji} ${a.planet1.name} ${aspect.icon} ${a.planet2.name} ${a.planet2.emoji}
+                </span>
+                <span style="color:${aspect.color};font-size:12px;font-weight:600;white-space:nowrap;margin-left:10px;">
+                    ${aspect.name} (${a.orb}°)
+                </span>
+            </div>
+        `;
+    }).join('');
 }
 
 // Функция генерации SVG колеса
 function generateNatalWheel(planets, ascendant) {
-    const size = 350;
+    const size = 400;
     const center = size / 2;
-    const outerR = 160;
-    const innerR = 110;
-    const planetR = 80;
+    const outerR = 185;
+    const middleR = 155;
+    const innerR = 125;
+    const planetR = 95;
     
-    const signEmojis = ['♈', '', '♊', '♋', '', '♍', '♎', '', '♐', '♑', '', '♓'];
+    const signEmojis = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
     const signNames = ['Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы'];
+    const signColors = ['#ff4444', '#ff8844', '#ffcc44', '#44ff44', '#44ffff', '#4488ff', 
+                        '#ff44ff', '#8844ff', '#cc44ff', '#444444', '#4444ff', '#448888'];
     
-    let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;filter:drop-shadow(0 0 20px rgba(255,215,0,0.3));">
+    // Находим аспекты между планетами
+    const aspects = findAspects(planets);
+    
+    let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;filter:drop-shadow(0 0 30px rgba(255,215,0,0.4));">
         <defs>
             <radialGradient id="wheel-bg" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="rgba(112,0,255,0.1)"/>
-                <stop offset="100%" stop-color="rgba(26,26,46,0.8)"/>
+                <stop offset="0%" stop-color="rgba(26,26,46,0.9)"/>
+                <stop offset="100%" stop-color="rgba(10,10,20,0.95)"/>
             </radialGradient>
+            <linearGradient id="gold-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FFD700"/>
+                <stop offset="100%" stop-color="#FFA500"/>
+            </linearGradient>
+            <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
         </defs>
         
-        <!-- Фон колеса -->
-        <circle cx="${center}" cy="${center}" r="${outerR}" fill="url(#wheel-bg)" stroke="#FFD700" stroke-width="2" style="animation:spinWheel 60s linear infinite;transform-origin:center;"/>
+        <!-- ВНЕШНИЙ КРУГ -->
+        <circle cx="${center}" cy="${center}" r="${outerR}" fill="url(#wheel-bg)" stroke="url(#gold-gradient)" stroke-width="3" filter="url(#glow)"/>
         
-        <!-- Сектора знаков -->`;
+        <!-- СРЕДНИЙ КРУГ -->
+        <circle cx="${center}" cy="${center}" r="${middleR}" fill="none" stroke="#FFD700" stroke-width="1" opacity="0.5"/>
+        
+        <!-- ВНУТРЕННИЙ КРУГ -->
+        <circle cx="${center}" cy="${center}" r="${innerR}" fill="none" stroke="#FFD700" stroke-width="1" opacity="0.3"/>`;
     
-    // Рисуем 12 знаков
+    // Рисуем 12 секторов зодиака
     for (let i = 0; i < 12; i++) {
-        const angle1 = (i * 30 - 90) * Math.PI / 180;
-        const angle2 = ((i + 1) * 30 - 90) * Math.PI / 180;
+        const startAngle = (i * 30 - 90) * Math.PI / 180;
+        const endAngle = ((i + 1) * 30 - 90) * Math.PI / 180;
         const midAngle = (i * 30 + 15 - 90) * Math.PI / 180;
         
-        const x1 = center + outerR * Math.cos(angle1);
-        const y1 = center + outerR * Math.sin(angle1);
-        const x2 = center + outerR * Math.cos(angle2);
-        const y2 = center + outerR * Math.sin(angle2);
+        const x1 = center + outerR * Math.cos(startAngle);
+        const y1 = center + outerR * Math.sin(startAngle);
+        const x2 = center + outerR * Math.cos(endAngle);
+        const y2 = center + outerR * Math.sin(endAngle);
         
-        const textX = center + (outerR - 25) * Math.cos(midAngle);
-        const textY = center + (outerR - 25) * Math.sin(midAngle);
+        const midX = center + (outerR - 20) * Math.cos(midAngle);
+        const midY = center + (outerR - 20) * Math.sin(midAngle);
         
+        // Линии секторов
         svg += `
-            <line x1="${center + innerR * Math.cos(angle1)}" y1="${center + innerR * Math.sin(angle1)}" x2="${x1}" y2="${y1}" stroke="#FFD700" stroke-width="1" opacity="0.6"/>
-            <text x="${textX}" y="${textY}" fill="#FFD700" font-size="16" text-anchor="middle" dominant-baseline="middle" style="font-family:'Montserrat',sans-serif;">${signEmojis[i]}</text>
+            <line x1="${center + innerR * Math.cos(startAngle)}" y1="${center + innerR * Math.sin(startAngle)}" 
+                  x2="${x1}" y2="${y1}" stroke="#FFD700" stroke-width="1.5" opacity="0.6"/>
+            
+            <!-- Символ знака -->
+            <text x="${midX}" y="${midY}" fill="${signColors[i]}" font-size="20" text-anchor="middle" dominant-baseline="middle" style="font-weight:bold;filter:url(#glow);">
+                ${signEmojis[i]}
+            </text>
         `;
     }
     
-    // Внутренний круг
-    svg += `<circle cx="${center}" cy="${center}" r="${innerR}" fill="none" stroke="#FFD700" stroke-width="1" opacity="0.4"/>
-            <circle cx="${center}" cy="${center}" r="${planetR + 30}" fill="none" stroke="#FFD700" stroke-width="1" opacity="0.2"/>`;
+    // Рисуем линии аспектов
+    aspects.forEach((aspect, idx) => {
+        const angle1 = (aspect.planet1.longitude - 90) * Math.PI / 180;
+        const angle2 = (aspect.planet2.longitude - 90) * Math.PI / 180;
+        
+        const x1 = center + planetR * Math.cos(angle1);
+        const y1 = center + planetR * Math.sin(angle1);
+        const x2 = center + planetR * Math.cos(angle2);
+        const y2 = center + planetR * Math.sin(angle2);
+        
+        const aspectColor = aspect.type === 'trine' ? '#00ff88' : 
+                           aspect.type === 'opposition' ? '#ff4444' :
+                           aspect.type === 'square' ? '#ff6666' :
+                           aspect.type === 'sextile' ? '#44aaff' : '#FFD700';
+        
+        svg += `
+            <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" 
+                  stroke="${aspectColor}" stroke-width="2" opacity="0.7" 
+                  style="animation:aspectPulse ${2 + idx * 0.5}s ease-in-out infinite;transform-origin:center;">
+            </line>
+        `;
+    });
     
     // Рисуем планеты
     planets.forEach((p, idx) => {
         const angle = (p.longitude - 90) * Math.PI / 180;
-        // Смещаем планеты чтобы не накладывались
-        const r = planetR - (idx % 3) * 15;
-        const x = center + r * Math.cos(angle);
-        const y = center + r * Math.sin(angle);
+        const x = center + planetR * Math.cos(angle);
+        const y = center + planetR * Math.sin(angle);
+        
+        // Подсветка для Солнца и Луны
+        const isImportant = p.name === 'Солнце' || p.name === 'Луна';
+        const glowEffect = isImportant ? 'filter="url(#glow)"' : '';
         
         svg += `
-            <g style="animation:planetPop 0.5s ease ${idx * 0.1}s both;">
-                <circle cx="${x}" cy="${y}" r="12" fill="rgba(112,0,255,0.6)" stroke="#FFD700" stroke-width="1.5"/>
-                <text x="${x}" y="${y}" fill="#fff" font-size="12" text-anchor="middle" dominant-baseline="central">${p.emoji}</text>
+            <g style="animation:planetPop 0.6s ease ${idx * 0.1}s both;">
+                <circle cx="${x}" cy="${y}" r="${isImportant ? '16' : '13'}" 
+                        fill="${isImportant ? 'rgba(255,215,0,0.3)' : 'rgba(112,0,255,0.4)'}" 
+                        stroke="${isImportant ? '#FFD700' : '#9d4edd'}" 
+                        stroke-width="${isImportant ? '2.5' : '1.5'}" 
+                        ${glowEffect}/>
+                <text x="${x}" y="${y}" fill="#fff" font-size="${isImportant ? '14' : '12'}" 
+                      text-anchor="middle" dominant-baseline="central" style="font-weight:bold;">
+                    ${p.emoji}
+                </text>
             </g>
         `;
     });
     
+    // Центр с крестом
     svg += `
-        <!-- Центр -->
-        <circle cx="${center}" cy="${center}" r="20" fill="#1a1a2e" stroke="#FFD700" stroke-width="2"/>
-        <text x="${center}" y="${center}" fill="#FFD700" font-size="14" text-anchor="middle" dominant-baseline="central" style="font-family:'Cinzel',serif;">✦</text>
+        <!-- ЦЕНТРАЛЬНЫЙ КРЕСТ -->
+        <circle cx="${center}" cy="${center}" r="25" fill="#1a1a2e" stroke="url(#gold-gradient)" stroke-width="2.5" filter="url(#glow)"/>
+        <line x1="${center-15}" y1="${center}" x2="${center+15}" y2="${center}" stroke="#FFD700" stroke-width="2"/>
+        <line x1="${center}" y1="${center-15}" x2="${center}" y2="${center+15}" stroke="#FFD700" stroke-width="2"/>
+        <circle cx="${center}" cy="${center}" r="5" fill="#FFD700"/>
     </svg>`;
     
     return svg;
+}
+
+// Функция поиска аспектов
+function findAspects(planets) {
+    const aspects = [];
+    const aspectTypes = [
+        { name: 'conjunction', angle: 0, orb: 8 },
+        { name: 'opposition', angle: 180, orb: 8 },
+        { name: 'trine', angle: 120, orb: 8 },
+        { name: 'square', angle: 90, orb: 7 },
+        { name: 'sextile', angle: 60, orb: 6 }
+    ];
+    
+    for (let i = 0; i < planets.length; i++) {
+        for (let j = i + 1; j < planets.length; j++) {
+            const p1 = planets[i];
+            const p2 = planets[j];
+            
+            let diff = Math.abs(p1.longitude - p2.longitude);
+            if (diff > 180) diff = 360 - diff;
+            
+            for (const aspect of aspectTypes) {
+                let orbDiff = aspect.angle === 0 ? diff : Math.abs(diff - aspect.angle);
+                if (orbDiff > 180) orbDiff = 360 - orbDiff;
+                
+                if (orbDiff <= aspect.orb) {
+                    aspects.push({
+                        planet1: p1,
+                        planet2: p2,
+                        type: aspect.name,
+                        orb: orbDiff.toFixed(1)
+                    });
+                    break;
+                }
+            }
+        }
+    }
+    
+    return aspects;
 }
 
 async function askHorary() {
@@ -1034,4 +1175,34 @@ async function downloadPDF(item) {
     } else {
         alert('📥 Разрешите pop-up окна для скачивания гороскопа!');
     }
+}
+
+function generateAspectsList(planets) {
+    const aspectNames = {
+        'conjunction': { name: 'Соединение', color: '#FFD700', icon: '☌' },
+        'opposition': { name: 'Оппозиция', color: '#ff4444', icon: '☍' },
+        'trine': { name: 'Трин', color: '#00ff88', icon: '△' },
+        'square': { name: 'Квадрат', color: '#ff6666', icon: '□' },
+        'sextile': { name: 'Секстиль', color: '#44aaff', icon: '⚹' }
+    };
+    
+    const aspects = findAspects(planets);
+    
+    if (aspects.length === 0) {
+        return '<p style="color:var(--text-secondary);text-align:center;font-size:13px;">Нет мажорных аспектов</p>';
+    }
+    
+    return aspects.map(a => {
+        const aspect = aspectNames[a.type];
+        return `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-left:3px solid ${aspect.color};background:rgba(255,255,255,0.03);margin-bottom:6px;border-radius:6px;">
+                <span style="color:var(--gold);font-size:13px;">
+                    ${a.planet1.emoji} ${a.planet1.name} ${aspect.icon} ${a.planet2.name} ${a.planet2.emoji}
+                </span>
+                <span style="color:${aspect.color};font-size:12px;font-weight:600;">
+                    ${aspect.name} (${a.orb}°)
+                </span>
+            </div>
+        `;
+    }).join('');
 }
