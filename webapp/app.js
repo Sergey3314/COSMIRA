@@ -674,6 +674,7 @@ function findAspects(planets) {
 
 async function askHorary() {
     const question = document.getElementById('horary-question').value.trim();
+    
     if (!question) { 
         alert('Задай вопрос!'); 
         return; 
@@ -684,7 +685,13 @@ async function askHorary() {
     const timeEl = document.getElementById('horary-time');
     
     resultBox.classList.remove('hidden');
-    answerEl.innerHTML = '<div class="loader" style="flex-direction:column;gap:15px;"><div class="spinner"></div><p>Строю хорарную карту...</p></div>';
+    answerEl.innerHTML = `
+        <div class="loader" style="flex-direction:column;gap:15px;">
+            <div class="spinner"></div>
+            <p>🔮 Рассчитываю точную хорарную карту...</p>
+            <p style="font-size:12px;color:var(--text-secondary);">Положение Луны, Асцендента, домов</p>
+        </div>
+    `;
     timeEl.textContent = '';
     
     try {
@@ -694,50 +701,67 @@ async function askHorary() {
         const res = await fetch(`${API_URL}/api/horary`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ question, user_id: userId })
+            body: JSON.stringify({ 
+                question: question,
+                user_id: userId.toString()
+            })
         });
+        
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.error || `HTTP ${res.status}`);
+        }
+        
         const data = await res.json();
         
-        // Рисуем карту
-        const horaryWheel = generateHoraryWheel(
-            data.planets, 
-            data.houses, 
-            data.ascendant, 
-            data.mc, 
-            data.question_house
-        );
-        
-        // Данные карты
+        // Показываем точные данные карты
         const chartInfo = `
-            <div style="background:rgba(255,215,0,0.1);border:1px solid var(--gold-border);border-radius:12px;padding:12px;margin-bottom:15px;font-size:13px;">
-                <div style="color:var(--gold);font-family:'Cinzel',serif;font-size:12px;margin-bottom:8px;letter-spacing:1px;">📊 ДАННЫЕ КАРТЫ</div>
-                <div style="color:var(--text);line-height:1.6;">
-                    ⏰ Карта на: ${data.chart_time}<br>
-                    🌙 Луна в ${data.moon_sign} (${data.moon_phase})<br>
-                    ${data.moon_retrograde ? '⚠️ Луна ретроградная — задержка' : '✨ Луна директная — развитие'}<br>
-                     Дом вопроса: ${data.question_house}-й
+            <div style="background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(112,0,255,0.1));border:2px solid var(--gold-border);border-radius:14px;padding:15px;margin-bottom:18px;">
+                <div style="color:var(--gold);font-family:'Cinzel',serif;font-size:13px;margin-bottom:12px;letter-spacing:2px;text-align:center;text-transform:uppercase;">
+                    ✦ Точная хорарная карта ✦
+                </div>
+                <div style="color:var(--text);line-height:1.8;font-size:13px;">
+                    <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--glass-border);">
+                        <strong style="color:var(--gold);">⏰ Время:</strong> ${data.chart_time}<br>
+                    </div>
+                    <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--glass-border);">
+                        <strong style="color:var(--gold);">🌙 Луна:</strong> ${data.moon_sign} (${data.moon_degree}°)<br>
+                        <span style="color:var(--text-secondary);font-size:12px;">
+                            Фаза: ${data.moon_phase} (${data.moon_phase_deg}°) • 
+                            Скорость: ${data.moon_speed}°/день<br>
+                            ${data.moon_retrograde ? '⚠️ <strong style="color:#ff6666;">РЕТРОГРАДНАЯ</strong> — задержка, возврат' : '✨ Директная — развитие'}
+                        </span>
+                    </div>
+                    <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--glass-border);">
+                        <strong style="color:var(--gold);">📍 Асцендент:</strong> ${data.ascendant} (${data.ascendant_degree}°)<br>
+                        <span style="color:var(--text-secondary);font-size:12px;">Управитель: ${data.house_ruler}</span>
+                    </div>
+                    <div>
+                        <strong style="color:var(--gold);">🏠 Дом вопроса:</strong> ${data.question_house}-й<br>
+                    </div>
                 </div>
             </div>
         `;
         
-        answerEl.innerHTML = `
-            <!-- КАРТА -->
-            <div style="position:relative;max-width:350px;margin:0 auto 20px;animation:fadeIn 1s ease;">
-                ${horaryWheel}
-                <div style="text-align:center;margin-top:10px;font-family:'Cinzel',serif;color:var(--gold);font-size:14px;letter-spacing:1px;">
-                    ✦ Хорарная карта ✦
-                </div>
+        answerEl.innerHTML = chartInfo + `
+            <div style="background:var(--glass);border:1px solid var(--gold-border);border-radius:14px;padding:18px;margin-top:15px;">
+                <div style="font-size:14px;line-height:1.9;color:var(--text);white-space:pre-line;">${data.answer}</div>
             </div>
-            
-            ${chartInfo}
-            
-            <!-- ОТВЕТ -->
-            <div style="font-size:14px;line-height:1.8;color:var(--text);white-space:pre-line;">${data.answer}</div>
         `;
         
-        timeEl.textContent = new Date().toLocaleTimeString('ru-RU');
+        timeEl.textContent = `Получен ответ: ${new Date().toLocaleTimeString('ru-RU')}`;
+        
     } catch (e) {
-        answerEl.textContent = 'Связь с космосом потеряна';
+        console.error('Horary error:', e);
+        answerEl.innerHTML = `
+            <div style="text-align:center;color:var(--text-secondary);padding:25px;">
+                <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
+                <p style="margin-bottom:15px;">${e.message}</p>
+                <button onclick="askHorary()" style="padding:12px 24px;background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(112,0,255,0.2));border:1px solid var(--gold);color:var(--gold);border-radius:10px;cursor:pointer;font-family:'Cinzel',serif;">
+                    🔄 Повторить расчёт
+                </button>
+            </div>
+        `;
     }
 }
 function editProfile() { showScreen('screen-register'); }
