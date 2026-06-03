@@ -688,8 +688,7 @@ async function askHorary() {
     answerEl.innerHTML = `
         <div class="loader" style="flex-direction:column;gap:15px;">
             <div class="spinner"></div>
-            <p>🔮 Рассчитываю точную хорарную карту...</p>
-            <p style="font-size:12px;color:var(--text-secondary);">Положение Луны, Асцендента, домов</p>
+            <p>🔮 Рассчитываю хорарную карту...</p>
         </div>
     `;
     timeEl.textContent = '';
@@ -697,6 +696,8 @@ async function askHorary() {
     try {
         const tg = window.Telegram?.WebApp;
         const userId = tg?.initDataUnsafe?.user?.id || 123456789;
+        
+        console.log('🔮 Horary request:', { question, userId });
         
         const res = await fetch(`${API_URL}/api/horary`, {
             method: 'POST',
@@ -707,41 +708,59 @@ async function askHorary() {
             })
         });
         
+        console.log('Response status:', res.status);
+        
+        const rawData = await res.text();
+        console.log('Raw response:', rawData);
+        
         if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.error || `HTTP ${res.status}`);
+            throw new Error(`Server error: ${res.status} - ${rawData.substring(0, 100)}`);
         }
         
-        const data = await res.json();
+        let data;
+        try {
+            data = JSON.parse(rawData);
+        } catch (e) {
+            console.error('JSON parse error:', e);
+            throw new Error('Invalid response format from server');
+        }
         
-        // Показываем точные данные карты
-        const chartInfo = `
+        console.log('Parsed data:', data);
+        
+        // Проверяем есть ли ошибка в ответе
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        // Проверяем есть ли ответ
+        if (!data.answer) {
+            throw new Error('No answer in response');
+        }
+        
+        // Показываем данные карты
+        const chartInfo = data.chart_time ? `
             <div style="background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(112,0,255,0.1));border:2px solid var(--gold-border);border-radius:14px;padding:15px;margin-bottom:18px;">
                 <div style="color:var(--gold);font-family:'Cinzel',serif;font-size:13px;margin-bottom:12px;letter-spacing:2px;text-align:center;text-transform:uppercase;">
-                    ✦ Точная хорарная карта ✦
+                    ✦ Хорарная карта ✦
                 </div>
                 <div style="color:var(--text);line-height:1.8;font-size:13px;">
                     <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--glass-border);">
                         <strong style="color:var(--gold);">⏰ Время:</strong> ${data.chart_time}<br>
                     </div>
+                    ${data.moon_sign ? `
                     <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--glass-border);">
-                        <strong style="color:var(--gold);">🌙 Луна:</strong> ${data.moon_sign} (${data.moon_degree}°)<br>
-                        <span style="color:var(--text-secondary);font-size:12px;">
-                            Фаза: ${data.moon_phase} (${data.moon_phase_deg}°) • 
-                            Скорость: ${data.moon_speed}°/день<br>
-                            ${data.moon_retrograde ? '⚠️ <strong style="color:#ff6666;">РЕТРОГРАДНАЯ</strong> — задержка, возврат' : '✨ Директная — развитие'}
-                        </span>
+                        <strong style="color:var(--gold);">🌙 Луна:</strong> ${data.moon_sign} ${data.moon_degree ? `(${data.moon_degree}°)` : ''}<br>
+                        ${data.moon_phase ? `<span style="color:var(--text-secondary);font-size:12px;">Фаза: ${data.moon_phase}</span>` : ''}
                     </div>
-                    <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--glass-border);">
-                        <strong style="color:var(--gold);">📍 Асцендент:</strong> ${data.ascendant} (${data.ascendant_degree}°)<br>
-                        <span style="color:var(--text-secondary);font-size:12px;">Управитель: ${data.house_ruler}</span>
-                    </div>
+                    ` : ''}
+                    ${data.question_house ? `
                     <div>
                         <strong style="color:var(--gold);">🏠 Дом вопроса:</strong> ${data.question_house}-й<br>
                     </div>
+                    ` : ''}
                 </div>
             </div>
-        `;
+        ` : '';
         
         answerEl.innerHTML = chartInfo + `
             <div style="background:var(--glass);border:1px solid var(--gold-border);border-radius:14px;padding:18px;margin-top:15px;">
@@ -752,18 +771,37 @@ async function askHorary() {
         timeEl.textContent = `Получен ответ: ${new Date().toLocaleTimeString('ru-RU')}`;
         
     } catch (e) {
-        console.error('Horary error:', e);
+        console.error('❌ Horary error:', e);
+        
+        let errorMessage = 'Произошла неизвестная ошибка';
+        
+        if (e.message.includes('pyswisseph') || e.message.includes('swisseph')) {
+            errorMessage = 'Ошибка библиотеки расчётов. Попробуйте позже.';
+        } else if (e.message.includes('OpenAI') || e.message.includes('API')) {
+            errorMessage = 'Ошибка подключения к AI. Попробуйте позже.';
+        } else if (e.message.includes('fetch') || e.message.includes('network')) {
+            errorMessage = 'Нет соединения с сервером. Проверьте интернет.';
+        } else {
+            errorMessage = e.message || 'Неизвестная ошибка';
+        }
+        
         answerEl.innerHTML = `
             <div style="text-align:center;color:var(--text-secondary);padding:25px;">
                 <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
-                <p style="margin-bottom:15px;">${e.message}</p>
-                <button onclick="askHorary()" style="padding:12px 24px;background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(112,0,255,0.2));border:1px solid var(--gold);color:var(--gold);border-radius:10px;cursor:pointer;font-family:'Cinzel',serif;">
+                <p style="margin-bottom:15px;font-size:14px;">${errorMessage}</p>
+                <details style="font-size:11px;color:#666;text-align:left;margin:15px 0;padding:10px;background:rgba(0,0,0,0.2);border-radius:6px;">
+                    <summary style="cursor:pointer;color:var(--gold);">Техническая информация</summary>
+                    <pre style="white-space:pre-wrap;margin-top:10px;">${e.stack || e.message}</pre>
+                </details>
+                <button onclick="askHorary()" style="margin-top:15px;padding:12px 24px;background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(112,0,255,0.2));border:1px solid var(--gold);color:var(--gold);border-radius:10px;cursor:pointer;font-family:'Cinzel',serif;">
                     🔄 Повторить расчёт
                 </button>
             </div>
         `;
     }
 }
+
+
 function editProfile() { showScreen('screen-register'); }
 
 // ===== ИСТОРИЯ ЧТЕНИЙ =====
